@@ -312,7 +312,7 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
       </div>
 
       <div class="btn-row">
-        <button class="btn-primary" onclick="calculateScore()">Calculate Score →</button>
+        <button class="btn-primary" id="btn-calculate">Calculate Score →</button>
       </div>
     </div>
   </div>
@@ -369,7 +369,7 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
       <p>Enter your email to save this analysis and receive co-living tips for your market.</p>
       <div class="email-row">
         <input type="email" id="r-email" placeholder="your@email.com">
-        <button class="btn-primary" onclick="submitEmail()">Save Score</button>
+        <button class="btn-primary" id="btn-save-email">Save Score</button>
       </div>
       <div class="text-xs text-muted mt-4">No spam. Unsubscribe anytime.</div>
     </div>
@@ -486,7 +486,7 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
 
       <div class="btn-row">
         <button class="btn-outline" onclick="showScreen('s-result')">Cancel</button>
-        <button class="btn-primary" onclick="generateProAnalysis()">Generate Pro Analysis →</button>
+        <button class="btn-primary" id="btn-pro-generate">Generate Pro Analysis →</button>
       </div>
     </div>
   </div>
@@ -528,7 +528,7 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
     <div class="card" style="text-align:center;padding:28px">
       <div style="font-size:15px;font-weight:600;margin-bottom:6px">Download Lender-Ready PDF Report</div>
       <div style="font-size:13px;color:var(--gray-500);margin-bottom:16px">7-page report with charts, P&L, ratios, and Go/No-Go verdict — ready to attach to a loan application.</div>
-      <button class="btn-primary" style="height:46px;font-size:15px;padding:0 32px" onclick="downloadPDF()">
+      <button class="btn-primary" style="height:46px;font-size:15px;padding:0 32px" id="btn-pdf">
         Download PDF Report
       </button>
       <div class="text-xs text-muted mt-4" id="pdf-status"></div>
@@ -1027,6 +1027,18 @@ function resetForm(){
 function showProGate(){
   document.getElementById('r-pro-gate').scrollIntoView({behavior:'smooth'});
 }
+
+// ── WIRE BUTTONS ─────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function(){
+  document.getElementById('btn-calculate').addEventListener('click', calculateScore);
+  document.getElementById('btn-pro-generate').addEventListener('click', generateProAnalysis);
+  document.getElementById('btn-pro-cancel').addEventListener('click', function(){ showScreen('s-result'); });
+  document.getElementById('btn-reset-1').addEventListener('click', resetForm);
+  document.getElementById('btn-reset-2').addEventListener('click', resetForm);
+  document.getElementById('btn-save-email').addEventListener('click', submitEmail);
+  document.getElementById('btn-pdf').addEventListener('click', downloadPDF);
+  document.getElementById('btn-back-pro').addEventListener('click', function(){ showScreen('s-result'); });
+});
 </script>
 </body>
 </html>
