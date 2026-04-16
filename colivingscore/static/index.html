@@ -740,7 +740,7 @@ function buildAuditFlags(inp, tenantKey){
   else html.push(flag('critical','Rooms are small ('+sqpp+' sq ft/bed)','Creates friction and higher turnover.'));
 
   // Parking
-  if(inp.garage>0) html.push(flag('success','Enclosed garage parking ('+inp.garage+' space'+(inp.garage>1?'s':''))+'Highest-value parking type. Supports $50–$75/mo per room rate premium.'));
+  if(inp.garage>0) html.push(flag('success','Enclosed garage parking ('+inp.garage+' space'+(inp.garage>1?'s':'')+')','Highest-value parking type. Supports $50–$75/mo per room rate premium.'));
   else if(inp.carport>0) html.push(flag('success','Covered carport parking','Supports a modest rate premium and improves retention.'));
   else if(inp.uncovered>0) html.push(flag('caution','Uncovered parking only','Weather exposure is a retention factor. A low-cost carport addition has strong ROI.'));
   else html.push(flag('critical','No off-street parking','Significantly narrows your eligible tenant pool.'));
