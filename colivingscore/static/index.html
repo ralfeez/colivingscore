@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CoLivingScore.com — Property Score & Analysis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --green:#1D9E75;--green-light:#EAF3DE;--green-dark:#0D6B52;--green-mid:#4DBF8F;
+  --navy:#1A3D5C;--red:#E24B4A;--red-light:#FCEBEB;--amber:#D97706;--amber-light:#FAEEDA;
+  --gray-900:#111827;--gray-800:#1F2937;--gray-700:#374151;--gray-500:#6B7280;
+  --gray-300:#D1D5DB;--gray-100:#F3F4F6;--gray-50:#F9FAFB;--white:#ffffff;
+  --radius:8px;--radius-lg:12px;--font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+  --shadow:0 1px 3px rgba(0,0,0,0.08),0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md:0 4px 6px rgba(0,0,0,0.07),0 2px 4px rgba(0,0,0,0.05);
+}
+body{font-family:var(--font);background:#F0F4F1;color:var(--gray-900);min-height:100vh;font-size:15px;line-height:1.6}
+
+/* ── HEADER ── */
+header{background:var(--gray-900);padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,0.3)}
+.logo{font-size:17px;font-weight:600;color:var(--white);letter-spacing:-0.3px}
+.logo span{color:var(--green)}
+.logo-sub{font-size:11px;color:var(--gray-500);margin-left:8px;font-weight:400}
+.header-badge{font-size:11px;background:rgba(29,158,117,0.15);color:var(--green-mid);padding:4px 10px;border-radius:20px;border:1px solid rgba(29,158,117,0.25)}
+
+/* ── LAYOUT ── */
+.container{max-width:780px;margin:0 auto;padding:32px 20px 60px}
+
+/* ── STEPS ── */
+.steps{display:flex;align-items:center;gap:0;margin-bottom:28px}
+.step{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--gray-500);font-weight:500}
+.step.active{color:var(--gray-900)}
+.step.done{color:var(--green)}
+.step-dot{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--gray-300);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;background:var(--white);color:var(--gray-500);flex-shrink:0}
+.step.active .step-dot{border-color:var(--gray-900);background:var(--gray-900);color:var(--white)}
+.step.done .step-dot{border-color:var(--green);background:var(--green);color:var(--white)}
+.step-line{flex:1;height:1px;background:var(--gray-300);margin:0 8px}
+
+/* ── CARDS ── */
+.card{background:var(--white);border:1px solid var(--gray-300);border-radius:var(--radius-lg);padding:24px;margin-bottom:16px;box-shadow:var(--shadow)}
+.card-title{font-size:16px;font-weight:600;color:var(--gray-900);margin-bottom:4px}
+.card-sub{font-size:13px;color:var(--gray-500);margin-bottom:20px}
+
+/* ── FORM ELEMENTS ── */
+.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.field-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.field{display:flex;flex-direction:column;gap:5px}
+.field-full{grid-column:1/-1}
+label{font-size:12px;font-weight:500;color:var(--gray-700);letter-spacing:0.2px}
+label .req{color:var(--red);margin-left:2px}
+select,input[type=number],input[type=text],input[type=email]{
+  height:38px;border:1px solid var(--gray-300);border-radius:var(--radius);
+  padding:0 12px;font-size:13px;font-family:var(--font);color:var(--gray-900);
+  background:var(--white);width:100%;transition:border-color 0.15s;outline:none
+}
+select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,158,117,0.1)}
+.field-hint{font-size:11px;color:var(--gray-500);margin-top:2px}
+
+/* ── BUTTONS ── */
+.btn-primary{height:42px;padding:0 24px;background:var(--green);color:var(--white);border:none;border-radius:var(--radius);font-size:14px;font-weight:600;font-family:var(--font);cursor:pointer;transition:background 0.15s;letter-spacing:-0.1px}
+.btn-primary:hover{background:var(--green-dark)}
+.btn-outline{height:38px;padding:0 18px;background:transparent;color:var(--gray-700);border:1px solid var(--gray-300);border-radius:var(--radius);font-size:13px;font-weight:500;font-family:var(--font);cursor:pointer;transition:all 0.15s}
+.btn-outline:hover{border-color:var(--gray-500);color:var(--gray-900)}
+.btn-row{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;align-items:center}
+
+/* ── SCREENS ── */
+.screen{display:none}
+.screen.active{display:block}
+
+/* ── BANNERS ── */
+.banner{border-radius:var(--radius);padding:12px 16px;margin-bottom:12px;display:flex;align-items:flex-start;gap:10px;font-size:13px;line-height:1.5}
+.banner-icon{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;font-size:10px;font-weight:700}
+.banner.success{background:var(--green-light);border:1px solid #97C459;color:#27500A}
+.banner.success .banner-icon{background:var(--green);color:var(--white)}
+.banner.caution{background:var(--amber-light);border:1px solid #F0B429;color:#78450A}
+.banner.caution .banner-icon{background:var(--amber);color:var(--white)}
+.banner.critical{background:var(--red-light);border:1px solid #F09595;color:#7A1F1F}
+.banner.critical .banner-icon{background:var(--red);color:var(--white)}
+.banner-text strong{display:block;font-weight:600;margin-bottom:2px}
+
+/* ── SCORE DISPLAY ── */
+.score-hero{display:flex;align-items:center;gap:24px;padding:20px 24px;background:var(--white);border:1px solid var(--gray-300);border-radius:var(--radius-lg);margin-bottom:16px;box-shadow:var(--shadow)}
+.score-ring{width:90px;height:90px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;position:relative}
+.score-ring::before{content:'';position:absolute;inset:0;border-radius:50%;border:8px solid var(--gray-100)}
+.score-ring-fill{position:absolute;inset:0;border-radius:50%;border:8px solid var(--ring-color,var(--green))}
+.score-number{font-size:28px;font-weight:700;color:var(--gray-900);line-height:1;position:relative;z-index:1}
+.score-label{font-size:10px;color:var(--gray-500);position:relative;z-index:1}
+.score-info{flex:1}
+.score-tier{font-size:14px;font-weight:700;letter-spacing:0.5px;margin-bottom:4px}
+.score-tier.strong{color:var(--green-dark)}
+.score-tier.moderate{color:var(--amber)}
+.score-tier.weak{color:var(--red)}
+.score-meta{font-size:13px;color:var(--gray-700)}
+.score-meta span{font-weight:600}
+
+/* ── SPECTRUM BAR ── */
+.spectrum{margin:12px 0 20px}
+.spectrum-bar{height:10px;border-radius:5px;background:linear-gradient(to right,#FCEBEB 0%,#FAEEDA 50%,#EAF3DE 75%,#97C459 100%);position:relative;margin-bottom:6px}
+.spectrum-marker{width:14px;height:14px;background:var(--gray-900);border:2px solid var(--white);border-radius:50%;position:absolute;top:50%;transform:translate(-50%,-50%);box-shadow:0 1px 4px rgba(0,0,0,0.3)}
+.spectrum-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--gray-500)}
+
+/* ── AUDIT FLAGS ── */
+.audit-section{margin-bottom:20px}
+.audit-section-title{font-size:11px;font-weight:600;color:var(--gray-500);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--gray-100)}
+.flags-list{display:flex;flex-direction:column;gap:8px}
+
+/* ── FINANCIAL SNAPSHOT ── */
+.fin-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px}
+.fin-card{background:var(--gray-50);border:1px solid var(--gray-100);border-radius:var(--radius);padding:14px}
+.fin-label{font-size:11px;color:var(--gray-500);margin-bottom:4px;font-weight:500}
+.fin-value{font-size:20px;font-weight:700;color:var(--gray-900);font-family:var(--mono)}
+.fin-value.green{color:var(--green-dark)}
+
+/* ── REFERRAL ── */
+.referral-card{border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:20px;margin-bottom:12px;background:var(--white)}
+.referral-card.featured{border-color:var(--green);background:var(--green-light)}
+.ref-title{font-size:14px;font-weight:600;color:var(--gray-900);margin-bottom:4px}
+.ref-desc{font-size:13px;color:var(--gray-600);margin-bottom:12px;line-height:1.5}
+.ref-btns{display:flex;gap:8px;flex-wrap:wrap}
+
+/* ── PRO GATE ── */
+.pro-gate{background:linear-gradient(135deg,#0D2818 0%,#0D6B52 100%);border-radius:var(--radius-lg);padding:28px;color:var(--white);margin-bottom:16px;text-align:center}
+.pro-gate h3{font-size:20px;font-weight:700;margin-bottom:8px}
+.pro-gate p{font-size:14px;opacity:0.85;margin-bottom:20px;line-height:1.6}
+.pro-features{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px;text-align:left}
+.pro-feature{display:flex;align-items:center;gap:8px;font-size:13px;opacity:0.9}
+.pro-feature::before{content:'✓';color:var(--green-mid);font-weight:700;flex-shrink:0}
+.pro-price{font-size:28px;font-weight:700;margin-bottom:4px}
+.pro-price span{font-size:14px;font-weight:400;opacity:0.7}
+.btn-pro{height:46px;padding:0 32px;background:var(--white);color:var(--green-dark);border:none;border-radius:var(--radius);font-size:15px;font-weight:700;font-family:var(--font);cursor:pointer;transition:all 0.15s;letter-spacing:-0.2px}
+.btn-pro:hover{background:var(--green-light);transform:translateY(-1px)}
+
+/* ── EMAIL GATE ── */
+.email-gate{background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:20px;text-align:center;margin-bottom:16px}
+.email-gate h4{font-size:15px;font-weight:600;margin-bottom:6px}
+.email-gate p{font-size:13px;color:var(--gray-600);margin-bottom:14px}
+.email-row{display:flex;gap:8px;max-width:420px;margin:0 auto}
+.email-row input{flex:1}
+
+/* ── SECTION DIVIDER ── */
+.section-divider{display:flex;align-items:center;gap:12px;margin:24px 0 16px}
+.section-divider-label{font-size:10px;font-weight:700;letter-spacing:1px;color:var(--green);text-transform:uppercase;white-space:nowrap}
+.section-divider-line{flex:1;height:1px;background:var(--gray-200)}
+
+/* ── HOA WARNING ── */
+.hoa-block{background:#FEF9C3;border:1px solid #FDE047;border-radius:var(--radius);padding:14px 16px;margin-bottom:12px}
+
+/* ── LOADING ── */
+.loading{text-align:center;padding:48px 24px}
+.spinner{width:32px;height:32px;border:3px solid var(--gray-200);border-top-color:var(--green);border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto 16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── ADDR STRIP ── */
+.addr-strip{background:var(--gray-900);border-radius:var(--radius);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.addr-text{font-size:13px;color:var(--white);font-weight:500}
+.addr-reg{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600}
+.addr-reg.clear{background:rgba(29,158,117,0.2);color:#4DBF8F}
+.addr-reg.caution{background:rgba(217,119,6,0.2);color:#FCD34D}
+.addr-reg.blocked{background:rgba(226,75,74,0.2);color:#FCA5A5}
+
+/* ── RESPONSIVE ── */
+@media(max-width:600px){
+  .field-grid,.field-grid-3,.fin-grid,.pro-features{grid-template-columns:1fr}
+  .field-full{grid-column:1}
+  .score-hero{flex-direction:column;text-align:center}
+}
+
+/* ── UTILITY ── */
+.text-sm{font-size:13px}.text-xs{font-size:11px}.text-muted{color:var(--gray-500)}
+.mt-4{margin-top:16px}.mt-6{margin-top:24px}.mb-2{margin-bottom:8px}
+.hidden{display:none!important}
+.divider{height:1px;background:var(--gray-100);margin:20px 0}
+</style>
+</head>
+<body>
+
+<header>
+  <div style="display:flex;align-items:center">
+    <div class="logo">CoLiving<span>Score</span><span class="logo-sub">.com</span></div>
+  </div>
+  <div class="header-badge">Property Score & Analysis</div>
+</header>
+
+<div class="container">
+
+  <!-- STEP INDICATOR -->
+  <div class="steps" id="step-indicator">
+    <div class="step active" id="step1"><div class="step-dot">1</div>Property Details</div>
+    <div class="step-line"></div>
+    <div class="step" id="step2"><div class="step-dot">2</div>Free Score</div>
+    <div class="step-line"></div>
+    <div class="step" id="step3"><div class="step-dot">3</div>Pro Analysis</div>
+  </div>
+
+  <!-- ══ SCREEN 1: PROPERTY FORM ══ -->
+  <div class="screen active" id="s-form">
+    <div class="card">
+      <div class="card-title">Score your property for co-living</div>
+      <div class="card-sub">Enter the property details to get your free suitability score.</div>
+
+      <div class="field-grid">
+        <div class="field">
+          <label>Bedrooms <span class="req">*</span></label>
+          <select id="f-beds">
+            <option value="2">2 bedrooms</option>
+            <option value="3">3 bedrooms</option>
+            <option value="4">4 bedrooms</option>
+            <option value="5" selected>5 bedrooms</option>
+            <option value="6">6 bedrooms</option>
+            <option value="7">7 bedrooms</option>
+            <option value="8">8 bedrooms</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Bathrooms (full only) <span class="req">*</span></label>
+          <select id="f-baths">
+            <option value="1">1</option>
+            <option value="1.5">1.5</option>
+            <option value="2">2</option>
+            <option value="2.5">2.5</option>
+            <option value="3" selected>3</option>
+            <option value="3.5">3.5</option>
+            <option value="4">4</option>
+            <option value="4.5">4.5</option>
+            <option value="5">5</option>
+          </select>
+          <div class="field-hint">Half baths count toward improvement suggestions, not ratio score</div>
+        </div>
+        <div class="field">
+          <label>Square footage <span class="req">*</span></label>
+          <input type="number" id="f-sqft" value="2480" min="500" max="10000">
+        </div>
+        <div class="field">
+          <label>Stories</label>
+          <select id="f-floors">
+            <option value="1" selected>1 story</option>
+            <option value="2">2 stories</option>
+            <option value="3">3 stories</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Garage spaces</label>
+          <select id="f-garage">
+            <option value="0">None</option>
+            <option value="1">1 car</option>
+            <option value="2" selected>2 car</option>
+            <option value="3">3 car</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Carport spaces</label>
+          <select id="f-carport">
+            <option value="0" selected>None</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Uncovered parking</label>
+          <select id="f-uncovered">
+            <option value="0" selected>None</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3+</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>HOA status <span class="req">*</span></label>
+          <select id="f-hoa">
+            <option value="none" selected>No HOA</option>
+            <option value="permits">HOA — permits rentals</option>
+            <option value="unclear">HOA — rules unclear</option>
+            <option value="prohibits">HOA — prohibits rentals</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Transit proximity</label>
+          <select id="f-transit">
+            <option value="walkable" selected>Under 0.5 mi</option>
+            <option value="close">0.5 – 1 mi</option>
+            <option value="moderate">1 – 3 mi</option>
+            <option value="far">Over 3 mi</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Hospital proximity</label>
+          <select id="f-hospital">
+            <option value="close" selected>Under 2 mi</option>
+            <option value="moderate">2 – 5 mi</option>
+            <option value="far">Over 5 mi</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Monthly mortgage (PITI)</label>
+          <input type="number" id="f-mortgage" value="2850" min="0">
+        </div>
+        <div class="field">
+          <label>Target tenant type <span class="req">*</span></label>
+          <select id="f-tenant">
+            <option value="nurses" selected>Travel Nurses</option>
+            <option value="tech">Tech / Remote Workers</option>
+            <option value="trades">Construction / Trades</option>
+            <option value="students">Students</option>
+            <option value="seniors">Seniors 55+</option>
+            <option value="sober">Sober Living</option>
+            <option value="workforce">General Workforce</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-primary" onclick="calculateScore()">Calculate Score →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SCREEN 2: FREE SCORE RESULTS ══ -->
+  <div class="screen" id="s-result">
+
+    <div class="addr-strip">
+      <div class="addr-text" id="r-addr-text">Property Analysis</div>
+      <div class="addr-reg clear" id="r-reg-badge">Regulatory: Clear</div>
+    </div>
+
+    <!-- Score hero -->
+    <div class="score-hero" id="r-score-hero">
+      <div class="score-ring" id="r-ring">
+        <div class="score-number" id="r-score-num">87</div>
+        <div class="score-label">out of 100</div>
+      </div>
+      <div class="score-info">
+        <div class="score-tier strong" id="r-tier">STRONG CANDIDATE</div>
+        <div class="score-meta">Target: <span id="r-tenant-label">Travel Nurses</span> &nbsp;·&nbsp; <span id="r-beds-baths">5 bed / 3 bath</span></div>
+        <div class="spectrum mt-4" style="max-width:320px">
+          <div class="spectrum-bar"><div class="spectrum-marker" id="r-marker" style="left:87%"></div></div>
+          <div class="spectrum-labels"><span>0</span><span>Weak</span><span>Moderate</span><span>Strong</span><span>100</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Financial snapshot -->
+    <div class="fin-grid" id="r-fin-grid">
+      <div class="fin-card">
+        <div class="fin-label">Est. Gross Monthly</div>
+        <div class="fin-value green" id="r-gross">$5,060</div>
+      </div>
+      <div class="fin-card">
+        <div class="fin-label">Est. Monthly NOI</div>
+        <div class="fin-value green" id="r-noi">$1,005</div>
+      </div>
+      <div class="fin-card">
+        <div class="fin-label">Break-Even Occupancy</div>
+        <div class="fin-value" id="r-be">68%</div>
+      </div>
+    </div>
+
+    <!-- Audit flags -->
+    <div class="card" id="r-audit">
+      <div class="card-title" style="margin-bottom:16px">Property Audit</div>
+      <div id="r-flags"></div>
+    </div>
+
+    <!-- Email gate -->
+    <div class="email-gate" id="r-email-gate">
+      <h4>Save your score & get the full report</h4>
+      <p>Enter your email to save this analysis and receive co-living tips for your market.</p>
+      <div class="email-row">
+        <input type="email" id="r-email" placeholder="your@email.com">
+        <button class="btn-primary" onclick="submitEmail()">Save Score</button>
+      </div>
+      <div class="text-xs text-muted mt-4">No spam. Unsubscribe anytime.</div>
+    </div>
+
+    <!-- Referral / CTA -->
+    <div id="r-referral"></div>
+
+    <!-- Pro gate -->
+    <div id="r-pro-gate"></div>
+
+    <div class="btn-row" style="justify-content:flex-start">
+      <button class="btn-outline" onclick="resetForm()">← Score another property</button>
+    </div>
+
+  </div>
+
+  <!-- ══ SCREEN 3: PRO ANALYSIS FORM ══ -->
+  <div class="screen" id="s-pro-form">
+
+    <div class="addr-strip">
+      <div class="addr-text">Pro Analysis — Financial Inputs</div>
+      <button class="btn-outline" style="height:28px;font-size:12px" onclick="showScreen('s-result')">← Back to score</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Income & Expense Inputs</div>
+      <div class="card-sub">These inputs drive your Year 1 P&L, financial ratios, and the PDF report.</div>
+
+      <div class="section-divider"><div class="section-divider-line"></div><div class="section-divider-label">Income</div><div class="section-divider-line"></div></div>
+      <div class="field-grid">
+        <div class="field">
+          <label>Target rent per room / month</label>
+          <input type="number" id="p-rent" value="1100" min="0">
+        </div>
+        <div class="field">
+          <label>Expected occupancy rate</label>
+          <select id="p-occ">
+            <option value="0.80">80%</option>
+            <option value="0.85">85%</option>
+            <option value="0.90">90%</option>
+            <option value="0.92" selected>92%</option>
+            <option value="0.95">95%</option>
+            <option value="1.00">100%</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="section-divider"><div class="section-divider-line"></div><div class="section-divider-label">Fixed Expenses</div><div class="section-divider-line"></div></div>
+      <div class="field-grid">
+        <div class="field">
+          <label>Monthly mortgage (PITI)</label>
+          <input type="number" id="p-mortgage" value="2850">
+        </div>
+        <div class="field">
+          <label>Annual property taxes</label>
+          <input type="number" id="p-taxes" value="4800">
+        </div>
+        <div class="field">
+          <label>Annual insurance</label>
+          <input type="number" id="p-insurance" value="2400">
+        </div>
+        <div class="field">
+          <label>HOA monthly</label>
+          <input type="number" id="p-hoa" value="0">
+        </div>
+      </div>
+
+      <div class="section-divider"><div class="section-divider-line"></div><div class="section-divider-label">Utilities & Operations</div><div class="section-divider-line"></div></div>
+      <div class="field-grid">
+        <div class="field">
+          <label>Water & Sewer / month</label>
+          <input type="number" id="p-water" value="220">
+        </div>
+        <div class="field">
+          <label>Garbage / month</label>
+          <input type="number" id="p-garbage" value="45">
+        </div>
+        <div class="field">
+          <label>Internet / month</label>
+          <input type="number" id="p-internet" value="120">
+          <div class="field-hint">Scaled by bedroom count</div>
+        </div>
+        <div class="field">
+          <label>Yard maintenance / month</label>
+          <input type="number" id="p-yard" value="80">
+        </div>
+        <div class="field">
+          <label>Pest control / month</label>
+          <input type="number" id="p-pest" value="40">
+        </div>
+      </div>
+
+      <div class="section-divider"><div class="section-divider-line"></div><div class="section-divider-label">Reserves & Management</div><div class="section-divider-line"></div></div>
+      <div class="field-grid">
+        <div class="field">
+          <label>Repairs reserve / month</label>
+          <input type="number" id="p-repairs" value="200">
+        </div>
+        <div class="field">
+          <label>CapEx reserve / month</label>
+          <input type="number" id="p-capex" value="150">
+          <div class="field-hint">Long-term capital expenditures</div>
+        </div>
+        <div class="field field-full">
+          <label>Property management model</label>
+          <select id="p-mgmt">
+            <option value="self">Self-managed (0%)</option>
+            <option value="specialist" selected>Co-living Specialist (10%)</option>
+            <option value="padsplit">PadSplit (20%)</option>
+            <option value="other">Other / TBD</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-outline" onclick="showScreen('s-result')">Cancel</button>
+        <button class="btn-primary" onclick="generateProAnalysis()">Generate Pro Analysis →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SCREEN 4: PRO ANALYSIS RESULTS ══ -->
+  <div class="screen" id="s-pro-result">
+
+    <div class="addr-strip">
+      <div class="addr-text">Pro Analysis — <span id="pr-addr" style="color:#4DBF8F"></span></div>
+      <button class="btn-outline" style="height:28px;font-size:12px" onclick="showScreen('s-result')">← Free Score</button>
+    </div>
+
+    <!-- P&L Summary -->
+    <div class="card">
+      <div class="card-title">Year 1 Financial Summary</div>
+      <div class="fin-grid" style="margin-top:16px" id="pr-fin-grid"></div>
+      <div class="divider"></div>
+      <div id="pr-ratios"></div>
+    </div>
+
+    <!-- Tenant comparison -->
+    <div class="card">
+      <div class="card-title">Tenant Type Comparison — Ranked by Monthly NOI</div>
+      <div class="card-sub">Using your actual expense inputs. Best fit highlighted.</div>
+      <div id="pr-tenant-comparison"></div>
+    </div>
+
+    <!-- Improvements -->
+    <div class="card">
+      <div class="card-title">Capital Improvements — ROI Analysis</div>
+      <div class="card-sub">Payback periods calculated at your room count and target rent.</div>
+      <div id="pr-improvements"></div>
+    </div>
+
+    <!-- Verdict -->
+    <div id="pr-verdict"></div>
+
+    <!-- PDF download -->
+    <div class="card" style="text-align:center;padding:28px">
+      <div style="font-size:15px;font-weight:600;margin-bottom:6px">Download Lender-Ready PDF Report</div>
+      <div style="font-size:13px;color:var(--gray-500);margin-bottom:16px">7-page report with charts, P&L, ratios, and Go/No-Go verdict — ready to attach to a loan application.</div>
+      <button class="btn-primary" style="height:46px;font-size:15px;padding:0 32px" onclick="downloadPDF()">
+        Download PDF Report
+      </button>
+      <div class="text-xs text-muted mt-4" id="pdf-status"></div>
+    </div>
+
+    <div class="btn-row" style="justify-content:flex-start">
+      <button class="btn-outline" onclick="resetForm()">← Score another property</button>
+    </div>
+
+  </div>
+
+</div><!-- /container -->
+
+<script>
+// ── SCORING ENGINE ────────────────────────────────────────────────────────────
+
+const TENANT_PROFILES = {
+  nurses:    {label:'Travel Nurses',         bathW:28,transitW:8, hospitalW:20,floorW:-8, hoaW:15,parkW:12,sqftW:8,  rent:1100},
+  tech:      {label:'Tech / Remote Workers', bathW:22,transitW:12,hospitalW:6, floorW:-3, hoaW:15,parkW:10,sqftW:12, rent:1000},
+  trades:    {label:'Construction / Trades', bathW:20,transitW:6, hospitalW:5, floorW:-2, hoaW:15,parkW:18,sqftW:6,  rent:950},
+  students:  {label:'Students',              bathW:18,transitW:20,hospitalW:4, floorW:-2, hoaW:15,parkW:6, sqftW:10, rent:800},
+  seniors:   {label:'Seniors 55+',           bathW:25,transitW:10,hospitalW:18,floorW:-15,hoaW:15,parkW:10,sqftW:10, rent:900},
+  sober:     {label:'Sober Living',          bathW:20,transitW:15,hospitalW:12,floorW:-12,hoaW:15,parkW:8, sqftW:8,  rent:850},
+  workforce: {label:'General Workforce',     bathW:20,transitW:12,hospitalW:6, floorW:-3, hoaW:15,parkW:12,sqftW:8,  rent:875},
+};
+
+function getInputs(){
+  return {
+    beds:      parseInt(document.getElementById('f-beds').value),
+    baths:     parseFloat(document.getElementById('f-baths').value),
+    sqft:      parseInt(document.getElementById('f-sqft').value),
+    floors:    parseInt(document.getElementById('f-floors').value),
+    garage:    parseInt(document.getElementById('f-garage').value),
+    carport:   parseInt(document.getElementById('f-carport').value),
+    uncovered: parseInt(document.getElementById('f-uncovered').value),
+    hoa:       document.getElementById('f-hoa').value,
+    transit:   document.getElementById('f-transit').value,
+    hospital:  document.getElementById('f-hospital').value,
+    mortgage:  parseInt(document.getElementById('f-mortgage').value)||0,
+    tenant:    document.getElementById('f-tenant').value,
+  };
+}
+
+function scoreProperty(inp, tenantKey){
+  const p = TENANT_PROFILES[tenantKey];
+  let score = 0;
+
+  // HOA hard caps
+  if(inp.hoa === 'prohibits') return {score:30, hoaCap:'prohibits'};
+  if(inp.hoa === 'unclear')   { score = 0; }
+
+  // Bathroom ratio (full baths only)
+  const fullBaths = Math.floor(inp.baths);
+  const ratio     = inp.beds / fullBaths;
+  let bathScore = 0;
+  if(ratio <= 1)        bathScore = 100;
+  else if(ratio <= 1.5) bathScore = 85;
+  else if(ratio <= 2)   bathScore = 70;
+  else if(ratio <= 2.5) bathScore = 50;
+  else if(ratio <= 3)   bathScore = 30;
+  else                  bathScore = 10;
+  score += (bathScore / 100) * p.bathW;
+
+  // Sq ft per bed
+  const sqpp = inp.sqft / inp.beds;
+  let sqScore = 0;
+  if(sqpp >= 400)      sqScore = 100;
+  else if(sqpp >= 300) sqScore = 80;
+  else if(sqpp >= 220) sqScore = 60;
+  else if(sqpp >= 160) sqScore = 35;
+  else                 sqScore = 10;
+  score += (sqScore / 100) * p.sqftW;
+
+  // Parking
+  let parkScore = 0;
+  if(inp.garage > 0)       parkScore = Math.min(100, inp.garage * 40 + 20);
+  else if(inp.carport > 0) parkScore = 60;
+  else if(inp.uncovered>0) parkScore = 35;
+  score += (parkScore / 100) * p.parkW;
+
+  // Transit
+  const tMap = {walkable:100,close:70,moderate:40,far:15};
+  score += ((tMap[inp.transit]||40) / 100) * p.transitW;
+
+  // Hospital
+  const hMap = {close:100,moderate:55,far:20};
+  score += ((hMap[inp.hospital]||55) / 100) * p.hospitalW;
+
+  // Floors penalty
+  if(inp.floors > 1 && p.floorW < 0){
+    score += p.floorW * (inp.floors - 1);
+  }
+
+  // HOA caution deduction
+  if(inp.hoa === 'unclear') score -= 10;
+  if(inp.hoa === 'permits') score += 0;
+
+  // Beds base score (4-5 beds ideal)
+  const bedBonus = inp.beds >= 4 && inp.beds <= 6 ? 8 : (inp.beds >= 3 ? 4 : 0);
+  score += bedBonus;
+
+  return {score: Math.max(0, Math.min(100, Math.round(score))), hoaCap: null};
+}
+
+function estimateFinancials(inp, tenantKey){
+  const p      = TENANT_PROFILES[tenantKey];
+  const rent   = p.rent;
+  const gross  = Math.round(inp.beds * rent * 0.92);
+  const mgmt   = Math.round(gross * 0.10);
+  const taxes  = Math.round(4800/12);
+  const ins    = Math.round(2400/12);
+  const utils  = 220+45+120+80+40;
+  const res    = 200+150;
+  const total  = inp.mortgage + taxes + ins + utils + res + mgmt;
+  const noi    = gross - total;
+  const be     = total / (inp.beds * rent);
+  return {gross, noi, be:Math.round(be*100), total, mgmt, dscr: inp.mortgage ? +(noi/inp.mortgage).toFixed(2) : 0};
+}
+
+// ── CALCULATE & SHOW SCORE ────────────────────────────────────────────────────
+function calculateScore(){
+  const inp    = getInputs();
+  const tenant = inp.tenant;
+  const p      = TENANT_PROFILES[tenant];
+  const res    = scoreProperty(inp, tenant);
+  const fin    = estimateFinancials(inp, tenant);
+  const score  = res.score;
+
+  // Step indicator
+  setStep(2);
+
+  // Score ring
+  const ringEl  = document.getElementById('r-ring');
+  const color   = score >= 75 ? '#1D9E75' : score >= 50 ? '#D97706' : '#E24B4A';
+  ringEl.style.cssText += `--ring-color:${color}`;
+  document.getElementById('r-score-num').textContent = score;
+  document.getElementById('r-marker').style.left = score + '%';
+
+  // Tier
+  const tierEl = document.getElementById('r-tier');
+  if(score >= 75){ tierEl.textContent='STRONG CANDIDATE'; tierEl.className='score-tier strong'; }
+  else if(score >= 50){ tierEl.textContent='MODERATE CANDIDATE'; tierEl.className='score-tier moderate'; }
+  else { tierEl.textContent='WEAK CANDIDATE'; tierEl.className='score-tier weak'; }
+
+  // Meta
+  document.getElementById('r-tenant-label').textContent = p.label;
+  document.getElementById('r-beds-baths').textContent   = inp.beds+' bed / '+inp.baths+' bath';
+  document.getElementById('r-addr-text').textContent    = inp.beds+' bed · '+inp.baths+' bath · '+inp.sqft.toLocaleString()+' sq ft';
+
+  // Reg badge
+  const regBadge = document.getElementById('r-reg-badge');
+  if(inp.hoa === 'prohibits'){ regBadge.textContent='HOA: Blocked'; regBadge.className='addr-reg blocked'; }
+  else if(inp.hoa === 'unclear'){ regBadge.textContent='HOA: Verify'; regBadge.className='addr-reg caution'; }
+  else { regBadge.textContent='Regulatory: Clear'; regBadge.className='addr-reg clear'; }
+
+  // Financials
+  document.getElementById('r-gross').textContent = '$'+fin.gross.toLocaleString();
+  document.getElementById('r-noi').textContent   = '$'+fin.noi.toLocaleString();
+  document.getElementById('r-be').textContent    = fin.be+'%';
+  document.getElementById('r-noi').style.color   = fin.noi > 0 ? 'var(--green-dark)' : 'var(--red)';
+
+  // Audit flags
+  buildAuditFlags(inp, tenant);
+
+  // Referral & Pro gate
+  buildReferral(score, inp);
+  buildProGate(score, inp);
+
+  // Save inputs globally for Pro Analysis
+  window._inputs = inp;
+  window._score  = score;
+  window._fin    = fin;
+
+  showScreen('s-result');
+}
+
+function buildAuditFlags(inp, tenantKey){
+  const p        = TENANT_PROFILES[tenantKey];
+  const fullBaths= Math.floor(inp.baths);
+  const ratio    = inp.beds / fullBaths;
+  const sqpp     = Math.round(inp.sqft / inp.beds);
+  const covPark  = inp.garage + inp.carport;
+  const html     = [];
+
+  const flag = (type, title, body) =>
+    `<div class="banner ${type}"><div class="banner-icon">${type==='success'?'✓':type==='caution'?'!':'✕'}</div><div class="banner-text"><strong>${title}</strong>${body}</div></div>`;
+
+  // HOA
+  if(inp.hoa==='prohibits') html.push(flag('critical','HOA prohibits co-living','This is a deal-level barrier. Do not invest capital until the CC&Rs are legally resolved.'));
+  else if(inp.hoa==='unclear') html.push(flag('caution','HOA rules unverified','Verify occupancy language before committing. Co-living with unrelated tenants may be restricted.'));
+  else if(inp.hoa==='permits') html.push(flag('success','HOA permits rentals','Confirm the language specifically allows unrelated occupants sharing common areas.'));
+  else html.push(flag('success','No HOA restrictions','Clean regulatory status for co-living conversion.'));
+
+  // Bathroom ratio
+  if(ratio<=1.5) html.push(flag('success','Excellent bathroom ratio ('+ratio.toFixed(1)+'x)','Near-private baths command top-of-market rates and drive the strongest tenant retention.'));
+  else if(ratio<=2) html.push(flag('success','Solid bathroom ratio ('+ratio.toFixed(1)+'x)','Workable and competitive for most tenant types.'));
+  else if(ratio<=2.5) html.push(flag('caution','Bathroom ratio is average ('+ratio.toFixed(1)+'x)','Adding one bathroom is typically the highest-ROI improvement in co-living.'));
+  else html.push(flag('critical','Bathroom ratio is a barrier ('+ratio.toFixed(1)+'x)','Bathroom congestion is the #1 reason co-living tenants do not renew. Address this first.'));
+
+  // Half bath note
+  if(inp.baths % 1 !== 0){
+    html.push(flag('caution','Half bath detected','Converting to a full bath could increase the ratio score. Estimated cost: $8,000–$12,000.'));
+  }
+
+  // Sq ft per room
+  if(sqpp>=400) html.push(flag('success','Generous room sizing ('+sqpp+' sq ft/bed)','Justifies premium pricing and attracts longer-stay tenants.'));
+  else if(sqpp>=300) html.push(flag('success','Solid room sizing ('+sqpp+' sq ft/bed)','Competitive in most markets.'));
+  else if(sqpp>=220) html.push(flag('caution','Room sizing is functional ('+sqpp+' sq ft/bed)','Below the comfort threshold for longer-stay tenants.'));
+  else html.push(flag('critical','Rooms are small ('+sqpp+' sq ft/bed)','Creates friction and higher turnover.'));
+
+  // Parking
+  if(inp.garage>0) html.push(flag('success','Enclosed garage parking ('+inp.garage+' space'+(inp.garage>1?'s':''))+'Highest-value parking type. Supports $50–$75/mo per room rate premium.'));
+  else if(inp.carport>0) html.push(flag('success','Covered carport parking','Supports a modest rate premium and improves retention.'));
+  else if(inp.uncovered>0) html.push(flag('caution','Uncovered parking only','Weather exposure is a retention factor. A low-cost carport addition has strong ROI.'));
+  else html.push(flag('critical','No off-street parking','Significantly narrows your eligible tenant pool.'));
+
+  // Floors
+  if(inp.floors===1 && (tenantKey==='nurses'||tenantKey==='seniors'||tenantKey==='sober'))
+    html.push(flag('success','Single-story layout preferred by '+p.label,'No stairs after long shifts or for mobility-sensitive tenants. Commands a premium.'));
+  else if(inp.floors>1 && (tenantKey==='seniors'||tenantKey==='sober'))
+    html.push(flag('caution','Multi-story layout for '+p.label,'Accessibility is a concern for this tenant type. Consider unit allocation on the ground floor.'));
+
+  // Transit
+  if(tenantKey==='students'||tenantKey==='sober'){
+    if(inp.transit==='walkable') html.push(flag('success','Excellent transit access','Critical differentiator for '+p.label+'. Commands a 10–15% rate premium.'));
+    else if(inp.transit==='far') html.push(flag('caution','Limited transit access',''+p.label+' prioritize transit access. This will reduce your eligible pool.'));
+  }
+
+  // Hospital
+  if(tenantKey==='nurses'||tenantKey==='seniors'){
+    if(inp.hospital==='close') html.push(flag('success','Hospital proximity is strong','Within 2 miles is the key threshold for '+p.label+'. Significant competitive advantage.'));
+    else if(inp.hospital==='far') html.push(flag('caution','Hospital is far (5+ miles)','Distance reduces appeal for '+p.label+' who prioritize short commutes.'));
+  }
+
+  document.getElementById('r-flags').innerHTML = html.join('');
+}
+
+function buildReferral(score, inp){
+  let html = '';
+  if(score >= 85){
+    html = `<div class="referral-card featured">
+      <div class="ref-title">✓ Strong candidate — ready for conversion</div>
+      <div class="ref-desc">This property scores in the top tier. Connect with a co-living contractor to get improvement bids and a conversion timeline.</div>
+      <div class="ref-btns">
+        <button class="btn-primary" onclick="showProGate()">Get Pro Analysis ($29)</button>
+        <button class="btn-outline">Find a co-living contractor</button>
+      </div>
+    </div>`;
+  } else if(score >= 65){
+    html = `<div class="referral-card">
+      <div class="ref-title">Moderate candidate — worth a closer look</div>
+      <div class="ref-desc">This property has potential with the right improvements. A Pro Analysis will show you exactly what to fix and the ROI on each change.</div>
+      <div class="ref-btns">
+        <button class="btn-primary" onclick="showProGate()">Get Pro Analysis ($29)</button>
+        <button class="btn-outline">Talk to HomeMatch55</button>
+      </div>
+    </div>`;
+  } else {
+    html = `<div class="referral-card">
+      <div class="ref-title">Weak candidate — consider your options</div>
+      <div class="ref-desc">The gaps identified above would require significant changes to overcome. You may get a better return selling to an investor or exploring a different use.</div>
+      <div class="ref-btns">
+        <button class="btn-outline" style="border-color:var(--red);color:#A32D2D">Talk to an investor-focused agent</button>
+        <button class="btn-outline">See what else CoLivingScore can do</button>
+      </div>
+    </div>`;
+  }
+  document.getElementById('r-referral').innerHTML = html;
+}
+
+function buildProGate(score, inp){
+  if(score < 50) return; // Don't show Pro for very weak properties
+  const html = `<div class="pro-gate">
+    <h3>Pro Analysis — Full Financial Report</h3>
+    <p>Get the complete picture: market narrative, itemized P&L, financial ratios, tenant type comparison, improvement ROI, and a lender-ready PDF.</p>
+    <div class="pro-features">
+      <div class="pro-feature">Year 1 P&L with expense breakdown</div>
+      <div class="pro-feature">DSCR & lender benchmarks</div>
+      <div class="pro-feature">All 7 tenant types ranked by NOI</div>
+      <div class="pro-feature">Capital improvement ROI analysis</div>
+      <div class="pro-feature">Go / No-Go verdict</div>
+      <div class="pro-feature">Downloadable PDF report</div>
+    </div>
+    <div class="pro-price">$29 <span>one-time · no subscription</span></div>
+    <button class="btn-pro" onclick="startProAnalysis()">Unlock Pro Analysis →</button>
+  </div>`;
+  document.getElementById('r-pro-gate').innerHTML = html;
+}
+
+// ── PRO ANALYSIS ─────────────────────────────────────────────────────────────
+function startProAnalysis(){
+  // Pre-fill mortgage from free form
+  const inp = window._inputs || {};
+  if(inp.mortgage) document.getElementById('p-mortgage').value = inp.mortgage;
+  if(inp.beds){
+    const beds = inp.beds;
+    // Scale internet by rooms
+    document.getElementById('p-internet').value = beds * 24;
+  }
+  showScreen('s-pro-form');
+  setStep(3);
+}
+
+function generateProAnalysis(){
+  const inp = window._inputs;
+  const beds = inp ? inp.beds : 5;
+  const tenant = inp ? inp.tenant : 'nurses';
+  const p = TENANT_PROFILES[tenant];
+
+  const rent     = parseInt(document.getElementById('p-rent').value)||1100;
+  const occ      = parseFloat(document.getElementById('p-occ').value)||0.92;
+  const mortgage = parseInt(document.getElementById('p-mortgage').value)||2850;
+  const taxes    = parseInt(document.getElementById('p-taxes').value)||4800;
+  const ins      = parseInt(document.getElementById('p-insurance').value)||2400;
+  const hoa      = parseInt(document.getElementById('p-hoa').value)||0;
+  const water    = parseInt(document.getElementById('p-water').value)||220;
+  const garbage  = parseInt(document.getElementById('p-garbage').value)||45;
+  const internet = parseInt(document.getElementById('p-internet').value)||120;
+  const yard     = parseInt(document.getElementById('p-yard').value)||80;
+  const pest     = parseInt(document.getElementById('p-pest').value)||40;
+  const repairs  = parseInt(document.getElementById('p-repairs').value)||200;
+  const capex    = parseInt(document.getElementById('p-capex').value)||150;
+  const mgmtSel  = document.getElementById('p-mgmt').value;
+  const mgmtPct  = mgmtSel==='self'?0:mgmtSel==='padsplit'?0.20:0.10;
+
+  const gross   = Math.round(beds * rent * occ);
+  const mgmtFee = Math.round(gross * mgmtPct);
+  const taxMo   = Math.round(taxes/12);
+  const insMo   = Math.round(ins/12);
+  const total   = mortgage + taxMo + insMo + hoa + water + garbage + internet + yard + pest + repairs + capex + mgmtFee;
+  const noi     = gross - total;
+  const noiAnn  = noi * 12;
+  const dscr    = mortgage ? +(noi/mortgage).toFixed(2) : 0;
+  const oer     = gross ? +(total/gross).toFixed(2) : 0;
+  const be      = (beds*rent) ? +(total/(beds*rent)).toFixed(2) : 0;
+  const margin  = gross ? +(noi/gross).toFixed(2) : 0;
+
+  // Save for PDF
+  window._proData = {
+    address: (inp ? inp.beds+' bed / '+inp.baths+' bath · '+inp.sqft.toLocaleString()+' sq ft' : 'Property'),
+    beds, baths: inp?inp.baths:3, sqft:inp?inp.sqft:2480,
+    floors:inp?inp.floors:1, parking:inp?inp.garage+' car garage':'',
+    hoa:'None', transit:inp?inp.transit:'walkable', hospital:inp?inp.hospital:'close',
+    target_tenant:p.label, score:window._score||87, regulatory:'Clear',
+    report_date: new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}),
+    mortgage, rent_per_room:rent, occupancy_rate:occ,
+    annual_taxes:taxes, annual_insurance:ins, hoa_monthly:hoa,
+    water_sewer:water, garbage, internet, yard, pest_control:pest,
+    repairs_reserve:repairs, capex_reserve:capex,
+    mgmt_model: mgmtSel==='self'?'Self-managed (0%)':mgmtSel==='padsplit'?'PadSplit (20%)':'Co-living Specialist (10%)',
+    gross_monthly:gross, total_expenses:total, noi_monthly:noi, noi_annual:noiAnn,
+    dscr, oer, breakeven_occ:be, noi_margin:margin, per_room_noi:Math.round(noi/beds)
+  };
+
+  // Render Pro results
+  document.getElementById('pr-addr').textContent = p.label + ' Analysis';
+
+  // Financial summary grid
+  const greenOrRed = v => v>0 ? 'color:var(--green-dark);font-weight:700' : 'color:var(--red);font-weight:700';
+  document.getElementById('pr-fin-grid').innerHTML = `
+    <div class="fin-card"><div class="fin-label">Gross Monthly Income</div><div class="fin-value green">$${gross.toLocaleString()}</div></div>
+    <div class="fin-card"><div class="fin-label">Total Monthly Expenses</div><div class="fin-value">$${total.toLocaleString()}</div></div>
+    <div class="fin-card"><div class="fin-label">Monthly NOI</div><div class="fin-value" style="${greenOrRed(noi)}">$${noi.toLocaleString()}</div></div>
+    <div class="fin-card"><div class="fin-label">Annual NOI</div><div class="fin-value" style="${greenOrRed(noiAnn)}">$${noiAnn.toLocaleString()}</div></div>
+    <div class="fin-card"><div class="fin-label">Per-Room NOI</div><div class="fin-value" style="${greenOrRed(Math.round(noi/beds))}">$${Math.round(noi/beds).toLocaleString()}</div></div>
+    <div class="fin-card"><div class="fin-label">Break-Even Occupancy</div><div class="fin-value">${Math.round(be*100)}%</div></div>`;
+
+  // Ratios
+  const ratioRow = (label, value, benchmark, good) => {
+    const color = good ? 'var(--green-dark)' : 'var(--amber)';
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--gray-100)">
+      <div><div style="font-size:13px;font-weight:500">${label}</div><div style="font-size:11px;color:var(--gray-500)">${benchmark}</div></div>
+      <div style="font-size:16px;font-weight:700;color:${color}">${value}</div>
+    </div>`;
+  };
+  document.getElementById('pr-ratios').innerHTML =
+    ratioRow('DSCR', dscr+'x', 'Lender minimum: 1.25x', dscr>=1.25) +
+    ratioRow('Operating Expense Ratio', Math.round(oer*100)+'%', 'Target: under 65%', oer<=0.65) +
+    ratioRow('Break-Even Occupancy', Math.round(be*100)+'%', 'Lower is safer', be<=0.75) +
+    ratioRow('NOI Margin', Math.round(margin*100)+'%', 'Target: 20%+', margin>=0.20);
+
+  // Tenant comparison
+  const tenantNOIs = Object.entries(TENANT_PROFILES).map(([key,prof])=>{
+    const g = Math.round(beds * prof.rent * occ);
+    const m = Math.round(g * mgmtPct);
+    const n = g - (total - mgmtFee) - m;
+    return {key, label:prof.label, noi:n, best:key===tenant};
+  }).sort((a,b)=>b.noi-a.noi);
+
+  const bestNoi = tenantNOIs[0].noi;
+  document.getElementById('pr-tenant-comparison').innerHTML = tenantNOIs.map(t=>`
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--gray-100)${t.best?';background:var(--green-light);margin:0 -24px;padding:10px 24px;':''}">
+      <div style="width:130px;font-size:13px;font-weight:${t.best?'600':'400'};color:${t.best?'var(--green-dark)':'var(--gray-700)'};flex-shrink:0">${t.label}${t.best?' ✓':''}</div>
+      <div style="flex:1;background:var(--gray-100);border-radius:4px;height:10px"><div style="background:${t.best?'var(--green)':'var(--gray-300)'};height:10px;border-radius:4px;width:${Math.max(0,t.noi/bestNoi*100)}%"></div></div>
+      <div style="font-size:13px;font-weight:600;color:${t.noi>0?'var(--green-dark)':'var(--red)'};width:80px;text-align:right">$${t.noi.toLocaleString()}/mo</div>
+    </div>`).join('');
+
+  // Improvements
+  const imps = [
+    {item:'Add bathroom (full addition)',  cost:18000,lift:150,months:10,priority:'High'},
+    {item:'Keypad entry per room',          cost:1200, lift:30, months:3, priority:'High'},
+    {item:'In-unit washer/dryer stack',     cost:2800, lift:50, months:5, priority:'High'},
+    {item:'Mini-fridge per bedroom',        cost:1600, lift:25, months:6, priority:'Medium'},
+    {item:'Dedicated desk + lighting',      cost:1800, lift:35, months:4, priority:'Medium'},
+  ];
+  // Add half-bath conversion if applicable
+  if(inp && inp.baths % 1 !== 0){
+    imps.unshift({item:'Convert half-bath to full bath', cost:10000, lift:100, months:8, priority:'High'});
+  }
+  document.getElementById('pr-improvements').innerHTML = `
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:0;font-size:11px;font-weight:700;color:var(--gray-500);letter-spacing:0.5px;padding:8px 0;border-bottom:1px solid var(--gray-200)">
+      <div>IMPROVEMENT</div><div style="text-align:right">COST</div><div style="text-align:right">LIFT/RM</div><div style="text-align:right">PAYBACK</div><div style="text-align:right">PRIORITY</div>
+    </div>` +
+    imps.map(i=>`<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:0;font-size:13px;padding:10px 0;border-bottom:1px solid var(--gray-100);align-items:center">
+      <div style="font-weight:500">${i.item}</div>
+      <div style="text-align:right;color:var(--gray-700)">$${i.cost.toLocaleString()}</div>
+      <div style="text-align:right;color:var(--green-dark);font-weight:600">+$${i.lift}/mo</div>
+      <div style="text-align:right;color:var(--gray-700)">${i.months} mo</div>
+      <div style="text-align:right;font-weight:600;color:${i.priority==='High'?'var(--green-dark)':'var(--gray-500)'}">${i.priority}</div>
+    </div>`).join('');
+
+  // Verdict
+  const goScore = window._score||87;
+  const isGo    = goScore>=65 && noi>0 && dscr>=1.0;
+  document.getElementById('pr-verdict').innerHTML = `
+    <div style="background:${isGo?'var(--green-light)':'var(--red-light)'};border:1px solid ${isGo?'#97C459':'#F09595'};border-radius:var(--radius-lg);padding:24px;margin-bottom:16px">
+      <div style="font-size:18px;font-weight:700;color:${isGo?'var(--green-dark)':'var(--red)'};margin-bottom:10px">${isGo?'✓ GO — Strong Co-Living Candidate':'✕ NO-GO — Does Not Meet Thresholds'}</div>
+      <div style="font-size:13px;color:var(--gray-700);line-height:1.7">
+        ${isGo
+          ? `DSCR of ${dscr}x ${dscr>=1.25?'exceeds':'is approaching'} the 1.25x lender benchmark. Break-even occupancy of ${Math.round(be*100)}% provides a ${be<=0.75?'comfortable':'tight'} cushion. Monthly NOI of $${noi.toLocaleString()} supports a viable co-living operation at this rent level.`
+          : `This property does not meet minimum thresholds for co-living investment at current inputs. Review the improvement recommendations above and re-run the analysis with adjusted rent or expense assumptions.`
+        }
+      </div>
+    </div>`;
+
+  showScreen('s-pro-result');
+}
+
+// ── PDF DOWNLOAD ──────────────────────────────────────────────────────────────
+async function downloadPDF(){
+  const statusEl = document.getElementById('pdf-status');
+  statusEl.textContent = 'Generating your PDF report...';
+  try {
+    const response = await fetch('/generate-pdf', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(window._proData||{})
+    });
+    if(!response.ok) throw new Error('Server error');
+    const blob = await response.blob();
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = 'CoLivingScore_ProAnalysis.pdf';
+    a.click();
+    URL.revokeObjectURL(url);
+    statusEl.textContent = '✓ Download started';
+    statusEl.style.color = 'var(--green-dark)';
+  } catch(err){
+    statusEl.textContent = 'Error generating PDF. Please try again.';
+    statusEl.style.color = 'var(--red)';
+  }
+}
+
+// ── EMAIL CAPTURE ─────────────────────────────────────────────────────────────
+function submitEmail(){
+  const email = document.getElementById('r-email').value;
+  if(!email || !email.includes('@')){ alert('Please enter a valid email address.'); return; }
+  document.getElementById('r-email-gate').innerHTML =
+    `<div class="banner success"><div class="banner-icon">✓</div><div class="banner-text"><strong>Score saved!</strong>Check your inbox for your co-living market report.</div></div>`;
+}
+
+// ── NAVIGATION ────────────────────────────────────────────────────────────────
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function setStep(n){
+  ['step1','step2','step3'].forEach((id,i)=>{
+    const el = document.getElementById(id);
+    el.className = 'step' + (i+1<n?' done':i+1===n?' active':'');
+    const dot = el.querySelector('.step-dot');
+    dot.textContent = i+1<n ? '✓' : String(i+1);
+  });
+}
+
+function resetForm(){
+  showScreen('s-form');
+  setStep(1);
+  document.getElementById('r-pro-gate').innerHTML='';
+  document.getElementById('r-referral').innerHTML='';
+}
+
+function showProGate(){
+  document.getElementById('r-pro-gate').scrollIntoView({behavior:'smooth'});
+}
+</script>
+</body>
+</html>
