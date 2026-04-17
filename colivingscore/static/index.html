@@ -496,7 +496,7 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
 
     <div class="addr-strip">
       <div class="addr-text">Review Your Inputs Before Payment</div>
-      <button class="btn-outline" style="height:28px;font-size:12px" onclick="showScreen('s-pro-form')">← Edit Inputs</button>
+      <button style="height:28px;font-size:12px;padding:0 12px;background:transparent;color:var(--white);border:1px solid rgba(255,255,255,0.4);border-radius:var(--radius);cursor:pointer;font-family:var(--font);font-weight:500" onclick="showScreen('s-pro-form')">← Edit Inputs</button>
     </div>
 
     <div class="card">
@@ -613,6 +613,7 @@ function getInputs(){
     hospital:  document.getElementById('f-hospital').value,
     mortgage:  parseInt(document.getElementById('f-mortgage').value)||0,
     tenant:    document.getElementById('f-tenant').value,
+    tenantLabel: document.getElementById('f-tenant').options[document.getElementById('f-tenant').selectedIndex].text,
   };
 }
 
@@ -1164,15 +1165,16 @@ function showProGate(){
 
 // ── WIRE BUTTONS ─────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function(){
-  document.getElementById('btn-calculate').addEventListener('click', calculateScore);
-  document.getElementById('btn-pro-generate').addEventListener('click', showReviewScreen);
-  document.getElementById('btn-pro-cancel').addEventListener('click', function(){ showScreen('s-result'); });
-  document.getElementById('btn-reset-1').addEventListener('click', resetForm);
-  document.getElementById('btn-reset-2').addEventListener('click', resetForm);
-  document.getElementById('btn-save-email').addEventListener('click', submitEmail);
-  document.getElementById('btn-pdf').addEventListener('click', downloadPDF);
-  document.getElementById('btn-back-pro').addEventListener('click', function(){ showScreen('s-result'); });
-  document.getElementById('btn-pay').addEventListener('click', initiatePayment);
+  const wire = (id, fn) => { const el = document.getElementById(id); if(el) el.addEventListener('click', fn); };
+  wire('btn-calculate',   calculateScore);
+  wire('btn-pro-generate', showReviewScreen);
+  wire('btn-pro-cancel',  function(){ showScreen('s-result'); });
+  wire('btn-reset-1',     resetForm);
+  wire('btn-reset-2',     resetForm);
+  wire('btn-save-email',  submitEmail);
+  wire('btn-pdf',         downloadPDF);
+  wire('btn-back-pro',    function(){ showScreen('s-result'); });
+  wire('btn-pay',         initiatePayment);
 
   // If returning from Stripe payment success, auto-run Pro Analysis
   const params = new URLSearchParams(window.location.search);
