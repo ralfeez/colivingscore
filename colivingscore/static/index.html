@@ -491,12 +491,56 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
     </div>
   </div>
 
-  <!-- ══ SCREEN 4: PRO ANALYSIS RESULTS ══ -->
-  <div class="screen" id="s-pro-result">
+  <!-- ══ SCREEN 3.5: REVIEW & CONFIRM ══ -->
+  <div class="screen" id="s-review">
+
+    <div class="addr-strip">
+      <div class="addr-text">Review Your Inputs Before Payment</div>
+      <button class="btn-outline" style="height:28px;font-size:12px" onclick="showScreen('s-pro-form')">← Edit Inputs</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Property Details</div>
+      <div class="card-sub">Confirm these are correct before unlocking your Pro Analysis.</div>
+      <div id="rv-property" style="margin-top:4px"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Income & Expense Inputs</div>
+      <div id="rv-financials" style="margin-top:4px"></div>
+    </div>
+
+    <div class="card" style="text-align:center;padding:28px;background:linear-gradient(135deg,#0D2818 0%,#0D6B52 100%)">
+      <div style="font-size:13px;color:rgba(255,255,255,0.75);margin-bottom:6px">One-time payment</div>
+      <div style="font-size:36px;font-weight:700;color:var(--white);margin-bottom:6px">$29</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.75);margin-bottom:20px">Full Pro Analysis + 12-Page Lender-Ready PDF</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px;text-align:left;max-width:420px;margin-left:auto;margin-right:auto">
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--green-mid)">✓</span>Full P&L Statement</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--green-mid)">✓</span>DSCR & Key Ratios</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--green-mid)">✓</span>Break-Even Analysis</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--green-mid)">✓</span>Tenant Comparison</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--green-mid)">✓</span>Improvement ROI</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--green-mid)">✓</span>5-Year Projection</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--green-mid)">✓</span>Lender Package</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--green-mid)">✓</span>PDF Download</div>
+      </div>
+      <button class="btn-pro" style="height:50px;font-size:16px;padding:0 40px" id="btn-pay">
+        Looks Good — Pay $29 →
+      </button>
+      <div class="text-xs mt-4" style="color:rgba(255,255,255,0.5)" id="pay-status"></div>
+    </div>
+
+    <div class="btn-row" style="justify-content:flex-start">
+      <button class="btn-outline" onclick="showScreen('s-pro-form')">← Edit Inputs</button>
+    </div>
+
+  </div>
+
+  <!-- ══ SCREEN 4: PRO ANALYSIS RESULTS ══ -->  <div class="screen" id="s-pro-result">
 
     <div class="addr-strip">
       <div class="addr-text">Pro Analysis — <span id="pr-addr" style="color:#4DBF8F"></span></div>
-      <button class="btn-outline" style="height:28px;font-size:12px" onclick="showScreen('s-result')">← Free Score</button>
+      <button style="height:28px;font-size:12px;padding:0 12px;background:transparent;color:var(--white);border:1px solid rgba(255,255,255,0.4);border-radius:var(--radius);cursor:pointer;font-family:var(--font);font-weight:500" onclick="showScreen('s-result')">← Free Score</button>
     </div>
 
     <!-- P&L Summary -->
@@ -773,7 +817,6 @@ function buildReferral(score, inp){
       <div class="ref-title">✓ Strong candidate — ready for conversion</div>
       <div class="ref-desc">This property scores in the top tier. Connect with a co-living contractor to get improvement bids and a conversion timeline.</div>
       <div class="ref-btns">
-        <button class="btn-primary" onclick="showProGate()">Get Pro Analysis ($29)</button>
         <button class="btn-outline">Find a co-living contractor</button>
       </div>
     </div>`;
@@ -781,10 +824,6 @@ function buildReferral(score, inp){
     html = `<div class="referral-card">
       <div class="ref-title">Moderate candidate — worth a closer look</div>
       <div class="ref-desc">This property has potential with the right improvements. A Pro Analysis will show you exactly what to fix and the ROI on each change.</div>
-      <div class="ref-btns">
-        <button class="btn-primary" onclick="showProGate()">Get Pro Analysis ($29)</button>
-        <button class="btn-outline">Talk to HomeMatch55</button>
-      </div>
     </div>`;
   } else {
     html = `<div class="referral-card">
@@ -818,6 +857,99 @@ function buildProGate(score, inp){
   document.getElementById('r-pro-gate').innerHTML = html;
 }
 
+// ── REVIEW SCREEN ─────────────────────────────────────────────────────────────
+function showReviewScreen(){
+  const inp = window._inputs || {};
+  const beds = inp.beds || 5;
+
+  // Collect all pro form values
+  const rent     = parseInt(document.getElementById('p-rent').value)||0;
+  const occ      = parseFloat(document.getElementById('p-occ').value)||0.85;
+  const mortgage = parseInt(document.getElementById('p-mortgage').value)||0;
+  const taxes    = parseInt(document.getElementById('p-taxes').value)||0;
+  const ins      = parseInt(document.getElementById('p-insurance').value)||0;
+  const hoa      = parseInt(document.getElementById('p-hoa').value)||0;
+  const water    = parseInt(document.getElementById('p-water').value)||0;
+  const garbage  = parseInt(document.getElementById('p-garbage').value)||0;
+  const internet = parseInt(document.getElementById('p-internet').value)||0;
+  const yard     = parseInt(document.getElementById('p-yard').value)||0;
+  const pest     = parseInt(document.getElementById('p-pest').value)||0;
+  const repairs  = parseInt(document.getElementById('p-repairs').value)||0;
+  const capex    = parseInt(document.getElementById('p-capex').value)||0;
+  const mgmtSel  = document.getElementById('p-mgmt').value;
+  const mgmtLabels = {self:'Self-managed (0%)', specialist:'Co-living Specialist (10%)', padsplit:'PadSplit (20%)', other:'Other / TBD'};
+
+  // Store for use after payment
+  window._pendingProInputs = { rent, occ, mortgage, taxes, ins, hoa, water, garbage, internet, yard, pest, repairs, capex, mgmtSel };
+
+  const row = (label, value) =>
+    `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gray-100);font-size:13px">
+       <span style="color:var(--gray-600)">${label}</span>
+       <span style="font-weight:600;color:var(--gray-900)">${value}</span>
+     </div>`;
+
+  document.getElementById('rv-property').innerHTML =
+    row('Bedrooms', beds) +
+    row('Bathrooms', inp.baths || '—') +
+    row('Square Footage', inp.sqft ? inp.sqft.toLocaleString() + ' sq ft' : '—') +
+    row('Stories', inp.floors || '—') +
+    row('Parking', (inp.garage||0) + ' garage · ' + (inp.carport||0) + ' carport · ' + (inp.uncovered||0) + ' uncovered') +
+    row('HOA Status', inp.hoa || '—') +
+    row('Transit', inp.transit || '—') +
+    row('Hospital proximity', inp.hospital || '—') +
+    row('Target Tenant', inp.tenantLabel || '—');
+
+  document.getElementById('rv-financials').innerHTML =
+    row('Rent per room / month', '$' + rent.toLocaleString()) +
+    row('Expected occupancy', Math.round(occ*100) + '%') +
+    row('Monthly mortgage', '$' + mortgage.toLocaleString()) +
+    row('Annual property taxes', '$' + taxes.toLocaleString()) +
+    row('Annual insurance', '$' + ins.toLocaleString()) +
+    row('HOA / month', '$' + hoa.toLocaleString()) +
+    row('Water & Sewer / month', '$' + water.toLocaleString()) +
+    row('Garbage / month', '$' + garbage.toLocaleString()) +
+    row('Internet / month', '$' + internet.toLocaleString()) +
+    row('Yard maintenance / month', '$' + yard.toLocaleString()) +
+    row('Pest control / month', '$' + pest.toLocaleString()) +
+    row('Repairs reserve / month', '$' + repairs.toLocaleString()) +
+    row('CapEx reserve / month', '$' + capex.toLocaleString()) +
+    row('Management model', mgmtLabels[mgmtSel] || mgmtSel);
+
+  showScreen('s-review');
+  setStep(3);
+}
+
+async function initiatePayment(){
+  const statusEl = document.getElementById('pay-status');
+  const btn = document.getElementById('btn-pay');
+  btn.disabled = true;
+  btn.textContent = 'Connecting to payment...';
+  statusEl.textContent = '';
+
+  // Save inputs to sessionStorage so we can recover them after Stripe redirect
+  sessionStorage.setItem('cls_pending_pro', JSON.stringify(window._pendingProInputs || {}));
+
+  try {
+    const res = await fetch('/create-checkout-session', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(window._pendingProInputs || {})
+    });
+    const data = await res.json();
+    if(data.url){
+      window.location.href = data.url;
+    } else {
+      statusEl.textContent = 'Payment error: ' + (data.error || 'Unknown error');
+      btn.disabled = false;
+      btn.textContent = 'Looks Good — Pay $29 →';
+    }
+  } catch(err){
+    statusEl.textContent = 'Connection error. Please try again.';
+    btn.disabled = false;
+    btn.textContent = 'Looks Good — Pay $29 →';
+  }
+}
+
 // ── PRO ANALYSIS ─────────────────────────────────────────────────────────────
 function startProAnalysis(){
   // Pre-fill mortgage from free form
@@ -832,26 +964,28 @@ function startProAnalysis(){
   setStep(3);
 }
 
-function generateProAnalysis(){
+function generateProAnalysis(overrideInputs){
   const inp = window._inputs;
   const beds = inp ? inp.beds : 5;
   const tenant = inp ? inp.tenant : 'nurses';
   const p = TENANT_PROFILES[tenant];
 
-  const rent     = parseInt(document.getElementById('p-rent').value)||1100;
-  const occ      = parseFloat(document.getElementById('p-occ').value)||0.92;
-  const mortgage = parseInt(document.getElementById('p-mortgage').value)||2850;
-  const taxes    = parseInt(document.getElementById('p-taxes').value)||4800;
-  const ins      = parseInt(document.getElementById('p-insurance').value)||2400;
-  const hoa      = parseInt(document.getElementById('p-hoa').value)||0;
-  const water    = parseInt(document.getElementById('p-water').value)||220;
-  const garbage  = parseInt(document.getElementById('p-garbage').value)||45;
-  const internet = parseInt(document.getElementById('p-internet').value)||120;
-  const yard     = parseInt(document.getElementById('p-yard').value)||80;
-  const pest     = parseInt(document.getElementById('p-pest').value)||40;
-  const repairs  = parseInt(document.getElementById('p-repairs').value)||200;
-  const capex    = parseInt(document.getElementById('p-capex').value)||150;
-  const mgmtSel  = document.getElementById('p-mgmt').value;
+  // Use overrideInputs if coming back from Stripe, otherwise read from form
+  const src = overrideInputs || {};
+  const rent     = src.rent     || parseInt(document.getElementById('p-rent').value)||1100;
+  const occ      = src.occ      || parseFloat(document.getElementById('p-occ').value)||0.92;
+  const mortgage = src.mortgage || parseInt(document.getElementById('p-mortgage').value)||2850;
+  const taxes    = src.taxes    || parseInt(document.getElementById('p-taxes').value)||4800;
+  const ins      = src.ins      || parseInt(document.getElementById('p-insurance').value)||2400;
+  const hoa      = src.hoa      !== undefined ? src.hoa : (parseInt(document.getElementById('p-hoa').value)||0);
+  const water    = src.water    || parseInt(document.getElementById('p-water').value)||220;
+  const garbage  = src.garbage  || parseInt(document.getElementById('p-garbage').value)||45;
+  const internet = src.internet || parseInt(document.getElementById('p-internet').value)||120;
+  const yard     = src.yard     || parseInt(document.getElementById('p-yard').value)||80;
+  const pest     = src.pest     || parseInt(document.getElementById('p-pest').value)||40;
+  const repairs  = src.repairs  || parseInt(document.getElementById('p-repairs').value)||200;
+  const capex    = src.capex    || parseInt(document.getElementById('p-capex').value)||150;
+  const mgmtSel  = src.mgmtSel  || document.getElementById('p-mgmt').value;
   const mgmtPct  = mgmtSel==='self'?0:mgmtSel==='padsplit'?0.20:0.10;
 
   const gross   = Math.round(beds * rent * occ);
@@ -1031,13 +1165,29 @@ function showProGate(){
 // ── WIRE BUTTONS ─────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function(){
   document.getElementById('btn-calculate').addEventListener('click', calculateScore);
-  document.getElementById('btn-pro-generate').addEventListener('click', generateProAnalysis);
+  document.getElementById('btn-pro-generate').addEventListener('click', showReviewScreen);
   document.getElementById('btn-pro-cancel').addEventListener('click', function(){ showScreen('s-result'); });
   document.getElementById('btn-reset-1').addEventListener('click', resetForm);
   document.getElementById('btn-reset-2').addEventListener('click', resetForm);
   document.getElementById('btn-save-email').addEventListener('click', submitEmail);
   document.getElementById('btn-pdf').addEventListener('click', downloadPDF);
   document.getElementById('btn-back-pro').addEventListener('click', function(){ showScreen('s-result'); });
+  document.getElementById('btn-pay').addEventListener('click', initiatePayment);
+
+  // If returning from Stripe payment success, auto-run Pro Analysis
+  const params = new URLSearchParams(window.location.search);
+  if(params.get('paid') === 'true' && window.opener && window.opener._paidProData){
+    window._proInputs = window.opener._paidProData;
+    generateProAnalysis(window._proInputs);
+  }
+  // Handle paid redirect in same tab via sessionStorage
+  const pendingData = sessionStorage.getItem('cls_pending_pro');
+  if(params.get('paid') === 'true' && pendingData){
+    sessionStorage.removeItem('cls_pending_pro');
+    window._proInputs = JSON.parse(pendingData);
+    generateProAnalysis(window._proInputs);
+    history.replaceState({}, '', '/');
+  }
 });
 </script>
 </body>
