@@ -2,6 +2,9 @@ import os
 import io
 import json
 import stripe
+import gspread
+from datetime import datetime
+from google.oauth2.service_account import Credentials
 from flask import Flask, send_from_directory, request, send_file, jsonify, redirect
 from pdf.generate_report import build_pdf_from_data
 
@@ -11,6 +14,21 @@ stripe.api_key = os.environ.get("STRIPE_SECRET_KEY")
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET")
 STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY")
 BASE_URL = os.environ.get("BASE_URL", "https://colivingscore.onrender.com")
+SHEET_ID = "14JS4z9w5S1Ar0oNhusxegVMz-jdf1e55dbGh1UqBXyc"
+SHEETS_SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
+
+
+def _get_sheet():
+    creds_json = os.environ.get("GOOGLE_SHEETS_CREDS")
+    if creds_json:
+        creds_info = json.loads(creds_json)
+    else:
+        local_key = os.path.join(os.path.dirname(__file__), "..", "colivingscore-1e18ab77fce0.json")
+        with open(local_key) as f:
+            creds_info = json.load(f)
+    creds = Credentials.from_service_account_info(creds_info, scopes=SHEETS_SCOPES)
+    client = gspread.authorize(creds)
+    return client.open_by_key(SHEET_ID).sheet1
 
 
 # ── Static tool ───────────────────────────────────────────────────────────────
@@ -51,6 +69,24 @@ def generate_pdf():
         )
 
     except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ── Email capture → Google Sheets ────────────────────────────────────────────
+
+@app.route("/save-email", methods=["POST"])
+def save_email():
+    try:
+        data = request.get_json(force=True)
+        email = data.get("email", "").strip()
+        address = data.get("address", "").strip()
+        if not email or "@" not in email:
+            return jsonify({"error": "invalid email"}), 400
+        sheet = _get_sheet()
+        sheet.append_row([datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC"), email, address])
+        return jsonify({"status": "ok"}), 200
+    except Exception as e:
+        print(f"save-email error: {e}")
         return jsonify({"error": str(e)}), 500
 
 

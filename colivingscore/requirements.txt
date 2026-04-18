@@ -1,4 +1,8 @@
 flask==3.0.3
 gunicorn==22.0.0
-reportlab==4.2.2
+reportlab==4.4.0
 stripe==10.5.0
+qrcode==8.0
+Pillow==11.1.0
+gspread==6.1.2
+google-auth==2.29.0

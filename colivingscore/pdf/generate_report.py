@@ -49,116 +49,69 @@ CHART_COLORS = [
     colors.HexColor("#97C459"),
 ]
 
-# ── Report data ───────────────────────────────────────────────────────────────
-DATA = {
-    "address":          "4721 Meadowbrook Dr, Sacramento, CA 95825",
-    "property_type":    "Single-Family Residential",
-    "beds":             5,
-    "baths":            3.0,
-    "sqft":             2_480,
-    "floors":           1,
-    "parking":          "Garage (2-car)",
-    "hoa":              "None",
-    "transit":          "< 0.5 mi",
-    "hospital":         "1.2 mi",
-    "target_tenant":    "Travel Nurses",
-    "score":            87,
-    "regulatory":       "Clear",
-    "report_date":      "April 16, 2026",
-    "mortgage":         2_850,
-    "rent_per_room":    1_100,
-    "occupancy_rate":   0.92,
-    "annual_taxes":     4_800,
-    "annual_insurance": 2_400,
-    "hoa_monthly":      0,
-    "utility_model":    "Owner-paid (combined)",
-    "water_sewer":      220,
-    "garbage":          45,
-    "internet":         120,
-    "yard":             80,
-    "pest_control":     40,
-    "repairs_reserve":  200,
-    "capex_reserve":    150,
-    "mgmt_model":       "Co-living Specialist (10%)",
-    "gross_monthly":    5_060,
-    "total_expenses":   4_055,
-    "noi_monthly":      1_005,
-    "noi_annual":       12_060,
-    "dscr":             1.35,
-    "oer":              0.80,
-    "breakeven_occ":    0.68,
-    "noi_margin":       0.20,
-    "per_room_noi":     201,
+# ── Tenant lookup tables (mirrors JS TENANT_PROFILES) ────────────────────────
+TENANT_RENTS = {
+    'nurses': 1100, 'tech': 1000, 'trades': 950, 'students': 800,
+    'seniors': 900, 'sober': 850, 'workforce': 875,
+}
+TENANT_LABELS = {
+    'nurses':    'Travel Nurses',
+    'tech':      'Tech / Remote Workers',
+    'trades':    'Construction / Trades',
+    'students':  'Students',
+    'seniors':   'Seniors 55+',
+    'sober':     'Sober Living',
+    'workforce': 'General Workforce',
+}
+TENANT_ORDER = ['nurses', 'tech', 'trades', 'students', 'seniors', 'sober', 'workforce']
+
+MGMT_RATES   = {'self': 0.0, 'specialist': 0.10, 'padsplit': 0.20, 'other': 0.10}
+MGMT_LABELS  = {
+    'self':       'Self-managed (0%)',
+    'specialist': 'Co-living Specialist (10%)',
+    'padsplit':   'PadSplit (20%)',
+    'other':      'Other / TBD (10%)',
 }
 
-TENANT_COMPARISON = [
-    {"type": "Travel Nurses",         "score": 87, "monthly_noi": 1_005, "delta": 0,    "best": True},
-    {"type": "Tech / Remote Workers", "score": 82, "monthly_noi":   920, "delta": -85,  "best": False},
-    {"type": "General Workforce",     "score": 78, "monthly_noi":   840, "delta": -165, "best": False},
-    {"type": "Construction / Trades", "score": 74, "monthly_noi":   790, "delta": -215, "best": False},
-    {"type": "Students",              "score": 61, "monthly_noi":   640, "delta": -365, "best": False},
-    {"type": "Seniors 55+",           "score": 58, "monthly_noi":   600, "delta": -405, "best": False},
-    {"type": "Sober Living",          "score": 44, "monthly_noi":   490, "delta": -515, "best": False},
-]
 
-IMPROVEMENTS = [
-    {"item": "Add 4th bathroom (convert half-bath)", "cost": 18_000, "rent_lift": 150, "roi_months": 10, "priority": "High"},
-    {"item": "Add keypad entry per room",            "cost":  1_200, "rent_lift":  30, "roi_months":  3, "priority": "High"},
-    {"item": "In-unit washer/dryer stack",           "cost":  2_800, "rent_lift":  50, "roi_months":  5, "priority": "High"},
-    {"item": "Mini-fridge per bedroom",              "cost":  1_600, "rent_lift":  25, "roi_months":  6, "priority": "Medium"},
-    {"item": "Dedicated desk + lighting per room",   "cost":  1_800, "rent_lift":  35, "roi_months":  4, "priority": "Medium"},
-]
+# ── Header / Footer factory ───────────────────────────────────────────────────
+def make_header_footer(d):
+    def header_footer(canvas_obj, doc):
+        canvas_obj.saveState()
+        W, H = letter
 
-# Expense breakdown for donut
-EXPENSES = [
-    ("Mortgage",          2_850),
-    ("Taxes & Insurance", 685),
-    ("Utilities",         425),
-    ("Reserves",          350),
-    ("Management",        506),
-    ("Maintenance",       120),
-    ("Other",             119),
-]
+        # Top bar
+        canvas_obj.setFillColor(GRAY_900)
+        canvas_obj.rect(0, H - 36, W, 36, stroke=0, fill=1)
+        canvas_obj.setFillColor(WHITE)
+        canvas_obj.setFont("Helvetica-Bold", 11)
+        canvas_obj.drawString(0.55 * inch, H - 23, "CoLiving")
+        canvas_obj.setFillColor(GREEN)
+        canvas_obj.drawString(0.55 * inch + 57, H - 23, "Score")
+        canvas_obj.setFillColor(WHITE)
+        canvas_obj.setFont("Helvetica", 9)
+        canvas_obj.drawString(0.55 * inch + 107, H - 23, ".com  |  Pro Analysis Report")
+        canvas_obj.setFillColor(GRAY_300)
+        canvas_obj.setFont("Helvetica", 8)
+        canvas_obj.drawRightString(W - 0.55 * inch, H - 23, d.get("report_date", ""))
 
-# ── Header / Footer ───────────────────────────────────────────────────────────
-def header_footer(canvas_obj, doc):
-    canvas_obj.saveState()
-    W, H = letter
+        # Bottom bar
+        canvas_obj.setFillColor(GRAY_100)
+        canvas_obj.rect(0, 0, W, 38, stroke=0, fill=1)
+        canvas_obj.setFillColor(GRAY_500)
+        canvas_obj.setFont("Helvetica", 7)
+        line1 = ("This report is for investment analysis purposes only and does not constitute "
+                 "legal, tax, or financial advice.")
+        line2 = ("Verify all regulatory items with a licensed attorney and local municipality "
+                 "before making any investment decision.")
+        canvas_obj.drawString(0.55 * inch, 25, line1)
+        canvas_obj.drawString(0.55 * inch, 13, line2)
+        canvas_obj.setFillColor(GRAY_500)
+        canvas_obj.setFont("Helvetica", 8)
+        canvas_obj.drawRightString(W - 0.55 * inch, 14, f"Page {doc.page}")
 
-    # Top bar
-    canvas_obj.setFillColor(GRAY_900)
-    canvas_obj.rect(0, H - 36, W, 36, stroke=0, fill=1)
-    canvas_obj.setFillColor(WHITE)
-    canvas_obj.setFont("Helvetica-Bold", 11)
-    canvas_obj.drawString(0.55 * inch, H - 23, "CoLiving")
-    canvas_obj.setFillColor(GREEN)
-    canvas_obj.drawString(0.55 * inch + 57, H - 23, "Score")
-    canvas_obj.setFillColor(WHITE)
-    canvas_obj.setFont("Helvetica", 9)
-    canvas_obj.drawString(0.55 * inch + 107, H - 23, ".com  |  Pro Analysis Report")
-    canvas_obj.setFillColor(GRAY_300)
-    canvas_obj.setFont("Helvetica", 8)
-    canvas_obj.drawRightString(W - 0.55 * inch, H - 23, DATA["report_date"])
-
-    # Bottom bar
-    canvas_obj.setFillColor(GRAY_100)
-    canvas_obj.rect(0, 0, W, 38, stroke=0, fill=1)
-    canvas_obj.setFillColor(GRAY_500)
-    canvas_obj.setFont("Helvetica", 7)
-
-    # Disclaimer — split into two lines so it never clips
-    line1 = ("This report is for investment analysis purposes only and does not constitute "
-             "legal, tax, or financial advice.")
-    line2 = ("Verify all regulatory items with a licensed attorney and local municipality "
-             "before making any investment decision.")
-    canvas_obj.drawString(0.55 * inch, 25, line1)
-    canvas_obj.drawString(0.55 * inch, 13, line2)
-
-    canvas_obj.setFillColor(GRAY_500)
-    canvas_obj.setFont("Helvetica", 8)
-    canvas_obj.drawRightString(W - 0.55 * inch, 14, f"Page {doc.page}")
-
-    canvas_obj.restoreState()
+        canvas_obj.restoreState()
+    return header_footer
 
 
 # ── Styles ────────────────────────────────────────────────────────────────────
@@ -218,32 +171,26 @@ class ScoreGauge(Flowable):
 
         score_color = GREEN if self.score >= 75 else (AMBER if self.score >= 50 else RED)
 
-        # Outer ring background
         c.setStrokeColor(GRAY_300)
         c.setLineWidth(9)
         c.circle(cx, cy, r, stroke=1, fill=0)
 
-        # Colored fill circle
         c.setFillColor(score_color)
         c.circle(cx, cy, r - 1, stroke=0, fill=1)
 
-        # Inner white circle
         c.setFillColor(WHITE)
         c.circle(cx, cy, r - 10, stroke=0, fill=1)
 
-        # Score number
         c.setFillColor(GRAY_900)
         c.setFont("Helvetica-Bold", 26)
         c.drawCentredString(cx, cy + 4, str(self.score))
 
-        # Label
         c.setFillColor(GRAY_500)
         c.setFont("Helvetica", 7.5)
         c.drawCentredString(cx, cy - 12, "out of 100")
 
 
 class ScoreSpectrumBar(Flowable):
-    """Horizontal bar showing score zones and where this property lands."""
     def __init__(self, score, width=480, height=52):
         Flowable.__init__(self)
         self.score  = score
@@ -253,8 +200,8 @@ class ScoreSpectrumBar(Flowable):
     def draw(self):
         c  = self.canv
         w  = self.width
-        bh = 18   # bar height
-        by = 20   # bar y from bottom
+        bh = 18
+        by = 20
 
         zones = [
             (0,  50,  colors.HexColor("#FCEBEB"), colors.HexColor("#E24B4A"), "Weak  0–49"),
@@ -274,7 +221,6 @@ class ScoreSpectrumBar(Flowable):
             c.setFont("Helvetica", 7)
             c.drawCentredString(x1 + bw / 2, by + 5, label)
 
-        # Score marker
         sx = (self.score / 100) * w
         c.setFillColor(GRAY_900)
         c.setStrokeColor(WHITE)
@@ -284,12 +230,10 @@ class ScoreSpectrumBar(Flowable):
         c.setFont("Helvetica-Bold", 6.5)
         c.drawCentredString(sx, by + bh / 2 - 2.5, str(self.score))
 
-        # Tick label below
         c.setFillColor(GRAY_700)
         c.setFont("Helvetica-Bold", 7.5)
         c.drawCentredString(sx, by - 10, f"This property: {self.score}")
 
-        # Axis ticks
         c.setFillColor(GRAY_500)
         c.setFont("Helvetica", 6.5)
         for tick in [0, 25, 50, 75, 100]:
@@ -301,7 +245,6 @@ class ScoreSpectrumBar(Flowable):
 
 
 class DSCRGauge(Flowable):
-    """Needle-style DSCR gauge."""
     def __init__(self, dscr, benchmark=1.25, width=280, height=160):
         Flowable.__init__(self)
         self.dscr      = dscr
@@ -315,25 +258,16 @@ class DSCRGauge(Flowable):
         cy = 30
         r  = 110
 
-        # Draw semicircle zones (180 degrees = pi radians)
-        # 0.8 = leftmost, 2.0 = rightmost on our scale
         scale_min, scale_max = 0.8, 2.0
         scale_range = scale_max - scale_min
 
         def val_to_angle(v):
             pct = (v - scale_min) / scale_range
-            return 180 - pct * 180  # 180=left, 0=right in degrees
+            return 180 - pct * 180
 
         def draw_arc_zone(v_start, v_end, fill_color):
             a1 = val_to_angle(v_end)
             a2 = val_to_angle(v_start)
-            c.setFillColor(fill_color)
-            c.setStrokeColor(WHITE)
-            c.setLineWidth(1)
-            # Draw as wedge approximation using thick arc
-            c.setLineWidth(22)
-            c.setStrokeColor(fill_color)
-            import math
             steps = 30
             for i in range(steps):
                 t1 = math.radians(a1 + (a2 - a1) * i / steps)
@@ -350,7 +284,6 @@ class DSCRGauge(Flowable):
         draw_arc_zone(1.0, 1.25, colors.HexColor("#FAEEDA"))
         draw_arc_zone(1.25, 2.0, colors.HexColor("#EAF3DE"))
 
-        # Benchmark line
         ba = math.radians(val_to_angle(self.benchmark))
         c.setStrokeColor(colors.HexColor("#D97706"))
         c.setLineWidth(2)
@@ -359,7 +292,6 @@ class DSCRGauge(Flowable):
                cx + (r + 2)  * math.cos(ba), cy + (r + 2)  * math.sin(ba))
         c.setDash([])
 
-        # Needle
         na = math.radians(val_to_angle(min(self.dscr, scale_max)))
         c.setStrokeColor(GRAY_900)
         c.setLineWidth(2.5)
@@ -369,7 +301,6 @@ class DSCRGauge(Flowable):
         c.setFillColor(GRAY_900)
         c.circle(cx, cy, 5, stroke=0, fill=1)
 
-        # Center value
         c.setFillColor(GRAY_900)
         c.setFont("Helvetica-Bold", 16)
         c.drawCentredString(cx, cy + 20, f"{self.dscr:.2f}x")
@@ -377,7 +308,6 @@ class DSCRGauge(Flowable):
         c.setFont("Helvetica", 7.5)
         c.drawCentredString(cx, cy + 10, "DSCR")
 
-        # Labels
         c.setFillColor(RED)
         c.setFont("Helvetica", 7)
         c.drawCentredString(cx - 85, cy + 55, "Danger")
@@ -386,7 +316,6 @@ class DSCRGauge(Flowable):
         c.setFillColor(GREEN)
         c.drawCentredString(cx + 55, cy + 75, "Strong")
 
-        # Benchmark label
         c.setFillColor(colors.HexColor("#D97706"))
         c.setFont("Helvetica", 7)
         c.drawCentredString(cx + (r - 8) * math.cos(ba) + 12,
@@ -395,7 +324,6 @@ class DSCRGauge(Flowable):
 
 
 class ExpenseDonut(Flowable):
-    """Expense composition donut chart with legend."""
     def __init__(self, expenses, width=480, height=200):
         Flowable.__init__(self)
         self.expenses = expenses
@@ -409,7 +337,6 @@ class ExpenseDonut(Flowable):
         cy     = self.height / 2
         r_out  = 75
         r_in   = 42
-        import math
 
         start_angle = 90
         for i, (label, value) in enumerate(self.expenses):
@@ -419,7 +346,6 @@ class ExpenseDonut(Flowable):
             c.setStrokeColor(WHITE)
             c.setLineWidth(1.5)
 
-            # Draw wedge as filled pie slice using Wedge-style path
             steps = max(int(sweep / 3), 4)
             p = c.beginPath()
             p.moveTo(cx, cy)
@@ -428,15 +354,12 @@ class ExpenseDonut(Flowable):
                 p.lineTo(cx + r_out * math.cos(a), cy + r_out * math.sin(a))
             p.close()
             c.drawPath(p, stroke=1, fill=1)
-
             start_angle += sweep
 
-        # Inner white circle (donut hole)
         c.setFillColor(WHITE)
         c.setStrokeColor(WHITE)
         c.circle(cx, cy, r_in, stroke=0, fill=1)
 
-        # Center label
         c.setFillColor(GRAY_900)
         c.setFont("Helvetica-Bold", 10)
         c.drawCentredString(cx, cy + 4, f"${total:,}")
@@ -444,7 +367,6 @@ class ExpenseDonut(Flowable):
         c.setFont("Helvetica", 7)
         c.drawCentredString(cx, cy - 8, "total/mo")
 
-        # Legend
         lx = 210
         ly = self.height - 18
         for i, (label, value) in enumerate(self.expenses):
@@ -462,7 +384,6 @@ class ExpenseDonut(Flowable):
 
 
 class TenantBarChart(Flowable):
-    """Horizontal bar chart — tenant NOI comparison."""
     def __init__(self, tenants, width=480, height=200):
         Flowable.__init__(self)
         self.tenants = tenants
@@ -471,52 +392,44 @@ class TenantBarChart(Flowable):
 
     def draw(self):
         c        = self.canv
-        max_noi  = max(t["monthly_noi"] for t in self.tenants)
+        max_noi  = max(t["monthly_noi"] for t in self.tenants) or 1
         bar_h    = 20
         gap      = 8
         label_w  = 145
         bar_area = self.width - label_w - 60
-        n        = len(self.tenants)
-        total_h  = n * (bar_h + gap)
         start_y  = self.height - 20
 
         for i, t in enumerate(self.tenants):
             y    = start_y - i * (bar_h + gap)
-            bw   = (t["monthly_noi"] / max_noi) * bar_area
+            bw   = max(0, (t["monthly_noi"] / max_noi) * bar_area)
             col  = GREEN if t["best"] else GRAY_300
 
-            # Bar
             c.setFillColor(col)
             c.setStrokeColor(WHITE)
             c.rect(label_w, y - bar_h, bw, bar_h, stroke=0, fill=1)
 
-            # Label
             fn = "Helvetica-Bold" if t["best"] else "Helvetica"
             tc = GRAY_900 if t["best"] else GRAY_700
             c.setFont(fn, 8)
             c.setFillColor(tc)
             c.drawRightString(label_w - 6, y - bar_h + 6, t["type"])
 
-            # Value
             c.setFont("Helvetica-Bold" if t["best"] else "Helvetica", 8)
             c.setFillColor(GREEN_DARK if t["best"] else GRAY_500)
             c.drawString(label_w + bw + 5, y - bar_h + 6,
                          f"${t['monthly_noi']:,}/mo")
 
-            # Best fit badge
             if t["best"]:
                 c.setFillColor(GREEN_LIGHT)
                 c.setStrokeColor(GREEN)
                 c.setLineWidth(0.5)
-                c.rect(label_w + bw + 52, y - bar_h + 2, 38, 14,
-                       stroke=1, fill=1)
+                c.rect(label_w + bw + 52, y - bar_h + 2, 38, 14, stroke=1, fill=1)
                 c.setFillColor(GREEN_DARK)
                 c.setFont("Helvetica-Bold", 6.5)
                 c.drawCentredString(label_w + bw + 71, y - bar_h + 7, "BEST FIT")
 
 
 class ImprovementBarChart(Flowable):
-    """Horizontal bar chart — improvement payback months."""
     def __init__(self, improvements, width=480, height=160):
         Flowable.__init__(self)
         self.improvements = improvements
@@ -525,14 +438,13 @@ class ImprovementBarChart(Flowable):
 
     def draw(self):
         c       = self.canv
-        max_roi = max(i["roi_months"] for i in self.improvements)
+        max_roi = max(i["roi_months"] for i in self.improvements) or 1
         bar_h   = 18
         gap     = 10
         label_w = 190
         bar_area= self.width - label_w - 70
         start_y = self.height - 16
 
-        # Header
         c.setFillColor(GRAY_500)
         c.setFont("Helvetica", 7)
         c.drawString(label_w, start_y + 8, "Payback period (months) — shorter = better ROI")
@@ -558,32 +470,31 @@ class ImprovementBarChart(Flowable):
 
 # ── Report sections ───────────────────────────────────────────────────────────
 
-def build_cover(story, styles):
+def build_cover(d, story, styles):
     story += [
         sp(0.15),
         Paragraph("PRO ANALYSIS REPORT", styles["section_label"]),
-        Paragraph(DATA["address"], ParagraphStyle("",
+        Paragraph(d["address"], ParagraphStyle("",
             fontName="Helvetica-Bold", fontSize=17, textColor=GRAY_900,
             leading=22, spaceAfter=4)),
         Paragraph(
-            f"{DATA['property_type']}  ·  {DATA['beds']} bed / {DATA['baths']} bath  "
-            f"·  {DATA['sqft']:,} sq ft  ·  {DATA['floors']}-story",
+            f"{d['property_type']}  ·  {d['beds']} bed / {d['baths']} bath  "
+            f"·  {d['sqft']:,} sq ft  ·  {d['floors']}-story",
             styles["body"]),
         sp(0.12),
     ]
 
-    # Score row — gauge with generous gap to text
-    score_color = GREEN if DATA["score"] >= 75 else (AMBER if DATA["score"] >= 50 else RED)
-    score_label = "STRONG CANDIDATE" if DATA["score"] >= 75 else (
-                  "MODERATE CANDIDATE" if DATA["score"] >= 50 else "WEAK CANDIDATE")
+    score_color = GREEN if d["score"] >= 75 else (AMBER if d["score"] >= 50 else RED)
+    score_label = ("STRONG CANDIDATE" if d["score"] >= 75 else
+                   "MODERATE CANDIDATE" if d["score"] >= 50 else "WEAK CANDIDATE")
 
     text_block = Table([
         [Paragraph("CO-LIVING SUITABILITY SCORE", styles["label_sm"])],
         [Paragraph(score_label, ParagraphStyle("", fontName="Helvetica-Bold",
                     fontSize=13, textColor=score_color, leading=17, spaceAfter=4))],
         [Paragraph(
-            f"Target tenant: <b>{DATA['target_tenant']}</b>  ·  "
-            f"Regulatory: <font color='#1D9E75'><b>{DATA['regulatory']}</b></font>",
+            f"Target tenant: <b>{d['target_tenant']}</b>  ·  "
+            f"Regulatory: <font color='#1D9E75'><b>{d['regulatory']}</b></font>",
             styles["body"])],
     ], colWidths=[4.2 * inch])
     text_block.setStyle(TableStyle([
@@ -595,8 +506,8 @@ def build_cover(story, styles):
     ]))
 
     score_row = Table(
-        [[ScoreGauge(DATA["score"], size=100), text_block]],
-        colWidths=[1.5 * inch, 4.2 * inch]   # wider gap col
+        [[ScoreGauge(d["score"], size=100), text_block]],
+        colWidths=[1.5 * inch, 4.2 * inch]
     )
     score_row.setStyle(TableStyle([
         ("VALIGN",        (0, 0), (-1, -1), "MIDDLE"),
@@ -607,26 +518,23 @@ def build_cover(story, styles):
     ]))
     story.append(score_row)
     story.append(sp(0.15))
-
-    # Score spectrum bar
-    story.append(ScoreSpectrumBar(DATA["score"], width=480, height=52))
+    story.append(ScoreSpectrumBar(d["score"], width=480, height=52))
     story.append(sp(0.18))
     story.append(hr())
 
-    # Property detail grid
     story += section_header("Property Details", "Physical Profile", styles)
     story.append(sp(0.06))
 
     detail_rows = [
-        ("Bedrooms",           str(DATA["beds"])),
-        ("Bathrooms",          str(DATA["baths"])),
-        ("Square Footage",     f"{DATA['sqft']:,} sq ft"),
-        ("Floors",             str(DATA["floors"])),
-        ("Parking",            DATA["parking"]),
-        ("HOA",                DATA["hoa"]),
-        ("Transit Proximity",  DATA["transit"]),
-        ("Hospital Proximity", DATA["hospital"]),
-        ("Management Model",   DATA["mgmt_model"]),
+        ("Bedrooms",           str(d["beds"])),
+        ("Bathrooms",          str(d["baths"])),
+        ("Square Footage",     f"{d['sqft']:,} sq ft"),
+        ("Floors",             str(d["floors"])),
+        ("Parking",            d["parking"]),
+        ("HOA",                d["hoa"]),
+        ("Transit Proximity",  d["transit"]),
+        ("Hospital Proximity", d["hospital"]),
+        ("Management Model",   d["mgmt_model"]),
     ]
 
     def mini_kv(rows):
@@ -656,70 +564,64 @@ def build_cover(story, styles):
     story.append(grid)
 
 
-def build_narrative(story, styles):
+def build_narrative(d, story, styles):
     story += [sp(0.15), hr()]
-    story += section_header("Market Analysis", "Travel Nurse Market Narrative", styles)
+    story += section_header("Market Analysis",
+                            f"{d['target_tenant']} Market Narrative", styles)
     story.append(sp(0.06))
-    story.append(Paragraph(
-        "Sacramento is one of the top-performing travel nurse markets in California, "
-        "driven by UC Davis Medical Center, Sutter Health, and Kaiser Permanente — "
-        "all within 15 minutes of this property. Travel nurse contracts typically run "
-        "13 weeks, with assignment extensions common in high-demand markets like this one. "
-        "Monthly travel nurse stipends for this region average $1,800–$2,400 for housing, "
-        "making your target rent of $1,100 per room well within budget for this tenant class."
-        "<br/><br/>"
-        "The bathroom ratio at this property (3 baths for 5 rooms) is competitive but not "
-        "optimal — travel nurse co-living operators typically target 1:1.5 bath-to-room "
-        "ratios. Adding a fourth bathroom would move this property into the top tier for "
-        "this tenant type and justify a $75–$150 per-room rent premium. Without it, "
-        "strong demand still supports full occupancy in this submarket."
-        "<br/><br/>"
-        "Single-floor layout earns a premium with healthcare workers pulling extended "
-        "shifts — no stairs after a 12-hour shift matters. Garage parking is a differentiator "
-        "in this market; nurses arriving on assignment with personal vehicles prioritize "
-        "covered, secure parking. This property checks that box cleanly.",
+    story.append(Paragraph(d.get("market_narrative",
+        "Market narrative is generated based on your property location and target tenant type. "
+        "Full AI-generated narrative available in Phase 2 via the Claude API."),
         styles["narrative"]))
 
 
-def build_financials(story, styles):
+def build_financials(d, story, styles):
     story += [sp(0.15), hr()]
     story += section_header("Financial Analysis", "Year 1 Pro Forma  —  Monthly & Annual", styles)
     story.append(sp(0.06))
 
-    D = DATA
-    mgmt_fee = round(D["gross_monthly"] * 0.10)
+    gross    = d["gross_monthly"]
+    occ_rate = d["occupancy_rate"]
+    beds     = d["beds"]
+    rent     = d["rent_per_room"]
+    vac_mo   = round(beds * rent * (1 - occ_rate))
+    mgmt_fee = round(gross * d["mgmt_rate"])
+    tax_mo   = round(d["annual_taxes"] / 12)
+    ins_mo   = round(d["annual_insurance"] / 12)
 
-    # Donut + P&L kept together so NOI row never orphans
     donut_block = [
         Paragraph("Expense Composition", styles["label_sm"]),
         sp(0.06),
-        ExpenseDonut(EXPENSES, width=480, height=150),
+        ExpenseDonut(d["_expenses"], width=480, height=150),
         sp(0.10),
     ]
 
+    occ_pct = int((1 - occ_rate) * 100)
     rows = [
         ["", "MONTHLY", "ANNUAL"],
         ["INCOME", "", ""],
-        ["Gross Potential Rent (5 rooms × $1,100)", f"${5*1100:,}", f"${5*1100*12:,}"],
-        [f"Vacancy Allowance ({int((1-D['occupancy_rate'])*100)}%)",
-         f"(${round(5*1100*(1-D['occupancy_rate'])):,})",
-         f"(${round(5*1100*(1-D['occupancy_rate'])*12):,})"],
-        ["Effective Gross Income", f"${D['gross_monthly']:,}", f"${D['gross_monthly']*12:,}"],
+        [f"Gross Potential Rent ({beds} rooms × ${rent:,})",
+         f"${beds * rent:,}", f"${beds * rent * 12:,}"],
+        [f"Vacancy Allowance ({occ_pct}%)",
+         f"(${vac_mo:,})", f"(${vac_mo * 12:,})"],
+        ["Effective Gross Income",
+         f"${gross:,}", f"${gross * 12:,}"],
         ["EXPENSES", "", ""],
-        ["Mortgage (PITI)",        f"${D['mortgage']:,}",                    f"${D['mortgage']*12:,}"],
-        ["Property Taxes",         f"${round(D['annual_taxes']/12):,}",      f"${D['annual_taxes']:,}"],
-        ["Insurance",              f"${round(D['annual_insurance']/12):,}",  f"${D['annual_insurance']:,}"],
-        ["HOA",                    "$0",                                      "$0"],
-        ["Water & Sewer",          f"${D['water_sewer']:,}",                 f"${D['water_sewer']*12:,}"],
-        ["Garbage",                f"${D['garbage']:,}",                     f"${D['garbage']*12:,}"],
-        ["Internet (5 rooms)",     f"${D['internet']:,}",                    f"${D['internet']*12:,}"],
-        ["Yard Maintenance",       f"${D['yard']:,}",                        f"${D['yard']*12:,}"],
-        ["Pest Control",           f"${D['pest_control']:,}",                f"${D['pest_control']*12:,}"],
-        ["Repairs Reserve",        f"${D['repairs_reserve']:,}",             f"${D['repairs_reserve']*12:,}"],
-        ["CapEx Reserve",          f"${D['capex_reserve']:,}",               f"${D['capex_reserve']*12:,}"],
-        ["Property Management (10%)", f"${mgmt_fee:,}",                      f"${mgmt_fee*12:,}"],
-        ["Total Expenses",         f"${D['total_expenses']:,}",              f"${D['total_expenses']*12:,}"],
-        ["NET OPERATING INCOME",   f"${D['noi_monthly']:,}",                 f"${D['noi_annual']:,}"],
+        ["Mortgage (PITI)",          f"${d['mortgage']:,}",        f"${d['mortgage'] * 12:,}"],
+        ["Property Taxes",           f"${tax_mo:,}",               f"${d['annual_taxes']:,}"],
+        ["Insurance",                f"${ins_mo:,}",               f"${d['annual_insurance']:,}"],
+        ["HOA",                      f"${d['hoa_monthly']:,}",     f"${d['hoa_monthly'] * 12:,}"],
+        ["Water & Sewer",            f"${d['water_sewer']:,}",     f"${d['water_sewer'] * 12:,}"],
+        ["Garbage",                  f"${d['garbage']:,}",         f"${d['garbage'] * 12:,}"],
+        [f"Internet ({beds} rooms)", f"${d['internet']:,}",        f"${d['internet'] * 12:,}"],
+        ["Yard Maintenance",         f"${d['yard']:,}",            f"${d['yard'] * 12:,}"],
+        ["Pest Control",             f"${d['pest_control']:,}",    f"${d['pest_control'] * 12:,}"],
+        ["Repairs Reserve",          f"${d['repairs_reserve']:,}", f"${d['repairs_reserve'] * 12:,}"],
+        ["CapEx Reserve",            f"${d['capex_reserve']:,}",   f"${d['capex_reserve'] * 12:,}"],
+        [f"Property Management ({int(d['mgmt_rate']*100)}%)",
+         f"${mgmt_fee:,}", f"${mgmt_fee * 12:,}"],
+        ["Total Expenses",           f"${d['total_expenses']:,}",  f"${d['total_expenses'] * 12:,}"],
+        ["NET OPERATING INCOME",     f"${d['noi_monthly']:,}",     f"${d['noi_annual']:,}"],
     ]
 
     col_w = [3.7 * inch, 1.35 * inch, 1.35 * inch]
@@ -756,18 +658,16 @@ def build_financials(story, styles):
     story.append(KeepTogether(donut_block))
 
 
-def build_ratios(story, styles):
+def build_ratios(d, story, styles):
     story += [sp(0.15), hr()]
     story += section_header("Key Ratios", "Financial Health Indicators", styles)
     story.append(sp(0.06))
 
-    # DSCR gauge chart
     story.append(Paragraph("Debt Service Coverage Ratio vs. 1.25x Lender Benchmark",
                            styles["label_sm"]))
     story.append(sp(0.06))
 
-    # Center the gauge
-    gauge_wrap = Table([[DSCRGauge(DATA["dscr"], width=280, height=155)]],
+    gauge_wrap = Table([[DSCRGauge(d["dscr"], width=280, height=155)]],
                        colWidths=[6.4 * inch])
     gauge_wrap.setStyle(TableStyle([
         ("ALIGN",         (0, 0), (-1, -1), "CENTER"),
@@ -786,19 +686,18 @@ def build_ratios(story, styles):
         if metric == "margin":    return "#1D9E75" if value >= 0.20 else ("#D97706" if value >= 0.10 else "#E24B4A")
         return "#1D9E75"
 
-    D = DATA
     ratios = [
-        ("Debt Service Coverage Ratio (DSCR)", f"{D['dscr']:.2f}x",
-         "Lender benchmark: 1.25x minimum", "dscr", D["dscr"]),
-        ("Operating Expense Ratio (OER)",      f"{int(D['oer']*100)}%",
-         "Target: under 65% for co-living",   "oer",  D["oer"]),
-        ("Break-Even Occupancy Rate",          f"{int(D['breakeven_occ']*100)}%",
-         "Rooms needed to cover all expenses", "breakeven", D["breakeven_occ"]),
-        ("NOI Margin",                         f"{int(D['noi_margin']*100)}%",
-         "Net income as % of gross potential", "margin", D["noi_margin"]),
-        ("Per-Room Monthly NOI",               f"${D['per_room_noi']:,}",
+        ("Debt Service Coverage Ratio (DSCR)", f"{d['dscr']:.2f}x",
+         "Lender benchmark: 1.25x minimum", "dscr", d["dscr"]),
+        ("Operating Expense Ratio (OER)",      f"{int(d['oer']*100)}%",
+         "Target: under 65% for co-living",   "oer",  d["oer"]),
+        ("Break-Even Occupancy Rate",          f"{int(d['breakeven_occ']*100)}%",
+         "Rooms needed to cover all expenses", "breakeven", d["breakeven_occ"]),
+        ("NOI Margin",                         f"{int(d['noi_margin']*100)}%",
+         "Net income as % of gross potential", "margin", d["noi_margin"]),
+        ("Per-Room Monthly NOI",               f"${d['per_room_noi']:,}",
          "After all expenses per occupied room", "room", None),
-        ("Annual Net Operating Income",        f"${D['noi_annual']:,}",
+        ("Annual Net Operating Income",        f"${d['noi_annual']:,}",
          "Total NOI if sustained 12 months",   "annual", None),
     ]
 
@@ -826,7 +725,209 @@ def build_ratios(story, styles):
     story.append(rt)
 
 
-def build_tenant_comparison(story, styles):
+def build_sensitivity(d, story, styles):
+    story += [sp(0.15), hr()]
+    story += section_header("Sensitivity Analysis", "Break-Even Occupancy Scenarios", styles)
+    story.append(sp(0.06))
+    story.append(Paragraph(
+        "Shows financial performance at reduced occupancy levels. "
+        "Management fee scales with revenue at each occupancy level.",
+        styles["label_sm"]))
+    story.append(sp(0.10))
+
+    beds      = d["beds"]
+    rent      = d["rent_per_room"]
+    mgmt_rate = d["mgmt_rate"]
+    fixed_exp = d["_fixed_exp"]
+    mortgage  = d["mortgage"]
+    gross_100 = beds * rent
+
+    be_rev  = (fixed_exp + mortgage) / (1 - mgmt_rate) if mgmt_rate < 1 else fixed_exp + mortgage
+    be_occ  = min(be_rev / gross_100, 1.0) if gross_100 else 1.0
+    be_noi  = be_rev - round(be_rev * mgmt_rate) - fixed_exp
+
+    def sens_row(occ, is_be=False):
+        rev     = round(gross_100 * occ)
+        mgmt_f  = round(rev * mgmt_rate)
+        noi_s   = rev - mgmt_f - fixed_exp
+        cf_s    = noi_s - mortgage
+        dscr_s  = round(noi_s / mortgage, 2) if mortgage else 0
+        if is_be:
+            occ_str   = f"{round(be_occ * 100)}%  (Break-Even)"
+            cf_str    = "$0"
+            assess    = "Break-Even"
+            assess_c  = AMBER
+            bg        = AMBER_LIGHT
+        else:
+            occ_str   = f"{int(occ * 100)}%"
+            cf_str    = f"${cf_s:,}" if cf_s >= 0 else f"(${abs(cf_s):,})"
+            if dscr_s >= 1.25:
+                assess, assess_c = "Strong", GREEN
+            elif dscr_s >= 1.0:
+                assess, assess_c = "Acceptable", GREEN_DARK
+            else:
+                assess, assess_c = "Below Threshold", RED
+            bg = WHITE
+        return [occ_str, f"${rev:,}", f"${mgmt_f:,}", f"${noi_s:,}", f"{dscr_s:.2f}x", assess], assess_c, bg
+
+    header = [
+        Paragraph("OCCUPANCY",   styles["table_head"]),
+        Paragraph("REVENUE",     styles["table_head"]),
+        Paragraph("MGMT FEE",    styles["table_head"]),
+        Paragraph("NOI",         styles["table_head"]),
+        Paragraph("DSCR",        styles["table_head"]),
+        Paragraph("ASSESSMENT",  styles["table_head"]),
+    ]
+
+    tbl_rows  = [header]
+    row_bgs   = []
+    assess_colors = []
+
+    for occ in [1.00, 0.90, 0.80]:
+        vals, a_color, bg = sens_row(occ)
+        tbl_rows.append([Paragraph(v, styles["table_cell"]) for v in vals])
+        row_bgs.append(bg)
+        assess_colors.append(a_color)
+
+    be_vals, be_a_color, be_bg = sens_row(be_occ, is_be=True)
+    tbl_rows.append([Paragraph(v, styles["table_cell"]) for v in be_vals])
+    row_bgs.append(be_bg)
+    assess_colors.append(be_a_color)
+
+    col_w = [1.1 * inch, 0.9 * inch, 0.85 * inch, 0.85 * inch, 0.7 * inch, 1.8 * inch]
+    tbl = Table(tbl_rows, colWidths=col_w)
+
+    ts = [
+        ("BACKGROUND",    (0, 0), (-1, 0), GRAY_900),
+        ("TEXTCOLOR",     (0, 0), (-1, 0), WHITE),
+        ("FONTNAME",      (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("ALIGN",         (1, 0), (-1, -1), "RIGHT"),
+        ("LEFTPADDING",   (0, 0), (-1, -1), 8),
+        ("RIGHTPADDING",  (0, 0), (-1, -1), 8),
+        ("TOPPADDING",    (0, 0), (-1, -1), 5),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+        ("LINEBELOW",     (0, 0), (-1, -1), 0.3, GRAY_300),
+    ]
+    for i, (bg, ac) in enumerate(zip(row_bgs, assess_colors)):
+        r = i + 1
+        ts.append(("BACKGROUND",  (0, r), (-1, r), bg))
+        ts.append(("TEXTCOLOR",   (5, r), (5, r),  ac))
+        ts.append(("FONTNAME",    (5, r), (5, r),  "Helvetica-Bold"))
+
+    tbl.setStyle(TableStyle(ts))
+    story.append(tbl)
+
+
+def build_projection(d, story, styles):
+    story += [sp(0.15), hr()]
+    story += section_header("5-Year Projection", "Cash Flow Forecast", styles)
+    story.append(sp(0.06))
+
+    rent_growth = 0.030
+    exp_growth  = 0.025
+    occ_rate    = d["occupancy_rate"]
+    mortgage    = d["mortgage"]
+    mgmt_rate   = d["mgmt_rate"]
+    fixed_exp   = d["_fixed_exp"]
+
+    # Assumptions note
+    assumptions = Table([[
+        Paragraph(
+            f"Assumptions: {int(rent_growth*100)}% annual rent growth · "
+            f"{int(exp_growth*100)}% annual expense growth · "
+            f"{int(occ_rate*100)}% occupancy · fixed mortgage · "
+            f"management at {int(mgmt_rate*100)}% of gross",
+            styles["label_sm"])
+    ]], colWidths=[6.4 * inch])
+    assumptions.setStyle(TableStyle([
+        ("BACKGROUND",    (0, 0), (-1, -1), GRAY_100),
+        ("LEFTPADDING",   (0, 0), (-1, -1), 10),
+        ("RIGHTPADDING",  (0, 0), (-1, -1), 10),
+        ("TOPPADDING",    (0, 0), (-1, -1), 7),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
+    ]))
+    story.append(assumptions)
+    story.append(sp(0.10))
+
+    header = [
+        Paragraph("YEAR",         styles["table_head"]),
+        Paragraph("RENT/MO",      styles["table_head"]),
+        Paragraph("GROSS/MO",     styles["table_head"]),
+        Paragraph("NOI/MO",       styles["table_head"]),
+        Paragraph("CASH FLOW/MO", styles["table_head"]),
+        Paragraph("CUMULATIVE CF",styles["table_head"]),
+    ]
+    tbl_rows = [header]
+
+    # Current year
+    tbl_rows.append([
+        Paragraph("Current", styles["table_cell_b"]),
+        Paragraph(f"${d['rent_per_room']:,}", styles["table_cell"]),
+        Paragraph(f"${d['gross_monthly']:,}", styles["table_cell"]),
+        Paragraph(f"${d['noi_monthly']:,}",  styles["table_cell"]),
+        Paragraph(f"${d['noi_monthly'] - mortgage:,}", styles["table_cell"]),
+        Paragraph("—", styles["table_cell"]),
+    ])
+
+    rent_mo = d["rent_per_room"]
+    exp_mo  = fixed_exp
+    cumulative = 0
+    row_styles = []
+
+    for yr in range(1, 6):
+        rent_mo = rent_mo * (1 + rent_growth)
+        exp_mo  = exp_mo  * (1 + exp_growth)
+        gross_y = round(d["beds"] * rent_mo * occ_rate)
+        mgmt_y  = round(gross_y * mgmt_rate)
+        noi_y   = round(gross_y - mgmt_y - exp_mo)
+        cf_y    = noi_y - mortgage
+        cumulative += cf_y * 12
+        cf_color = "#1D9E75" if cf_y >= 0 else "#E24B4A"
+        is_last = (yr == 5)
+
+        tbl_rows.append([
+            Paragraph(f"Year {yr}", styles["table_cell_b" if is_last else "table_cell"]),
+            Paragraph(f"${round(rent_mo):,}", styles["table_cell"]),
+            Paragraph(f"${gross_y:,}",        styles["table_cell"]),
+            Paragraph(f"${noi_y:,}",          styles["table_cell"]),
+            Paragraph(f'<font color="{cf_color}">${cf_y:,}</font>', styles["table_cell"]),
+            Paragraph(f"${cumulative:,}",     styles["table_cell_b" if is_last else "table_cell"]),
+        ])
+        if is_last:
+            row_styles.append(yr)
+
+    col_w = [0.7*inch, 0.9*inch, 0.9*inch, 0.9*inch, 1.0*inch, 1.05*inch]
+    # Pad to full width
+    col_w = [1.0*inch, 0.95*inch, 0.95*inch, 0.95*inch, 1.05*inch, 1.5*inch]
+    tbl = Table(tbl_rows, colWidths=col_w)
+
+    ts = [
+        ("BACKGROUND",    (0, 0), (-1, 0), GRAY_900),
+        ("TEXTCOLOR",     (0, 0), (-1, 0), WHITE),
+        ("FONTNAME",      (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("BACKGROUND",    (0, 1), (-1, 1), GREEN_LIGHT),
+        ("ROWBACKGROUNDS",(0, 2), (-1, -2), [WHITE, GRAY_100]),
+        ("BACKGROUND",    (0, -1), (-1, -1), GREEN_LIGHT),
+        ("ALIGN",         (1, 0), (-1, -1), "RIGHT"),
+        ("LEFTPADDING",   (0, 0), (-1, -1), 8),
+        ("RIGHTPADDING",  (0, 0), (-1, -1), 8),
+        ("TOPPADDING",    (0, 0), (-1, -1), 5),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+        ("LINEBELOW",     (0, 0), (-1, -1), 0.3, GRAY_300),
+    ]
+    tbl.setStyle(TableStyle(ts))
+    story.append(tbl)
+
+    story.append(sp(0.12))
+    story.append(Paragraph(
+        f"At {int(rent_growth*100)}% annual rent growth, cumulative 5-year cash flow reaches "
+        f"<b>${cumulative:,}</b>. Year 5 monthly cash flow of <b>${cf_y:,}</b> represents a "
+        f"{round((cf_y - (d['noi_monthly'] - mortgage)) / max(abs(d['noi_monthly'] - mortgage), 1) * 100)}% "
+        f"increase over the current run rate.",
+        styles["narrative"]))
+
+
+def build_tenant_comparison(d, story, styles):
     story += [sp(0.15), hr()]
     story += section_header("Tenant Type Analysis",
                             "All 7 Tenant Types — Ranked by Monthly NOI", styles)
@@ -836,32 +937,27 @@ def build_tenant_comparison(story, styles):
         "prevent a recommendation.", styles["label_sm"]))
     story.append(sp(0.10))
 
-    # Bar chart
-    story.append(TenantBarChart(TENANT_COMPARISON, width=480, height=200))
+    story.append(TenantBarChart(d["_tenant_comparison"], width=480, height=200))
     story.append(sp(0.14))
 
-    # Table
     header = [
         Paragraph("TENANT TYPE",   styles["table_head"]),
-        Paragraph("SCORE",         styles["table_head"]),
         Paragraph("MONTHLY NOI",   styles["table_head"]),
         Paragraph("VS. SELECTION", styles["table_head"]),
     ]
     rows = [header]
-    for t in TENANT_COMPARISON:
-        delta_str  = "—" if t["delta"] == 0 else f"-${abs(t['delta']):,}/mo"
-        delta_color= "#1D9E75" if t["delta"] == 0 else "#E24B4A"
-        name_str   = t["type"] + ("  ✓ Best Fit" if t["best"] else "")
+    best_noi = next((t["monthly_noi"] for t in d["_tenant_comparison"] if t["best"]), 1)
+
+    for t in d["_tenant_comparison"]:
+        delta     = t["monthly_noi"] - best_noi
+        delta_str = "—" if delta == 0 else f"-${abs(delta):,}/mo"
+        delta_col = "#1D9E75" if delta == 0 else "#E24B4A"
+        name_str  = t["type"] + ("  ✓ Best Fit" if t["best"] else "")
         rows.append([
             Paragraph(name_str, ParagraphStyle("",
                 fontName="Helvetica-Bold" if t["best"] else "Helvetica",
                 fontSize=8.5, leading=12,
                 textColor=GREEN_DARK if t["best"] else GRAY_700)),
-            Paragraph(str(t["score"]), ParagraphStyle("",
-                fontName="Helvetica-Bold", fontSize=8.5, leading=12,
-                alignment=TA_CENTER,
-                textColor=GREEN if t["score"] >= 75 else
-                          (AMBER if t["score"] >= 50 else RED))),
             Paragraph(f"${t['monthly_noi']:,}", ParagraphStyle("",
                 fontName="Helvetica-Bold" if t["best"] else "Helvetica",
                 fontSize=8.5, leading=12, alignment=TA_RIGHT,
@@ -869,19 +965,17 @@ def build_tenant_comparison(story, styles):
             Paragraph(delta_str, ParagraphStyle("",
                 fontName="Helvetica-Bold", fontSize=8.5, leading=12,
                 alignment=TA_RIGHT,
-                textColor=colors.HexColor(delta_color))),
+                textColor=colors.HexColor(delta_col))),
         ])
 
-    col_w = [2.6 * inch, 0.9 * inch, 1.2 * inch, 1.4 * inch]
+    col_w = [3.5 * inch, 1.5 * inch, 1.4 * inch]
     tbl   = Table(rows, colWidths=col_w)
     tbl.setStyle(TableStyle([
         ("BACKGROUND",    (0, 0), (-1, 0), GRAY_900),
         ("TEXTCOLOR",     (0, 0), (-1, 0), WHITE),
         ("BACKGROUND",    (0, 1), (-1, 1), GREEN_LIGHT),
         ("ROWBACKGROUNDS",(0, 2), (-1, -1), [WHITE, GRAY_100]),
-        ("ALIGN",         (1, 0), (-1, -1), "CENTER"),
-        ("ALIGN",         (2, 0), (-1, -1), "RIGHT"),
-        ("ALIGN",         (3, 0), (-1, -1), "RIGHT"),
+        ("ALIGN",         (1, 0), (-1, -1), "RIGHT"),
         ("LEFTPADDING",   (0, 0), (-1, -1), 8),
         ("RIGHTPADDING",  (0, 0), (-1, -1), 8),
         ("TOPPADDING",    (0, 0), (-1, -1), 5),
@@ -891,22 +985,20 @@ def build_tenant_comparison(story, styles):
     story.append(tbl)
 
 
-def build_improvements(story, styles):
+def build_improvements(d, story, styles):
     story += [sp(0.15), hr()]
     story += section_header("Improvement Analysis",
                             "Capital Improvements — Cost vs. Rent Lift vs. ROI", styles)
     story.append(sp(0.06))
     story.append(Paragraph(
         "ROI expressed as months to recover improvement cost from incremental rent increase. "
-        "Green bars = High priority. All payback periods calculated at 5 rooms.",
+        f"Green bars = High priority. All payback periods calculated at {d['beds']} rooms.",
         styles["label_sm"]))
     story.append(sp(0.10))
 
-    # Bar chart
-    story.append(ImprovementBarChart(IMPROVEMENTS, width=480, height=165))
+    story.append(ImprovementBarChart(d["_improvements"], width=480, height=165))
     story.append(sp(0.14))
 
-    # Table
     header = [
         Paragraph("IMPROVEMENT",  styles["table_head"]),
         Paragraph("EST. COST",    styles["table_head"]),
@@ -915,11 +1007,11 @@ def build_improvements(story, styles):
         Paragraph("PRIORITY",     styles["table_head"]),
     ]
     rows = [header]
-    for imp in IMPROVEMENTS:
+    for imp in d["_improvements"]:
         pri_color = GREEN_DARK if imp["priority"] == "High" else GRAY_700
         rows.append([
-            Paragraph(imp["item"],              styles["table_cell"]),
-            Paragraph(f"${imp['cost']:,}",      styles["table_cell"]),
+            Paragraph(imp["item"],               styles["table_cell"]),
+            Paragraph(f"${imp['cost']:,}",       styles["table_cell"]),
             Paragraph(f"+${imp['rent_lift']}/mo", styles["table_cell"]),
             Paragraph(f"{imp['roi_months']} mos", styles["table_cell"]),
             Paragraph(imp["priority"], ParagraphStyle("",
@@ -943,60 +1035,73 @@ def build_improvements(story, styles):
     story.append(tbl)
 
 
-def build_verdict(story, styles):
+def build_verdict(d, story, styles):
     story += [sp(0.15), hr(GREEN, 1.5)]
     story += section_header("Investment Decision", "Go / No-Go Verdict", styles)
     story.append(sp(0.06))
 
+    noi    = d["noi_monthly"]
+    dscr   = d["dscr"]
+    be     = d["breakeven_occ"]
+    score  = d["score"]
+    is_go  = score >= 65 and noi > 0 and dscr >= 1.0
+
+    verdict_text = ("GO — Strong Co-Living Candidate" if is_go
+                    else "NO-GO — Does Not Meet Thresholds")
+    verdict_color = GREEN_DARK if is_go else RED
+    verdict_bg    = GREEN_LIGHT if is_go else RED_LIGHT
+    verdict_border= GREEN_MID  if is_go else colors.HexColor("#F09595")
+
     vbox = Table([[
-        Paragraph("GO — Strong Co-Living Candidate", ParagraphStyle("",
+        Paragraph(verdict_text, ParagraphStyle("",
             fontName="Helvetica-Bold", fontSize=15,
-            textColor=GREEN_DARK, leading=20)),
+            textColor=verdict_color, leading=20)),
     ]], colWidths=[6.2 * inch])
     vbox.setStyle(TableStyle([
-        ("BACKGROUND",    (0, 0), (-1, -1), GREEN_LIGHT),
+        ("BACKGROUND",    (0, 0), (-1, -1), verdict_bg),
         ("LEFTPADDING",   (0, 0), (-1, -1), 14),
         ("RIGHTPADDING",  (0, 0), (-1, -1), 14),
         ("TOPPADDING",    (0, 0), (-1, -1), 12),
         ("BOTTOMPADDING", (0, 0), (-1, -1), 12),
-        ("BOX",           (0, 0), (-1, -1), 1, GREEN_MID),
+        ("BOX",           (0, 0), (-1, -1), 1, verdict_border),
     ]))
     story.append(vbox)
     story.append(sp(0.10))
-    story.append(Paragraph(
-        "This property clears every material threshold for travel nurse co-living. "
-        "DSCR of 1.35x exceeds the 1.25x lender benchmark. Break-even occupancy of 68% "
-        "provides a comfortable cushion — you cover expenses with fewer than 3.5 of 5 rooms "
-        "filled. Regulatory status is clear with no HOA restrictions or zoning barriers. "
-        "Transit, parking, and single-floor layout align with travel nurse preferences."
-        "<br/><br/>"
-        "<b>One recommended action before moving forward:</b> Adding a fourth bathroom "
-        "at an estimated $18,000 cost recovers in under 10 months at the target rent point "
-        "and moves the property into the top tier for this tenant class. It is not required "
-        "to operate profitably — but it is the highest-ROI single improvement available."
-        "<br/><br/>"
-        "This report is suitable for submission to lenders as part of a co-living investment "
-        "package. Attach to your loan application with the Year 1 P&amp;L and DSCR calculation.",
-        styles["narrative"]))
+
+    if is_go:
+        body = (
+            f"This property clears every material threshold for {d['target_tenant']} co-living. "
+            f"DSCR of {dscr:.2f}x {'exceeds' if dscr >= 1.25 else 'approaches'} the 1.25x lender benchmark. "
+            f"Break-even occupancy of {int(be*100)}% provides a "
+            f"{'comfortable' if be <= 0.75 else 'tight'} cushion — you cover expenses with "
+            f"fewer than {math.ceil(be * d['beds']):.0f} of {d['beds']} rooms filled. "
+            f"Monthly NOI of ${noi:,} supports a viable co-living operation at this rent level."
+        )
+    else:
+        body = (
+            "This property does not meet minimum thresholds for co-living investment at current inputs. "
+            "Review the improvement recommendations and re-run the analysis with adjusted rent or expense assumptions."
+        )
+
+    story.append(Paragraph(body, styles["narrative"]))
     story.append(sp(0.20))
     story.append(hr())
     story.append(Paragraph(
-        f"Report generated by CoLivingScore.com  ·  {DATA['report_date']}  ·  "
+        f"Report generated by CoLivingScore.com  ·  {d['report_date']}  ·  "
         "Pro Analysis  ·  For investment analysis purposes only.",
         ParagraphStyle("", fontSize=7.5, textColor=GRAY_500,
                        leading=11, alignment=TA_CENTER)))
 
 
-# ── Main ──────────────────────────────────────────────────────────────────────
+# ── Main builders ─────────────────────────────────────────────────────────────
 
-def collect_section(fn, styles):
-    """Run a section builder and return its flowables as a list."""
+def collect_section(fn, d, styles):
     buf = []
-    fn(buf, styles)
+    fn(d, buf, styles)
     return buf
 
 
-def build_pdf(output_path):
+def build_pdf(d, output_path):
     doc = SimpleDocTemplate(
         output_path,
         pagesize=letter,
@@ -1008,93 +1113,223 @@ def build_pdf(output_path):
 
     styles = make_styles()
     story  = []
+    hf     = make_header_footer(d)
 
-    # Page 1 — Cover + property profile
-    cover = collect_section(build_cover, styles)
-    story.append(KeepTogether(cover))
+    story.append(KeepTogether(collect_section(build_cover, d, styles)))
 
-    # Page 2 — Market narrative (starts fresh page)
     story.append(PageBreak())
-    narrative = collect_section(build_narrative, styles)
-    story.append(KeepTogether(narrative))
+    story.append(KeepTogether(collect_section(build_narrative, d, styles)))
 
-    # Page 3 — Financials (always multi-page; just break cleanly)
     story.append(PageBreak())
-    build_financials(story, styles)
+    build_financials(d, story, styles)
 
-    # Page N — Ratios (fresh page, keep gauge + table together)
     story.append(PageBreak())
-    ratios = collect_section(build_ratios, styles)
-    story.append(KeepTogether(ratios))
+    story.append(KeepTogether(collect_section(build_ratios, d, styles)))
 
-    # Page N — Tenant comparison (fresh page, keep chart + table together)
     story.append(PageBreak())
-    tenant = collect_section(build_tenant_comparison, styles)
-    story.append(KeepTogether(tenant))
+    story.append(KeepTogether(collect_section(build_sensitivity, d, styles)))
 
-    # Page N — Improvements (fresh page, keep chart + table together)
     story.append(PageBreak())
-    improvements = collect_section(build_improvements, styles)
-    story.append(KeepTogether(improvements))
+    story.append(KeepTogether(collect_section(build_tenant_comparison, d, styles)))
 
-    # Page N — Verdict (fresh page)
     story.append(PageBreak())
-    verdict = collect_section(build_verdict, styles)
-    story.append(KeepTogether(verdict))
+    story.append(KeepTogether(collect_section(build_improvements, d, styles)))
 
-    doc.build(story, onFirstPage=header_footer, onLaterPages=header_footer)
+    story.append(PageBreak())
+    story.append(KeepTogether(collect_section(build_projection, d, styles)))
+
+    story.append(PageBreak())
+    story.append(KeepTogether(collect_section(build_verdict, d, styles)))
+
+    doc.build(story, onFirstPage=hf, onLaterPages=hf)
     print(f"Done — {output_path}")
+
+
+def _compute_tenant_comparison(d):
+    beds      = d["beds"]
+    occ_rate  = d["occupancy_rate"]
+    mgmt_rate = d["mgmt_rate"]
+    fixed_exp = d["_fixed_exp"]
+    mortgage  = d["mortgage"]
+    target    = d.get("_tenant_key", "nurses")
+
+    results = []
+    for key in TENANT_ORDER:
+        rent_k  = TENANT_RENTS[key]
+        gross_k = round(beds * rent_k * occ_rate)
+        mgmt_k  = round(gross_k * mgmt_rate)
+        noi_k   = gross_k - mgmt_k - fixed_exp - mortgage
+        results.append({
+            "type":       TENANT_LABELS[key],
+            "monthly_noi": noi_k,
+            "best":       key == target,
+        })
+
+    results.sort(key=lambda x: x["monthly_noi"], reverse=True)
+    return results
+
+
+def _compute_improvements(d):
+    baths = d.get("baths", 3)
+    beds  = d.get("beds", 5)
+
+    imps = []
+    if baths % 1 != 0:
+        imps.append({"item": "Convert half-bath to full bath", "cost": 10_000,
+                     "rent_lift": 100, "roi_months": 8, "priority": "High"})
+    else:
+        imps.append({"item": "Add full bathroom (addition)", "cost": 18_000,
+                     "rent_lift": 150, "roi_months": 10, "priority": "High"})
+
+    imps += [
+        {"item": "Keypad entry per room",       "cost": 1_200, "rent_lift": 30,  "roi_months": 3,  "priority": "High"},
+        {"item": "In-unit washer/dryer stack",  "cost": 2_800, "rent_lift": 50,  "roi_months": 5,  "priority": "High"},
+        {"item": "Mini-fridge per bedroom",     "cost": 1_600, "rent_lift": 25,  "roi_months": 6,  "priority": "Medium"},
+        {"item": "Dedicated desk + lighting",   "cost": 1_800, "rent_lift": 35,  "roi_months": 4,  "priority": "Medium"},
+    ]
+    return imps
+
+
+def _compute_expenses(d):
+    mgmt_fee = round(d["gross_monthly"] * d["mgmt_rate"])
+    tax_ins  = round(d["annual_taxes"] / 12) + round(d["annual_insurance"] / 12)
+    utils    = d["water_sewer"] + d["garbage"] + d["internet"] + d["yard"] + d["pest_control"]
+    reserves = d["repairs_reserve"] + d["capex_reserve"]
+    hoa      = d["hoa_monthly"]
+
+    expenses = [
+        ("Mortgage",           d["mortgage"]),
+        ("Taxes & Insurance",  tax_ins),
+        ("Utilities",          utils),
+        ("Reserves",           reserves),
+        ("Management",         mgmt_fee),
+    ]
+    if hoa > 0:
+        expenses.append(("HOA", hoa))
+    return expenses
 
 
 def build_pdf_from_data(data_dict, output_buffer):
     """
     Called by app.py. Accepts a dict of user inputs and
     writes the PDF to output_buffer (a BytesIO object).
+    Thread-safe: uses a local data dict, no global mutation.
     """
-    # Merge user-supplied data over defaults
-    global DATA
-    DATA = {**DATA, **data_dict}
+    mgmt_key  = data_dict.get("mgmt_model_key", "specialist")
+    mgmt_rate = MGMT_RATES.get(mgmt_key, 0.10)
+    mgmt_label = MGMT_LABELS.get(mgmt_key, data_dict.get("mgmt_model", "Co-living Specialist (10%)"))
 
-    # Compute derived values from inputs
-    rooms         = DATA["beds"]
-    rent_per_room = DATA.get("rent_per_room", 1100)
-    occ_rate      = DATA.get("occupancy_rate", 0.92)
-    mortgage      = DATA.get("mortgage", 0)
-    taxes         = DATA.get("annual_taxes", 0)
-    insurance     = DATA.get("annual_insurance", 0)
-    water_sewer   = DATA.get("water_sewer", 0)
-    garbage       = DATA.get("garbage", 0)
-    internet      = DATA.get("internet", 0)
-    yard          = DATA.get("yard", 0)
-    pest          = DATA.get("pest_control", 0)
-    repairs       = DATA.get("repairs_reserve", 0)
-    capex         = DATA.get("capex_reserve", 0)
+    beds      = int(data_dict.get("beds", 5))
+    baths     = float(data_dict.get("baths", 3))
+    rent      = int(data_dict.get("rent_per_room", 1100))
+    occ_rate  = float(data_dict.get("occupancy_rate", 0.92))
+    mortgage  = int(data_dict.get("mortgage", 0))
+    taxes     = int(data_dict.get("annual_taxes", 0))
+    insurance = int(data_dict.get("annual_insurance", 0))
+    hoa_mo    = int(data_dict.get("hoa_monthly", 0))
+    water     = int(data_dict.get("water_sewer", 0))
+    garbage   = int(data_dict.get("garbage", 0))
+    internet  = int(data_dict.get("internet", 0))
+    yard      = int(data_dict.get("yard", 0))
+    pest      = int(data_dict.get("pest_control", 0))
+    repairs   = int(data_dict.get("repairs_reserve", 0))
+    capex     = int(data_dict.get("capex_reserve", 0))
 
-    gross_monthly = round(rooms * rent_per_room * occ_rate)
-    mgmt_fee      = round(gross_monthly * 0.10)
-    total_exp     = (mortgage + round(taxes/12) + round(insurance/12) +
-                     water_sewer + garbage + internet + yard + pest +
-                     repairs + capex + mgmt_fee)
-    noi_monthly   = gross_monthly - total_exp
-    noi_annual    = noi_monthly * 12
-    dscr          = round(noi_monthly / mortgage, 2) if mortgage else 0
-    oer           = round(total_exp / gross_monthly, 2) if gross_monthly else 0
-    breakeven     = round(total_exp / (rooms * rent_per_room), 2) if rooms and rent_per_room else 0
-    margin        = round(noi_monthly / gross_monthly, 2) if gross_monthly else 0
+    gross_monthly = round(beds * rent * occ_rate)
+    mgmt_fee      = round(gross_monthly * mgmt_rate)
+    tax_mo        = round(taxes / 12)
+    ins_mo        = round(insurance / 12)
 
-    DATA["gross_monthly"]   = gross_monthly
-    DATA["total_expenses"]  = total_exp
-    DATA["noi_monthly"]     = noi_monthly
-    DATA["noi_annual"]      = noi_annual
-    DATA["dscr"]            = dscr
-    DATA["oer"]             = oer
-    DATA["breakeven_occ"]   = breakeven
-    DATA["noi_margin"]      = margin
-    DATA["per_room_noi"]    = round(noi_monthly / rooms) if rooms else 0
-    DATA["mgmt_model"]      = data_dict.get("mgmt_model", DATA["mgmt_model"])
+    # Fixed expenses (do not scale with revenue)
+    fixed_exp = tax_mo + ins_mo + hoa_mo + water + garbage + internet + yard + pest + repairs + capex
 
-    build_pdf(output_buffer)
+    total_exp   = mortgage + fixed_exp + mgmt_fee
+    noi_monthly = gross_monthly - total_exp
+    noi_annual  = noi_monthly * 12
+    dscr        = round(noi_monthly / mortgage, 2) if mortgage else 0
+    oer         = round(total_exp / gross_monthly, 2) if gross_monthly else 0
+    breakeven   = round((fixed_exp + mortgage) / (beds * rent), 2) if beds and rent else 0
+    margin      = round(noi_monthly / gross_monthly, 2) if gross_monthly else 0
+
+    # Infer tenant key from label if needed
+    label_to_key = {v: k for k, v in TENANT_LABELS.items()}
+    tenant_label = data_dict.get("target_tenant", "Travel Nurses")
+    tenant_key   = label_to_key.get(tenant_label, "nurses")
+
+    d = {
+        # Property
+        "address":       data_dict.get("address", "Property Address"),
+        "property_type": data_dict.get("property_type", "Single-Family Residential"),
+        "beds":          beds,
+        "baths":         baths,
+        "sqft":          int(data_dict.get("sqft", 0)),
+        "floors":        int(data_dict.get("floors", 1)),
+        "parking":       data_dict.get("parking", "—"),
+        "hoa":           data_dict.get("hoa", "None"),
+        "transit":       data_dict.get("transit", "—"),
+        "hospital":      data_dict.get("hospital", "—"),
+        "target_tenant": tenant_label,
+        "score":         int(data_dict.get("score", 0)),
+        "regulatory":    data_dict.get("regulatory", "Verify"),
+        "report_date":   data_dict.get("report_date", ""),
+        # Financial inputs
+        "mortgage":        mortgage,
+        "rent_per_room":   rent,
+        "occupancy_rate":  occ_rate,
+        "annual_taxes":    taxes,
+        "annual_insurance":insurance,
+        "hoa_monthly":     hoa_mo,
+        "water_sewer":     water,
+        "garbage":         garbage,
+        "internet":        internet,
+        "yard":            yard,
+        "pest_control":    pest,
+        "repairs_reserve": repairs,
+        "capex_reserve":   capex,
+        "mgmt_model":      mgmt_label,
+        "mgmt_rate":       mgmt_rate,
+        # Derived financials
+        "gross_monthly":   gross_monthly,
+        "total_expenses":  total_exp,
+        "noi_monthly":     noi_monthly,
+        "noi_annual":      noi_annual,
+        "dscr":            dscr,
+        "oer":             oer,
+        "breakeven_occ":   breakeven,
+        "noi_margin":      margin,
+        "per_room_noi":    round(noi_monthly / beds) if beds else 0,
+        # Internal computed lists
+        "_fixed_exp":   fixed_exp,
+        "_tenant_key":  tenant_key,
+    }
+
+    d["_tenant_comparison"] = _compute_tenant_comparison(d)
+    d["_improvements"]      = _compute_improvements(d)
+    d["_expenses"]          = _compute_expenses(d)
+
+    build_pdf(d, output_buffer)
 
 
 if __name__ == "__main__":
-    build_pdf("/mnt/user-data/outputs/CoLivingScore_ProAnalysis_v2.pdf")
+    # Standalone test with sample data
+    sample = {
+        "address":          "2847 Maple Grove Drive, Austin TX 78704",
+        "property_type":    "Single-Family · Co-Living Conversion",
+        "beds": 5, "baths": 3.0, "sqft": 2640, "floors": 1,
+        "parking": "Garage (2-car)", "hoa": "None",
+        "transit": "< 0.5 mi", "hospital": "1.4 mi",
+        "target_tenant": "Travel Nurses", "score": 87, "regulatory": "Clear",
+        "report_date": "April 18, 2026",
+        "mortgage": 2180, "rent_per_room": 950, "occupancy_rate": 0.93,
+        "annual_taxes": 3480, "annual_insurance": 1740, "hoa_monthly": 0,
+        "water_sewer": 220, "garbage": 50, "internet": 120,
+        "yard": 150, "pest_control": 75, "repairs_reserve": 500,
+        "capex_reserve": 238, "mgmt_model_key": "specialist",
+    }
+    import io
+    buf = io.BytesIO()
+    build_pdf_from_data(sample, buf)
+    buf.seek(0)
+    with open("/tmp/CoLivingScore_test.pdf", "wb") as f:
+        f.write(buf.read())
+    print("Test PDF written to /tmp/CoLivingScore_test.pdf")
