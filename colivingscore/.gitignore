@@ -11,3 +11,5 @@ dist/
 build/
 .DS_Store
 *.pdf
+*-service-account*.json
+*-1e18ab77fce0.json
