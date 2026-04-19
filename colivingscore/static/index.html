@@ -208,6 +208,47 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
 .mt-4{margin-top:14px}.mt-6{margin-top:22px}.mb-2{margin-bottom:7px}
 .hidden{display:none!important}
 .divider{height:1px;background:var(--gray-100);margin:18px 0}
+
+/* ── LOADING SCREEN ── */
+#s-loading{background:var(--dark);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;position:relative;overflow:hidden}
+.loading-bg-slide{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity 1.5s ease;z-index:0}
+.loading-bg-slide.active{opacity:0.18}
+.loading-content{position:relative;z-index:1;text-align:center;max-width:560px;width:100%}
+.loading-logo{font-size:22px;font-weight:700;color:#fff;letter-spacing:-0.5px;margin-bottom:32px}
+.loading-logo span{color:var(--green)}
+.loading-stage{font-size:15px;font-weight:500;color:rgba(255,255,255,0.85);margin-bottom:20px;min-height:24px;transition:opacity 0.3s}
+.loading-bar-wrap{width:100%;height:6px;background:rgba(255,255,255,0.12);border-radius:99px;overflow:hidden;margin-bottom:36px}
+.loading-bar{height:100%;background:var(--green);border-radius:99px;width:0%;transition:width 0.6s ease}
+.loading-quote-wrap{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:24px 28px;min-height:100px;display:flex;flex-direction:column;justify-content:center;transition:opacity 0.5s}
+.loading-quote{font-size:14px;color:rgba(255,255,255,0.75);line-height:1.7;font-style:italic;margin-bottom:10px}
+.loading-quote-author{font-size:12px;color:var(--green);font-weight:600;font-style:normal}
+
+/* ── MARKET DATA SECTIONS ── */
+.market-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px}
+.market-grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:16px}
+@media(max-width:600px){.market-grid{grid-template-columns:repeat(2,1fr)}.market-grid-2{grid-template-columns:1fr}}
+.market-stat{background:var(--gray-50);border:var(--border);border-radius:var(--radius);padding:14px 16px}
+.market-stat-label{font-size:11px;font-weight:700;color:var(--gray-500);letter-spacing:0.5px;margin-bottom:4px;text-transform:uppercase}
+.market-stat-value{font-size:22px;font-weight:700;color:var(--dark);line-height:1.1}
+.market-stat-sub{font-size:12px;color:var(--gray-500);margin-top:3px}
+.score-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:99px;font-size:12px;font-weight:700}
+.score-badge.walk{background:#e0f2fe;color:#0369a1}
+.score-badge.transit{background:#f0fdf4;color:#15803d}
+.score-badge.bike{background:#fefce8;color:#a16207}
+.comp-analysis{font-size:13.5px;color:var(--gray-700);line-height:1.75;white-space:pre-wrap}
+.comp-section-head{font-size:12px;font-weight:700;color:var(--gray-500);letter-spacing:0.5px;text-transform:uppercase;margin:18px 0 6px;padding-top:14px;border-top:1px solid var(--gray-100)}
+.comp-section-head:first-child{border-top:none;margin-top:0;padding-top:0}
+.rentcast-comp{display:grid;grid-template-columns:2fr 1fr 1fr;gap:0;font-size:12px;padding:8px 0;border-bottom:1px solid var(--gray-100)}
+.location-pill{display:inline-flex;align-items:center;gap:8px;background:var(--gray-50);border:var(--border);border-radius:var(--radius);padding:12px 16px;margin-top:8px;width:100%}
+.location-pill-icon{font-size:18px}
+.location-pill-info{flex:1}
+.location-pill-name{font-size:13px;font-weight:600;color:var(--dark)}
+.location-pill-dist{font-size:12px;color:var(--gray-500)}
+.location-pill-band{font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px}
+.band-walkable{background:#dcfce7;color:#15803d}
+.band-close{background:#fef9c3;color:#854d0e}
+.band-moderate{background:#ffedd5;color:#9a3412}
+.band-far{background:#fee2e2;color:#991b1b}
 </style>
 </head>
 <body>
@@ -716,6 +757,78 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
       <button style="height:36px;padding:0 16px;background:var(--gray-100);color:var(--gray-900);border:1.5px solid var(--gray-400);border-radius:var(--radius);font-size:12.5px;font-weight:500;font-family:var(--font);cursor:pointer" onclick="resetForm()">← Score another property</button>
     </div>
 
+  </div>
+
+  <!-- ══ SCREEN 5: LOADING ══ -->
+  <div class="screen" id="s-loading">
+    <div class="loading-bg-slide" id="lbg0" style="background-image:url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1400&auto=format&fit=crop')"></div>
+    <div class="loading-bg-slide" id="lbg1" style="background-image:url('https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=1400&auto=format&fit=crop')"></div>
+    <div class="loading-bg-slide" id="lbg2" style="background-image:url('https://images.unsplash.com/photo-1484154218962-a197022b5858?w=1400&auto=format&fit=crop')"></div>
+    <div class="loading-bg-slide" id="lbg3" style="background-image:url('https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=1400&auto=format&fit=crop')"></div>
+    <div class="loading-content">
+      <div class="loading-logo">CoLiving<span>Score</span></div>
+      <div class="loading-stage" id="loading-stage">Preparing your analysis...</div>
+      <div class="loading-bar-wrap"><div class="loading-bar" id="loading-bar"></div></div>
+      <div class="loading-quote-wrap">
+        <div class="loading-quote" id="loading-quote"></div>
+        <div class="loading-quote-author" id="loading-author"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SCREEN 6: FULL PRO REPORT ══ -->
+  <div class="screen" id="s-pro-report">
+    <div class="addr-strip">
+      <div class="addr-text">Pro Analysis — <span id="rpt-addr" style="color:#4DBF8F"></span></div>
+      <button style="height:28px;font-size:12px;padding:0 12px;background:transparent;color:var(--white);border:1px solid rgba(255,255,255,0.4);border-radius:var(--radius);cursor:pointer;font-family:var(--font);font-weight:500" onclick="showScreen('s-result')">← Free Score</button>
+    </div>
+    <div class="card" id="rpt-score-bar"></div>
+    <div class="card">
+      <div class="card-title">Market Demand</div>
+      <div class="card-sub">Neighborhood walkability, demographics, and renter profile.</div>
+      <div id="rpt-market"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Rental Market — Rent Validation</div>
+      <div class="card-sub">RentCast market estimate for this address and bedroom count.</div>
+      <div id="rpt-rentcast"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Location Intelligence</div>
+      <div class="card-sub">Verified distances to transit and medical facilities.</div>
+      <div id="rpt-location"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Competitive Landscape</div>
+      <div class="card-sub">AI-powered research of local competition, rates, and market gaps.</div>
+      <div id="rpt-competitive"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Year 1 Financial Summary</div>
+      <div class="fin-grid" style="margin-top:16px" id="rpt-fin-grid"></div>
+      <div class="divider"></div>
+      <div id="rpt-ratios"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Tenant Type Comparison</div>
+      <div class="card-sub">Ranked by monthly NOI. Market fit noted from competitive research.</div>
+      <div id="rpt-tenant-comparison"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Capital Improvements — ROI Analysis</div>
+      <div class="card-sub">Payback periods at your room count and target rent.</div>
+      <div id="rpt-improvements"></div>
+    </div>
+    <div id="rpt-verdict"></div>
+    <div class="card" style="text-align:center;padding:28px">
+      <div style="font-size:15px;font-weight:600;margin-bottom:6px">Download Lender-Ready PDF Report</div>
+      <div style="font-size:13px;color:var(--gray-500);margin-bottom:16px">Full report with financials, market data, and Go/No-Go verdict.</div>
+      <button class="btn-primary" style="height:46px;font-size:15px;padding:0 32px" id="btn-pdf-rpt">Download PDF Report</button>
+      <div class="text-xs text-muted mt-4" id="pdf-status-rpt"></div>
+    </div>
+    <div class="btn-row" style="justify-content:flex-start">
+      <button style="height:36px;padding:0 16px;background:var(--gray-100);color:var(--gray-900);border:1.5px solid var(--gray-400);border-radius:var(--radius);font-size:12.5px;font-weight:500;font-family:var(--font);cursor:pointer" onclick="resetForm()">← Score another property</button>
+    </div>
   </div>
 
 </div><!-- /container -->
@@ -1475,6 +1588,7 @@ document.addEventListener('DOMContentLoaded', function(){
   wire('btn-reset-2',     resetForm);
   wire('btn-save-email',  submitEmail);
   wire('btn-pdf',         downloadPDF);
+  wire('btn-pdf-rpt',     downloadPDF);
   wire('btn-back-pro',    function(){ showScreen('s-result'); });
   wire('btn-pay',         initiatePayment);
 
@@ -1482,17 +1596,239 @@ document.addEventListener('DOMContentLoaded', function(){
   const params = new URLSearchParams(window.location.search);
   if(params.get('paid') === 'true' && window.opener && window.opener._paidProData){
     window._proInputs = window.opener._paidProData;
-    generateProAnalysis(window._proInputs);
+    runFullProAnalysis(window._proInputs);
   }
   // Handle paid redirect in same tab via sessionStorage
   const pendingData = sessionStorage.getItem('cls_pending_pro');
   if(params.get('paid') === 'true' && pendingData){
     sessionStorage.removeItem('cls_pending_pro');
     window._proInputs = JSON.parse(pendingData);
-    generateProAnalysis(window._proInputs);
+    runFullProAnalysis(window._proInputs);
     history.replaceState({}, '', '/');
   }
 });
+
+// ── LOADING SCREEN ────────────────────────────────────────────────────────────
+const QUOTES = [
+  {q:"Real estate cannot be lost or stolen. Purchased with common sense and managed with care, it is about the safest investment in the world.", a:"Franklin D. Roosevelt"},
+  {q:"The best investment on earth is earth.", a:"Louis Glickman"},
+  {q:"Don't wait to buy real estate. Buy real estate and wait.", a:"Will Rogers"},
+  {q:"Ninety percent of all millionaires become so through owning real estate.", a:"Andrew Carnegie"},
+  {q:"Buy land, they're not making it anymore.", a:"Mark Twain"},
+  {q:"Real estate investing remains a tried and true means of building an individual's cash flow and wealth.", a:"Robert Kiyosaki"},
+  {q:"In real estate, location is everything — but in co-living, community is everything.", a:"CoLivingScore"},
+  {q:"The secret of getting ahead is getting started.", a:"Mark Twain"},
+  {q:"Opportunities don't happen. You create them.", a:"Chris Grosser"},
+  {q:"The time to buy is when there's blood in the streets.", a:"Baron Rothschild"},
+];
+
+const STAGES = [
+  {pct:8,  text:"Verifying property address..."},
+  {pct:22, text:"Pulling rental market data..."},
+  {pct:38, text:"Scoring neighborhood walkability..."},
+  {pct:54, text:"Calculating proximity to transit & hospitals..."},
+  {pct:68, text:"Researching local competition..."},
+  {pct:82, text:"Analyzing market demographics..."},
+  {pct:93, text:"Building your report..."},
+];
+
+let _loadingTimers = [];
+
+function startLoadingScreen(){
+  showScreen('s-loading');
+  const bar      = document.getElementById('loading-bar');
+  const stageEl  = document.getElementById('loading-stage');
+  const quoteEl  = document.getElementById('loading-quote');
+  const authorEl = document.getElementById('loading-author');
+
+  // Progress bar stages
+  let si = 0;
+  function advanceStage(){
+    if(si >= STAGES.length) return;
+    bar.style.width = STAGES[si].pct + '%';
+    stageEl.style.opacity = 0;
+    setTimeout(()=>{ stageEl.textContent = STAGES[si].text; stageEl.style.opacity=1; si++; }, 300);
+  }
+  advanceStage();
+  _loadingTimers.push(setInterval(advanceStage, 4500));
+
+  // Quote rotator
+  let qi = 0;
+  function showQuote(){
+    const q = QUOTES[qi % QUOTES.length];
+    quoteEl.style.opacity=0; authorEl.style.opacity=0;
+    setTimeout(()=>{ quoteEl.textContent='"'+q.q+'"'; authorEl.textContent='— '+q.a; quoteEl.style.opacity=1; authorEl.style.opacity=1; }, 400);
+    qi++;
+  }
+  showQuote();
+  _loadingTimers.push(setInterval(showQuote, 10000));
+
+  // Image rotator
+  let bi = 0;
+  function rotateImage(){
+    [0,1,2,3].forEach(i => document.getElementById('lbg'+i)?.classList.remove('active'));
+    document.getElementById('lbg'+bi)?.classList.add('active');
+    bi = (bi+1) % 4;
+  }
+  rotateImage();
+  _loadingTimers.push(setInterval(rotateImage, 6000));
+}
+
+function stopLoadingScreen(){
+  _loadingTimers.forEach(t => clearInterval(t));
+  _loadingTimers = [];
+  document.getElementById('loading-bar').style.width = '100%';
+  document.getElementById('loading-stage').textContent = 'Report ready!';
+}
+
+// ── FULL PRO ANALYSIS ORCHESTRATOR ───────────────────────────────────────────
+async function runFullProAnalysis(overrideInputs){
+  startLoadingScreen();
+
+  const inp   = window._inputs || {};
+  const place = window._place  || {};
+
+  // Run financial model in background (no screen change yet)
+  generateProAnalysis(overrideInputs);
+
+  // Fetch all market data
+  let marketData = {};
+  try {
+    const res = await fetch('/api/pro-data', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        address:    window._address || inp.address || '',
+        lat:        place.lat,
+        lng:        place.lng,
+        zip:        place.zip || '',
+        city:       place.city || '',
+        state:      place.state || '',
+        beds:       inp.beds || 4,
+        baths:      inp.baths || 2,
+        tenant_key: inp.tenant || 'workforce',
+      })
+    });
+    marketData = await res.json();
+  } catch(e){
+    console.warn('pro-data fetch failed:', e);
+  }
+
+  stopLoadingScreen();
+  renderProReport(marketData);
+  showScreen('s-pro-report');
+}
+
+// ── REPORT RENDERING ──────────────────────────────────────────────────────────
+function renderProReport(md){
+  const inp   = window._inputs || {};
+  const fin   = window._fin   || {};
+  const place = window._place || {};
+
+  // Header
+  const addr = window._address || '';
+  const el = document.getElementById('rpt-addr');
+  if(el) el.textContent = addr;
+
+  // Score bar
+  const score = window._score || 0;
+  const band  = fin.band || '';
+  const bColor = score>=70?'#1D9E75':score>=50?'#D97706':'#E24B4A';
+  document.getElementById('rpt-score-bar').innerHTML = `
+    <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap">
+      <div style="text-align:center;min-width:80px">
+        <div style="font-size:52px;font-weight:800;color:${bColor};line-height:1">${score}</div>
+        <div style="font-size:13px;font-weight:700;color:${bColor}">${band.toUpperCase()}</div>
+      </div>
+      <div style="flex:1;min-width:200px">
+        <div style="font-size:16px;font-weight:700;color:var(--dark);margin-bottom:4px">${addr}</div>
+        <div style="font-size:13px;color:var(--gray-500)">${inp.beds||'—'} bed · ${inp.baths||'—'} bath · ${(inp.sqft||0).toLocaleString()} sq ft · ${TENANT_PROFILES[inp.tenant||'workforce']?.label||''}</div>
+      </div>
+    </div>`;
+
+  // Market demand (WalkScore + Census)
+  const ws = md.walkscore || {};
+  const dm = md.demographics || {};
+  const walk    = ws.walk_score    ?? '—';
+  const transit = ws.transit_score ?? '—';
+  const bike    = ws.bike_score    ?? '—';
+  const pop     = dm.population    ? dm.population.toLocaleString() : '—';
+  const rPct    = dm.renter_pct    != null ? dm.renter_pct+'%' : '—';
+  const income  = dm.median_income ? '$'+dm.median_income.toLocaleString() : '—';
+  const medRent = dm.median_rent   ? '$'+dm.median_rent.toLocaleString()+'/mo' : '—';
+  document.getElementById('rpt-market').innerHTML = `
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+      <span class="score-badge walk">🚶 Walk ${walk}</span>
+      <span class="score-badge transit">🚌 Transit ${transit}</span>
+      <span class="score-badge bike">🚲 Bike ${bike}</span>
+      ${ws.walk_desc ? `<span style="font-size:12px;color:var(--gray-500);align-self:center">${ws.walk_desc}</span>` : ''}
+    </div>
+    <div class="market-grid">
+      <div class="market-stat"><div class="market-stat-label">Population (ZIP)</div><div class="market-stat-value">${pop}</div></div>
+      <div class="market-stat"><div class="market-stat-label">Renter Occupied</div><div class="market-stat-value">${rPct}</div></div>
+      <div class="market-stat"><div class="market-stat-label">Median Income</div><div class="market-stat-value">${income}</div></div>
+      <div class="market-stat"><div class="market-stat-label">Median Rent (ZIP)</div><div class="market-stat-value">${medRent}</div></div>
+    </div>`;
+
+  // RentCast
+  const rc = md.rentcast || {};
+  const estRent = rc.rent_estimate ? '$'+Math.round(rc.rent_estimate).toLocaleString() : '—';
+  const lowRent = rc.rent_low      ? '$'+Math.round(rc.rent_low).toLocaleString()      : '—';
+  const hiRent  = rc.rent_high     ? '$'+Math.round(rc.rent_high).toLocaleString()     : '—';
+  const comps   = rc.comparables   || [];
+  const compRows = comps.map(c=>`
+    <div class="rentcast-comp">
+      <div style="color:var(--dark);font-weight:500">${c.address||c.formattedAddress||'—'}</div>
+      <div style="text-align:right;color:var(--dark)">${c.rent ? '$'+c.rent : '—'}</div>
+      <div style="text-align:right;color:var(--gray-500)">${c.bedrooms||'—'} bd</div>
+    </div>`).join('');
+  document.getElementById('rpt-rentcast').innerHTML = `
+    <div class="market-grid" style="margin-bottom:16px">
+      <div class="market-stat"><div class="market-stat-label">Estimated Rent</div><div class="market-stat-value">${estRent}</div><div class="market-stat-sub">per month</div></div>
+      <div class="market-stat"><div class="market-stat-label">Market Low</div><div class="market-stat-value">${lowRent}</div></div>
+      <div class="market-stat"><div class="market-stat-label">Market High</div><div class="market-stat-value">${hiRent}</div></div>
+    </div>
+    ${comps.length ? `<div style="font-size:12px;font-weight:700;color:var(--gray-500);letter-spacing:0.5px;margin-bottom:8px">COMPARABLE RENTALS</div>
+    <div class="rentcast-comp" style="font-weight:700;color:var(--gray-500)"><div>ADDRESS</div><div style="text-align:right">RENT</div><div style="text-align:right">BED</div></div>
+    ${compRows}` : '<div style="font-size:13px;color:var(--gray-500)">No comparable data returned for this address.</div>'}`;
+
+  // Location
+  const nb = md.nearby || {};
+  const tr = nb.transit  || {};
+  const ho = nb.hospital || {};
+  function pill(icon, name, dist, band){
+    const bandClass = 'band-'+(band||'far');
+    return `<div class="location-pill">
+      <div class="location-pill-icon">${icon}</div>
+      <div class="location-pill-info">
+        <div class="location-pill-name">${name||'Not found'}</div>
+        <div class="location-pill-dist">${dist ? dist+' miles away' : '—'}</div>
+      </div>
+      ${band ? `<span class="location-pill-band ${bandClass}">${band.charAt(0).toUpperCase()+band.slice(1)}</span>` : ''}
+    </div>`;
+  }
+  document.getElementById('rpt-location').innerHTML =
+    pill('🚌', tr.name, tr.distance_miles, nb.transit_band) +
+    pill('🏥', ho.name, ho.distance_miles, nb.hospital_band);
+
+  // Competitive analysis
+  const ca = md.competitive || {};
+  const analysis = ca.analysis || '';
+  const formattedAnalysis = analysis
+    .replace(/^#{1,3}\s+(.+)$/gm, '<div class="comp-section-head">$1</div>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\n{2,}/g, '\n');
+  document.getElementById('rpt-competitive').innerHTML = analysis
+    ? `<div class="comp-analysis">${formattedAnalysis}</div>`
+    : `<div style="font-size:13px;color:var(--gray-500)">Competitive data not available for this location.</div>`;
+
+  // Copy financial sections from existing pro result
+  ['fin-grid','ratios','tenant-comparison','improvements','verdict'].forEach(id=>{
+    const src = document.getElementById('pr-'+id);
+    const dst = document.getElementById('rpt-'+id);
+    if(src && dst) dst.innerHTML = src.innerHTML;
+  });
+}
 </script>
 </body>
 </html>
