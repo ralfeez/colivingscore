@@ -4,7 +4,6 @@ import json
 import stripe
 import gspread
 from datetime import datetime
-from google.oauth2.service_account import Credentials
 from flask import Flask, send_from_directory, request, send_file, jsonify, redirect
 from pdf.generate_report import build_pdf_from_data
 
@@ -15,7 +14,6 @@ STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET")
 STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY")
 BASE_URL = os.environ.get("BASE_URL", "https://colivingscore.onrender.com")
 SHEET_ID = "14JS4z9w5S1Ar0oNhusxegVMz-jdf1e55dbGh1UqBXyc"
-SHEETS_SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 
 
 def _get_sheet():
@@ -26,8 +24,7 @@ def _get_sheet():
         local_key = os.path.join(os.path.dirname(__file__), "..", "colivingscore-1e18ab77fce0.json")
         with open(local_key) as f:
             creds_info = json.load(f)
-    creds = Credentials.from_service_account_info(creds_info, scopes=SHEETS_SCOPES)
-    client = gspread.authorize(creds)
+    client = gspread.service_account_from_dict(creds_info)
     return client.open_by_key(SHEET_ID).sheet1
 
 
