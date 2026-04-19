@@ -239,7 +239,7 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
       <div class="addr-hero-title">Is this property a co-living candidate?</div>
       <div class="addr-hero-sub">Enter an address to score the property, model the financials, and get a go/no-go recommendation.</div>
       <div class="addr-input-row">
-        <input type="text" id="f-address" placeholder="123 Main St, City, State ZIP" autocomplete="street-address">
+        <input type="text" id="f-address" placeholder="123 Main St, City, State ZIP" autocomplete="off">
         <button class="btn-addr" id="btn-address-next">Analyze →</button>
       </div>
       <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:10px">Example: 123 Main St, Phoenix AZ 85001</div>
@@ -1388,10 +1388,14 @@ function setStep(n){
 function goToPropertyForm(){
   const addr = document.getElementById('f-address').value.trim();
   if(!addr){ alert('Please enter a property address.'); return; }
-  window._address = addr;
-  document.getElementById('r-addr-text').textContent = addr;
+  if(!window._place){
+    alert('Please select an address from the dropdown suggestions to ensure accuracy.');
+    return;
+  }
+  window._address = window._place.formatted_address;
+  document.getElementById('r-addr-text').textContent = window._address;
   const prAddr = document.getElementById('pr-addr');
-  if(prAddr) prAddr.textContent = addr;
+  if(prAddr) prAddr.textContent = window._address;
   showScreen('s-form');
   setStep(2);
 }
@@ -1399,6 +1403,9 @@ function goToPropertyForm(){
 function resetForm(){
   showScreen('s-address');
   setStep(1);
+  window._place   = null;
+  window._address = null;
+  document.getElementById('f-address').value = '';
   document.getElementById('r-pro-gate').innerHTML='';
   document.getElementById('r-referral').innerHTML='';
   document.getElementById('r-email-gate').innerHTML=`
@@ -1417,9 +1424,52 @@ function showProGate(){
   document.getElementById('r-pro-gate').scrollIntoView({behavior:'smooth'});
 }
 
+// ── GOOGLE PLACES AUTOCOMPLETE ────────────────────────────────────────────────
+window.initAutocomplete = function(){
+  const input = document.getElementById('f-address');
+  if(!input || !window.google) return;
+  const ac = new google.maps.places.Autocomplete(input, {
+    types: ['address'],
+    componentRestrictions: { country: 'us' },
+    fields: ['formatted_address','geometry','place_id','address_components']
+  });
+  ac.addListener('place_changed', function(){
+    const place = ac.getPlace();
+    if(!place.geometry) return;
+    const comps = {};
+    (place.address_components || []).forEach(c => {
+      if(c.types.includes('locality'))                       comps.city   = c.long_name;
+      if(c.types.includes('administrative_area_level_2'))    comps.county = c.long_name;
+      if(c.types.includes('administrative_area_level_1'))    comps.state  = c.short_name;
+      if(c.types.includes('postal_code'))                    comps.zip    = c.long_name;
+    });
+    window._place = {
+      formatted_address: place.formatted_address,
+      lat:      place.geometry.location.lat(),
+      lng:      place.geometry.location.lng(),
+      place_id: place.place_id,
+      ...comps
+    };
+    input.value = place.formatted_address;
+  });
+};
+
 // ── WIRE BUTTONS ─────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function(){
   const wire = (id, fn) => { const el = document.getElementById(id); if(el) el.addEventListener('click', fn); };
+
+  // Load Google Maps JS API dynamically using key from /config
+  fetch('/config').then(r=>r.json()).then(cfg=>{
+    if(cfg.google_places_key){
+      const s = document.createElement('script');
+      s.src = `https://maps.googleapis.com/maps/api/js?key=${cfg.google_places_key}&libraries=places&callback=initAutocomplete`;
+      s.async = true; s.defer = true;
+      document.head.appendChild(s);
+    }
+    // Stripe key
+    if(cfg.publishable_key) window._stripePK = cfg.publishable_key;
+  });
+
   wire('btn-address-next', goToPropertyForm);
   const addrField = document.getElementById('f-address');
   if(addrField) addrField.addEventListener('keydown', e=>{ if(e.key==='Enter') goToPropertyForm(); });

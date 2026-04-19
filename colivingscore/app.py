@@ -16,6 +16,10 @@ STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY")
 BASE_URL = os.environ.get("BASE_URL", "https://colivingscore.onrender.com")
 SHEET_ID = "14JS4z9w5S1Ar0oNhusxegVMz-jdf1e55dbGh1UqBXyc"
 resend.api_key = os.environ.get("RESEND_API_KEY", "")
+GOOGLE_PLACES_API_KEY = os.environ.get("GOOGLE_PLACES_API_KEY", "")
+RENTCAST_API_KEY      = os.environ.get("RENTCAST_API_KEY", "")
+ANTHROPIC_API_KEY     = os.environ.get("ANTHROPIC_API_KEY", "")
+WALKSCORE_API_KEY     = os.environ.get("WALKSCORE_API_KEY", "")
 
 
 def _get_sheet():
@@ -265,7 +269,10 @@ def health():
 
 @app.route("/config")
 def get_config():
-    return jsonify({"publishable_key": STRIPE_PUBLISHABLE_KEY})
+    return jsonify({
+        "publishable_key": STRIPE_PUBLISHABLE_KEY,
+        "google_places_key": GOOGLE_PLACES_API_KEY,
+    })
 
 
 # ── Create Stripe Checkout session ────────────────────────────────────────────
