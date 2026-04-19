@@ -570,7 +570,58 @@ def api_competitive():
         return jsonify({"error": str(e)}), 500
 
 
-# ── Pro data orchestrator — runs all data calls in parallel ──────────────────
+# ── Pro data orchestrator — fast (no competitive) ────────────────────────────
+
+@app.route("/api/pro-data-fast", methods=["POST"])
+def api_pro_data_fast():
+    """RentCast + WalkScore + Nearby + Demographics only. Returns in ~5-10s."""
+    try:
+        data       = request.get_json(force=True)
+        address    = data.get("address", "")
+        lat        = data.get("lat")
+        lng        = data.get("lng")
+        zip_code   = data.get("zip", "")
+        beds       = data.get("beds", 4)
+        baths      = data.get("baths", 2)
+
+        def call_rentcast():
+            r = requests.post(f"{request.host_url}api/rentcast",
+                json={"address": address, "beds": beds, "baths": baths}, timeout=15)
+            return "rentcast", r.json() if r.ok else {"error": r.text}
+
+        def call_walkscore():
+            r = requests.post(f"{request.host_url}api/walkscore",
+                json={"address": address, "lat": lat, "lng": lng}, timeout=15)
+            return "walkscore", r.json() if r.ok else {"error": r.text}
+
+        def call_nearby():
+            r = requests.post(f"{request.host_url}api/nearby",
+                json={"lat": lat, "lng": lng}, timeout=15)
+            return "nearby", r.json() if r.ok else {"error": r.text}
+
+        def call_demographics():
+            r = requests.post(f"{request.host_url}api/demographics",
+                json={"zip": zip_code}, timeout=15)
+            return "demographics", r.json() if r.ok else {"error": r.text}
+
+        results = {}
+        with ThreadPoolExecutor(max_workers=4) as executor:
+            futures = {executor.submit(fn): fn.__name__
+                       for fn in [call_rentcast, call_walkscore, call_nearby, call_demographics]}
+            for future in as_completed(futures):
+                try:
+                    key, value = future.result()
+                    results[key] = value
+                except Exception as e:
+                    results[futures[future]] = {"error": str(e)}
+
+        return jsonify(results)
+    except Exception as e:
+        print(f"pro-data-fast error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+# ── Pro data orchestrator — full (includes competitive) ───────────────────────
 
 @app.route("/api/pro-data", methods=["POST"])
 def api_pro_data():
