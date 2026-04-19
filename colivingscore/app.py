@@ -7,6 +7,7 @@ import stripe
 import gspread
 import requests
 import anthropic
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from flask import Flask, send_from_directory, request, send_file, jsonify, redirect
 from pdf.generate_report import build_pdf_from_data
@@ -447,6 +448,191 @@ def api_demographics():
             "zip":              zip_code,
         })
     except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ── Competitive intelligence — Claude AI + web search ────────────────────────
+
+TENANT_SEARCH_PROMPTS = {
+    "nurses": (
+        "travel nurse housing, furnished rooms for rent, co-living, nurse housing, short-term rentals"
+    ),
+    "tech": (
+        "co-living, coliving, shared housing, furnished rooms for rent, remote worker housing"
+    ),
+    "trades": (
+        "worker housing, rooms for rent, weekly rentals, shared housing, construction worker housing"
+    ),
+    "students": (
+        "student housing, rooms for rent near university, shared student housing, off-campus housing"
+    ),
+    "seniors": (
+        "senior living, 55+ community, assisted living, independent living, senior housing"
+    ),
+    "sober": (
+        "sober living, recovery housing, sober house, halfway house, transitional housing"
+    ),
+    "workforce": (
+        "rooms for rent, shared housing, co-living, affordable housing, workforce housing"
+    ),
+}
+
+def _build_competitive_prompt(address, city, state, tenant_key, beds):
+    search_terms = TENANT_SEARCH_PROMPTS.get(tenant_key, TENANT_SEARCH_PROMPTS["workforce"])
+    is_senior  = tenant_key == "seniors"
+    is_sober   = tenant_key == "sober"
+    is_nurse   = tenant_key == "nurses"
+
+    extra = ""
+    if is_senior:
+        extra = (
+            "For senior living facilities found, list their name, address, care level "
+            "(independent, assisted, memory care), and published monthly rates if available. "
+            "If rates are not published, note '(no rates available)'."
+        )
+    elif is_sober:
+        extra = (
+            "For sober living or recovery homes found, list their name, address, and monthly "
+            "or weekly rates if published. If rates are not found, note '(no rates available)'."
+        )
+    elif is_nurse:
+        extra = (
+            "Check Furnished Finder and similar travel nurse housing platforms for listings "
+            "near this address. Note average nightly or monthly rates if visible."
+        )
+
+    return f"""You are a real estate market analyst specializing in co-living investments.
+
+Research the co-living and rental market near {address} ({city}, {state}) for a {beds}-bedroom property targeting: {tenant_key.replace('_',' ')}.
+
+Search for: {search_terms} near {city}, {state}.
+
+Please provide a structured market analysis with the following sections:
+
+1. MARKET DEMAND
+   - Assess rental demand signals in {city}, {state} for this tenant type
+   - Note any known employers, universities, hospitals, or demand drivers nearby
+   - Describe the general supply/demand balance
+
+2. COMPETITION
+   - List named competitors (businesses, properties, or platforms) offering similar housing in {city}, {state}
+   - For each: name, approximate location or neighborhood, advertised rates (per room/month), and notable amenities
+   - If only a name or address is known with no rates, note "(no rates available)"
+   {extra}
+
+3. WHAT COMPETITORS DO WELL
+   - Common amenities or features that appear frequently (utilities included, furnished, parking, etc.)
+
+4. MARKET GAPS
+   - What is missing or underserved in the current competition?
+   - Where is there opportunity to differentiate?
+
+5. PRICING INTELLIGENCE
+   - What is the going rate per room per month in this market for this tenant type?
+   - Provide a low / mid / high range based on what you find
+
+6. RECOMMENDATION
+   - Based on competition and demand, is this a favorable market for a {beds}-bed co-living property targeting {tenant_key}?
+   - What positioning would give the best chance of success?
+
+Be specific. Name actual businesses and places where possible. If you cannot find specific data for {city}, use regional or state-level context."""
+
+
+@app.route("/api/competitive", methods=["POST"])
+def api_competitive():
+    try:
+        data       = request.get_json(force=True)
+        address    = data.get("address", "")
+        city       = data.get("city", "")
+        state      = data.get("state", "")
+        tenant_key = data.get("tenant_key", "workforce")
+        beds       = data.get("beds", 4)
+
+        prompt = _build_competitive_prompt(address, city, state, tenant_key, beds)
+
+        client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+        response = client.messages.create(
+            model="claude-opus-4-5-20251001",
+            max_tokens=4096,
+            tools=[{"type": "web_search_20250305", "name": "web_search", "max_uses": 8}],
+            messages=[{"role": "user", "content": prompt}],
+        )
+
+        # Extract text from response (may include tool_use blocks)
+        analysis = ""
+        for block in response.content:
+            if hasattr(block, "text"):
+                analysis += block.text
+
+        return jsonify({"analysis": analysis, "tenant_key": tenant_key, "city": city})
+    except Exception as e:
+        print(f"competitive error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+# ── Pro data orchestrator — runs all data calls in parallel ──────────────────
+
+@app.route("/api/pro-data", methods=["POST"])
+def api_pro_data():
+    """
+    Single endpoint that fans out to RentCast, WalkScore, Google Nearby,
+    Census ACS, and Claude competitive analysis concurrently.
+    Returns all results merged into one JSON object.
+    """
+    try:
+        data       = request.get_json(force=True)
+        address    = data.get("address", "")
+        lat        = data.get("lat")
+        lng        = data.get("lng")
+        zip_code   = data.get("zip", "")
+        beds       = data.get("beds", 4)
+        baths      = data.get("baths", 2)
+        city       = data.get("city", "")
+        state      = data.get("state", "")
+        tenant_key = data.get("tenant_key", "workforce")
+
+        def call_rentcast():
+            r = requests.post(f"{request.host_url}api/rentcast",
+                json={"address": address, "beds": beds, "baths": baths}, timeout=15)
+            return "rentcast", r.json() if r.ok else {"error": r.text}
+
+        def call_walkscore():
+            r = requests.post(f"{request.host_url}api/walkscore",
+                json={"address": address, "lat": lat, "lng": lng}, timeout=15)
+            return "walkscore", r.json() if r.ok else {"error": r.text}
+
+        def call_nearby():
+            r = requests.post(f"{request.host_url}api/nearby",
+                json={"lat": lat, "lng": lng}, timeout=15)
+            return "nearby", r.json() if r.ok else {"error": r.text}
+
+        def call_demographics():
+            r = requests.post(f"{request.host_url}api/demographics",
+                json={"zip": zip_code}, timeout=15)
+            return "demographics", r.json() if r.ok else {"error": r.text}
+
+        def call_competitive():
+            r = requests.post(f"{request.host_url}api/competitive",
+                json={"address": address, "city": city, "state": state,
+                      "tenant_key": tenant_key, "beds": beds}, timeout=60)
+            return "competitive", r.json() if r.ok else {"error": r.text}
+
+        results = {}
+        tasks = [call_rentcast, call_walkscore, call_nearby,
+                 call_demographics, call_competitive]
+
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            futures = {executor.submit(fn): fn.__name__ for fn in tasks}
+            for future in as_completed(futures):
+                try:
+                    key, value = future.result()
+                    results[key] = value
+                except Exception as e:
+                    results[futures[future]] = {"error": str(e)}
+
+        return jsonify(results)
+    except Exception as e:
+        print(f"pro-data error: {e}")
         return jsonify({"error": str(e)}), 500
 
 
