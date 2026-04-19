@@ -1,9 +1,12 @@
 import os
 import io
 import json
+import math
 import resend
 import stripe
 import gspread
+import requests
+import anthropic
 from datetime import datetime
 from flask import Flask, send_from_directory, request, send_file, jsonify, redirect
 from pdf.generate_report import build_pdf_from_data
@@ -273,6 +276,178 @@ def get_config():
         "publishable_key": STRIPE_PUBLISHABLE_KEY,
         "google_places_key": GOOGLE_PLACES_API_KEY,
     })
+
+
+# ── Pro Analysis data routes ──────────────────────────────────────────────────
+
+@app.route("/api/rentcast", methods=["POST"])
+def api_rentcast():
+    try:
+        data    = request.get_json(force=True)
+        address = data.get("address", "")
+        beds    = data.get("beds", 3)
+        baths   = data.get("baths", 2)
+        resp = requests.get(
+            "https://api.rentcast.io/v1/avm/rent/long-term",
+            params={"address": address, "bedrooms": beds, "bathrooms": baths, "propertyType": "Single Family"},
+            headers={"X-Api-Key": RENTCAST_API_KEY},
+            timeout=10
+        )
+        if resp.status_code != 200:
+            return jsonify({"error": f"RentCast {resp.status_code}"}), 502
+        d = resp.json()
+        return jsonify({
+            "rent_estimate": d.get("rent"),
+            "rent_low":      d.get("rentRangeLow"),
+            "rent_high":     d.get("rentRangeHigh"),
+            "comparables":   d.get("comparables", [])[:5],
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/walkscore", methods=["POST"])
+def api_walkscore():
+    try:
+        data    = request.get_json(force=True)
+        address = data.get("address", "")
+        lat     = data.get("lat")
+        lng     = data.get("lng")
+        resp = requests.get(
+            "https://api.walkscore.com/score",
+            params={
+                "format": "json",
+                "address": address,
+                "lat": lat,
+                "lon": lng,
+                "transit": 1,
+                "bike": 1,
+                "wsapikey": WALKSCORE_API_KEY,
+            },
+            timeout=10
+        )
+        d = resp.json()
+        return jsonify({
+            "walk_score":    d.get("walkscore"),
+            "walk_desc":     d.get("description"),
+            "transit_score": d.get("transit", {}).get("score"),
+            "transit_desc":  d.get("transit", {}).get("description"),
+            "bike_score":    d.get("bike", {}).get("score"),
+            "bike_desc":     d.get("bike", {}).get("description"),
+            "logo_url":      d.get("logo_url"),
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+def _haversine_miles(lat1, lng1, lat2, lng2):
+    R = 3958.8
+    dlat = math.radians(lat2 - lat1)
+    dlng = math.radians(lng2 - lng1)
+    a = math.sin(dlat/2)**2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlng/2)**2
+    return R * 2 * math.asin(math.sqrt(a))
+
+
+@app.route("/api/nearby", methods=["POST"])
+def api_nearby():
+    try:
+        data = request.get_json(force=True)
+        lat  = data.get("lat")
+        lng  = data.get("lng")
+        if not lat or not lng:
+            return jsonify({"error": "lat/lng required"}), 400
+
+        def nearest(place_type, radius=8000):
+            resp = requests.get(
+                "https://maps.googleapis.com/maps/api/place/nearbysearch/json",
+                params={"location": f"{lat},{lng}", "rankby": "distance",
+                        "type": place_type, "key": GOOGLE_PLACES_API_KEY},
+                timeout=10
+            )
+            results = resp.json().get("results", [])
+            if not results:
+                return None
+            r   = results[0]
+            rlat = r["geometry"]["location"]["lat"]
+            rlng = r["geometry"]["location"]["lng"]
+            dist = _haversine_miles(lat, lng, rlat, rlng)
+            return {"name": r.get("name"), "distance_miles": round(dist, 2),
+                    "vicinity": r.get("vicinity")}
+
+        transit  = nearest("transit_station")
+        hospital = nearest("hospital")
+
+        def transit_band(d):
+            if d is None: return "far"
+            if d < 0.5:   return "walkable"
+            if d < 1.0:   return "close"
+            if d < 2.0:   return "moderate"
+            return "far"
+
+        def hospital_band(d):
+            if d is None: return "far"
+            if d < 1.0:   return "close"
+            if d < 3.0:   return "moderate"
+            return "far"
+
+        t_dist = transit["distance_miles"]  if transit  else None
+        h_dist = hospital["distance_miles"] if hospital else None
+
+        return jsonify({
+            "transit":       transit,
+            "hospital":      hospital,
+            "transit_band":  transit_band(t_dist),
+            "hospital_band": hospital_band(h_dist),
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/demographics", methods=["POST"])
+def api_demographics():
+    try:
+        data = request.get_json(force=True)
+        zip_code = data.get("zip", "")
+        if not zip_code:
+            return jsonify({"error": "zip required"}), 400
+
+        variables = ",".join([
+            "B01003_001E",  # total population
+            "B25003_001E",  # total occupied housing units
+            "B25003_002E",  # owner occupied
+            "B25003_003E",  # renter occupied
+            "B19013_001E",  # median household income
+            "B25064_001E",  # median gross rent
+        ])
+        resp = requests.get(
+            "https://api.census.gov/data/2023/acs/acs5",
+            params={"get": variables, "for": f"zip code tabulation area:{zip_code}"},
+            timeout=10
+        )
+        if resp.status_code != 200:
+            return jsonify({"error": "Census data unavailable"}), 502
+        rows = resp.json()
+        if len(rows) < 2:
+            return jsonify({"error": "No data for this zip"}), 404
+        headers, values = rows[0], rows[1]
+        d = dict(zip(headers, values))
+
+        pop        = int(d.get("B01003_001E", 0) or 0)
+        total_hu   = int(d.get("B25003_001E", 1) or 1)
+        renter_hu  = int(d.get("B25003_003E", 0) or 0)
+        income     = int(d.get("B19013_001E", 0) or 0)
+        med_rent   = int(d.get("B25064_001E", 0) or 0)
+        renter_pct = round(renter_hu / total_hu * 100, 1) if total_hu else 0
+
+        return jsonify({
+            "population":       pop,
+            "renter_pct":       renter_pct,
+            "median_income":    income,
+            "median_rent":      med_rent,
+            "zip":              zip_code,
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 # ── Create Stripe Checkout session ────────────────────────────────────────────
