@@ -1681,6 +1681,7 @@ function stopLoadingScreen(){
   _loadingTimers = [];
   document.getElementById('loading-bar').style.width = '100%';
   document.getElementById('loading-stage').textContent = 'Report ready!';
+  document.getElementById('s-loading').style.display = 'none';
 }
 
 // ── FULL PRO ANALYSIS ORCHESTRATOR ───────────────────────────────────────────
@@ -1689,9 +1690,6 @@ async function runFullProAnalysis(overrideInputs){
 
   const inp   = window._inputs || {};
   const place = window._place  || {};
-
-  // Run financial model in background (no screen change yet)
-  generateProAnalysis(overrideInputs);
 
   // Fetch fast market data (rentcast, walkscore, nearby, demographics) — 25s timeout
   let marketData = {};
@@ -1721,6 +1719,7 @@ async function runFullProAnalysis(overrideInputs){
   }
 
   stopLoadingScreen();
+  generateProAnalysis(overrideInputs);
   renderProReport(marketData);
   showScreen('s-pro-report');
 
