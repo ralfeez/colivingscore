@@ -257,29 +257,47 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
         <div class="field">
           <label>Bedrooms <span class="req">*</span></label>
           <select id="f-beds">
-            <option value="2">2 bedrooms</option>
-            <option value="3">3 bedrooms</option>
-            <option value="4">4 bedrooms</option>
-            <option value="5" selected>5 bedrooms</option>
-            <option value="6">6 bedrooms</option>
-            <option value="7">7 bedrooms</option>
-            <option value="8">8 bedrooms</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5" selected>5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+            <option value="11">11</option>
+            <option value="12">12</option>
           </select>
         </div>
         <div class="field">
-          <label>Bathrooms (full only) <span class="req">*</span></label>
+          <label>Bathrooms <span class="req">*</span></label>
           <select id="f-baths">
             <option value="1">1</option>
-            <option value="1.5">1.5</option>
             <option value="2">2</option>
-            <option value="2.5">2.5</option>
             <option value="3" selected>3</option>
-            <option value="3.5">3.5</option>
             <option value="4">4</option>
-            <option value="4.5">4.5</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+            <option value="11">11</option>
+            <option value="12">12</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Half Baths</label>
+          <select id="f-halfbaths">
+            <option value="0" selected>None</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
             <option value="5">5</option>
           </select>
-          <div class="field-hint">Half baths count toward improvement suggestions, not ratio score</div>
         </div>
         <div class="field">
           <label>Square footage <span class="req">*</span></label>
@@ -731,7 +749,8 @@ function parkingScore(inp){
 function getInputs(){
   return {
     beds:      parseInt(document.getElementById('f-beds').value),
-    baths:     parseFloat(document.getElementById('f-baths').value),
+    baths:     parseInt(document.getElementById('f-baths').value),
+    halfbaths: parseInt(document.getElementById('f-halfbaths').value),
     sqft:      parseInt(document.getElementById('f-sqft').value),
     floors:    parseInt(document.getElementById('f-floors').value),
     garage:    parseInt(document.getElementById('f-garage').value),
@@ -766,7 +785,7 @@ function scoreProperty(inp, tenantKey){
   const factors = [];
 
   // 1. Bathroom ratio
-  const fullBaths = Math.floor(inp.baths) || 1;
+  const fullBaths = inp.baths || 1;
   const ratio = inp.beds / fullBaths;
   const bathPct = ratio > 2.5 ? 1.0 : ratio > 2.0 ? 0.67 : ratio > 1.5 ? 0.33 : 0;
   factors.push({factor:'Bathroom ratio', deduction:Math.round(p.bathW * bathPct),
@@ -881,8 +900,9 @@ function calculateScore(){
 
   // Meta
   document.getElementById('r-tenant-label').textContent = p.label;
-  document.getElementById('r-beds-baths').textContent   = inp.beds+' bed / '+inp.baths+' bath';
-  document.getElementById('r-addr-text').textContent    = inp.beds+' bed · '+inp.baths+' bath · '+inp.sqft.toLocaleString()+' sq ft';
+  const bathLabel = inp.baths + (inp.halfbaths ? ' full / '+inp.halfbaths+' half' : '') + ' bath';
+  document.getElementById('r-beds-baths').textContent   = inp.beds+' bed / '+bathLabel;
+  document.getElementById('r-addr-text').textContent    = inp.beds+' bed · '+bathLabel+' · '+inp.sqft.toLocaleString()+' sq ft';
 
   // Reg badge
   const regBadge = document.getElementById('r-reg-badge');
@@ -1010,7 +1030,7 @@ function showReviewScreen(){
 
   document.getElementById('rv-property').innerHTML =
     row('Bedrooms', beds) +
-    row('Bathrooms', inp.baths || '—') +
+    row('Bathrooms', (inp.baths || '—') + (inp.halfbaths ? ' full / '+inp.halfbaths+' half' : '')) +
     row('Square Footage', inp.sqft ? inp.sqft.toLocaleString() + ' sq ft' : '—') +
     row('Stories', inp.floors || '—') +
     row('Parking', (inp.garage||0) + ' garage · ' + (inp.carport||0) + ' carport · ' + (inp.uncovered||0) + ' uncovered') +
@@ -1193,8 +1213,8 @@ function generateProAnalysis(overrideInputs){
     {item:'Dedicated desk + lighting',      cost:1800, lift:35, months:4, priority:'Medium'},
   ];
   // Add half-bath conversion if applicable
-  if(inp && inp.baths % 1 !== 0){
-    imps.unshift({item:'Convert half-bath to full bath', cost:10000, lift:100, months:8, priority:'High'});
+  if(inp && inp.halfbaths > 0){
+    imps.unshift({item:'Convert half-bath to full bath (add standup shower)', cost:10000, lift:100, months:8, priority:'High'});
   }
   document.getElementById('pr-improvements').innerHTML = `
     <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:0;font-size:11px;font-weight:700;color:var(--gray-500);letter-spacing:0.5px;padding:8px 0;border-bottom:1px solid var(--gray-200)">
@@ -1348,6 +1368,16 @@ function resetForm(){
   setStep(1);
   document.getElementById('r-pro-gate').innerHTML='';
   document.getElementById('r-referral').innerHTML='';
+  document.getElementById('r-email-gate').innerHTML=`
+    <h4>Save your score &amp; get the full report</h4>
+    <p>Enter your email to save this analysis and receive co-living tips for your market.</p>
+    <div class="email-row">
+      <input type="email" id="r-email" placeholder="your@email.com">
+      <button class="btn-primary" id="btn-save-email">Save Score</button>
+    </div>
+    <div class="text-xs text-muted mt-4">No spam. Unsubscribe anytime.</div>`;
+  const emailBtn = document.getElementById('btn-save-email');
+  if(emailBtn) emailBtn.addEventListener('click', submitEmail);
 }
 
 function showProGate(){
