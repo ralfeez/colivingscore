@@ -1318,13 +1318,46 @@ function getUtilityValues(){
 function submitEmail(){
   const email = document.getElementById('r-email').value.trim();
   if(!email || !email.includes('@')){ alert('Please enter a valid email address.'); return; }
+
+  const inp = window._inputs || {};
+  const fin = window._fin   || {};
+  const tenant = inp.tenant || document.getElementById('f-tenant').value;
+  const p = TENANT_PROFILES[tenant] || {};
+
+  const btn = document.getElementById('btn-save-email');
+  if(btn){ btn.disabled = true; btn.textContent = 'Sending…'; }
+
   fetch('/save-email', {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ email, address: window._address || '' })
-  }).catch(err => console.warn('save-email failed:', err));
-  document.getElementById('r-email-gate').innerHTML =
-    `<div class="banner success"><div class="banner-icon">✓</div><div class="banner-text"><strong>Score saved!</strong>Check your inbox for your co-living market report.</div></div>`;
+    body: JSON.stringify({
+      email,
+      address:     window._address || '',
+      beds:        inp.beds,
+      baths:       inp.baths,
+      halfbaths:   inp.halfbaths,
+      sqft:        inp.sqft,
+      tenantLabel: p.label || tenant,
+      rent:        inp.rent,
+      mortgage:    inp.mortgage,
+      score:       window._score,
+      band:        fin.band,
+      gross:       fin.gross,
+      net:         fin.net,
+      dscr:        fin.dscr,
+      topFlags:    fin.topFlags || [],
+    })
+  })
+  .then(r => r.json())
+  .then(r => {
+    if(r.error) throw new Error(r.error);
+    document.getElementById('r-email-gate').innerHTML =
+      `<div class="banner success"><div class="banner-icon">✓</div><div class="banner-text"><strong>Report sent!</strong> Check your inbox for your CoLivingScore report.</div></div>`;
+  })
+  .catch(() => {
+    if(btn){ btn.disabled = false; btn.textContent = 'Save Score'; }
+    alert('Something went wrong — please try again.');
+  });
 }
 
 // ── NAVIGATION ────────────────────────────────────────────────────────────────
