@@ -19,7 +19,7 @@ SHEET_ID = "14JS4z9w5S1Ar0oNhusxegVMz-jdf1e55dbGh1UqBXyc"
 def _get_sheet():
     creds_json = os.environ.get("GOOGLE_SHEETS_CREDS")
     if creds_json:
-        creds_info = json.loads(creds_json)
+        creds_info = json.loads(creds_json.strip())
     else:
         local_key = os.path.join(os.path.dirname(__file__), "..", "colivingscore-1e18ab77fce0.json")
         with open(local_key) as f:
