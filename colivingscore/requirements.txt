@@ -6,3 +6,4 @@ qrcode==8.0
 Pillow==11.1.0
 gspread==6.1.2
 google-auth==2.29.0
+resend==2.5.0

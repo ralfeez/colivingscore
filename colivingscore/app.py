@@ -1,6 +1,7 @@
 import os
 import io
 import json
+import resend
 import stripe
 import gspread
 from datetime import datetime
@@ -14,6 +15,7 @@ STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET")
 STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY")
 BASE_URL = os.environ.get("BASE_URL", "https://colivingscore.onrender.com")
 SHEET_ID = "14JS4z9w5S1Ar0oNhusxegVMz-jdf1e55dbGh1UqBXyc"
+resend.api_key = os.environ.get("RESEND_API_KEY", "")
 
 
 def _get_sheet():
@@ -69,18 +71,183 @@ def generate_pdf():
         return jsonify({"error": str(e)}), 500
 
 
-# ── Email capture → Google Sheets ────────────────────────────────────────────
+# ── Email capture → Google Sheets + Resend ───────────────────────────────────
+
+def _build_score_email(email, data):
+    address  = data.get("address", "—")
+    beds     = data.get("beds", "—")
+    baths    = data.get("baths", "—")
+    halfbaths= data.get("halfbaths", 0)
+    sqft     = data.get("sqft", "—")
+    tenant   = data.get("tenantLabel", "—")
+    score    = data.get("score", "—")
+    band     = data.get("band", "—")
+    gross    = data.get("gross", 0)
+    net      = data.get("net", 0)
+    dscr     = data.get("dscr", 0)
+    flags    = data.get("topFlags", [])
+
+    band_color = {"Excellent":"#1D9E75","Good":"#1D9E75","Fair":"#D97706",
+                  "Poor":"#E24B4A","No Go":"#E24B4A"}.get(band, "#555")
+
+    bath_str = f"{baths} full" + (f" / {halfbaths} half" if halfbaths else "")
+
+    flags_html = "".join(
+        f'<tr><td style="padding:6px 0;border-bottom:1px solid #eee;font-size:14px;color:#333">'
+        f'{f.get("factor","")}</td>'
+        f'<td style="padding:6px 0;border-bottom:1px solid #eee;font-size:14px;color:#E24B4A;text-align:right">−{f.get("deduction",0)} pts</td></tr>'
+        for f in flags[:3]
+    ) if flags else '<tr><td colspan="2" style="color:#666;font-size:14px">No significant deductions</td></tr>'
+
+    net_color = "#1D9E75" if net >= 0 else "#E24B4A"
+    dscr_str  = f"{dscr:.2f}" if isinstance(dscr, (int, float)) and dscr else "N/A"
+    gross_str = f"${gross:,.0f}" if isinstance(gross, (int, float)) else "—"
+    net_str   = f"${net:,.0f}" if isinstance(net, (int, float)) else "—"
+
+    return f"""
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f5;padding:32px 16px">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:12px;overflow:hidden;max-width:600px;width:100%">
+
+        <!-- Header -->
+        <tr><td style="background:#0f172a;padding:28px 36px">
+          <div style="font-size:22px;font-weight:700;color:#fff;letter-spacing:-0.5px">CoLiving<span style="color:#1D9E75">Score</span></div>
+          <div style="font-size:13px;color:#94a3b8;margin-top:4px">Your Free Property Score Report</div>
+        </td></tr>
+
+        <!-- Score block -->
+        <tr><td style="padding:32px 36px 0">
+          <div style="text-align:center;background:#f8fafc;border-radius:10px;padding:24px">
+            <div style="font-size:64px;font-weight:800;color:{band_color};line-height:1">{score}</div>
+            <div style="font-size:18px;font-weight:700;color:{band_color};margin-top:4px">{band.upper()}</div>
+            <div style="font-size:13px;color:#64748b;margin-top:8px">{address}</div>
+          </div>
+        </td></tr>
+
+        <!-- Property summary -->
+        <tr><td style="padding:24px 36px 0">
+          <div style="font-size:13px;font-weight:700;color:#94a3b8;letter-spacing:0.5px;margin-bottom:12px">PROPERTY DETAILS</div>
+          <table width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+              <td style="font-size:14px;color:#333;padding:5px 0;width:50%">Bedrooms</td>
+              <td style="font-size:14px;color:#0f172a;font-weight:600;text-align:right">{beds}</td>
+            </tr>
+            <tr>
+              <td style="font-size:14px;color:#333;padding:5px 0">Bathrooms</td>
+              <td style="font-size:14px;color:#0f172a;font-weight:600;text-align:right">{bath_str}</td>
+            </tr>
+            <tr>
+              <td style="font-size:14px;color:#333;padding:5px 0">Square Footage</td>
+              <td style="font-size:14px;color:#0f172a;font-weight:600;text-align:right">{sqft:,} sq ft</td>
+            </tr>
+            <tr>
+              <td style="font-size:14px;color:#333;padding:5px 0">Target Tenant</td>
+              <td style="font-size:14px;color:#0f172a;font-weight:600;text-align:right">{tenant}</td>
+            </tr>
+          </table>
+        </td></tr>
+
+        <!-- Cash flow -->
+        <tr><td style="padding:24px 36px 0">
+          <div style="font-size:13px;font-weight:700;color:#94a3b8;letter-spacing:0.5px;margin-bottom:12px">CASH FLOW SNAPSHOT</div>
+          <table width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+              <td style="font-size:14px;color:#333;padding:5px 0">Est. Gross Monthly</td>
+              <td style="font-size:14px;color:#0f172a;font-weight:600;text-align:right">{gross_str}</td>
+            </tr>
+            <tr>
+              <td style="font-size:14px;color:#333;padding:5px 0">Est. Monthly Net</td>
+              <td style="font-size:14px;font-weight:600;color:{net_color};text-align:right">{net_str}</td>
+            </tr>
+            <tr>
+              <td style="font-size:14px;color:#333;padding:5px 0">DSCR</td>
+              <td style="font-size:14px;color:#0f172a;font-weight:600;text-align:right">{dscr_str}</td>
+            </tr>
+          </table>
+        </td></tr>
+
+        <!-- Property audit flags -->
+        <tr><td style="padding:24px 36px 0">
+          <div style="font-size:13px;font-weight:700;color:#94a3b8;letter-spacing:0.5px;margin-bottom:12px">TOP SCORE FACTORS</div>
+          <table width="100%" cellpadding="0" cellspacing="0">
+            {flags_html}
+          </table>
+          <p style="font-size:13px;color:#64748b;margin-top:12px;line-height:1.6">
+            These are the highest-impact factors affecting your score. Improving any one of these
+            could meaningfully raise your CoLivingScore and the property's income potential.
+          </p>
+        </td></tr>
+
+        <!-- CTA -->
+        <tr><td style="padding:28px 36px">
+          <div style="background:#f0fdf4;border-radius:10px;padding:24px;text-align:center">
+            <div style="font-size:16px;font-weight:700;color:#0f172a;margin-bottom:8px">Ready for a deeper look?</div>
+            <p style="font-size:14px;color:#475569;margin:0 0 20px;line-height:1.6">
+              Our <strong>Pro Analysis</strong> unlocks a full P&amp;L, DSCR breakdown, 5-year projection,
+              and a downloadable PDF report — all for $29.
+            </p>
+            <a href="https://colivingscore.onrender.com" style="display:inline-block;background:#1D9E75;color:#fff;font-size:14px;font-weight:600;padding:12px 28px;border-radius:8px;text-decoration:none">
+              Run Pro Analysis →
+            </a>
+          </div>
+        </td></tr>
+
+        <!-- Footer -->
+        <tr><td style="padding:20px 36px;border-top:1px solid #e2e8f0;text-align:center">
+          <p style="font-size:12px;color:#94a3b8;margin:0;line-height:1.6">
+            Thank you for using CoLivingScore. Best of luck with your co-living investment!<br>
+            <a href="https://colivingscore.onrender.com" style="color:#1D9E75;text-decoration:none">colivingscore.com</a>
+          </p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>"""
+
 
 @app.route("/save-email", methods=["POST"])
 def save_email():
     try:
         data = request.get_json(force=True)
-        email = data.get("email", "").strip()
+        email   = data.get("email", "").strip()
         address = data.get("address", "").strip()
         if not email or "@" not in email:
             return jsonify({"error": "invalid email"}), 400
+
+        # Save to Google Sheets (full data row)
         sheet = _get_sheet()
-        sheet.append_row([datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC"), email, address])
+        sheet.append_row([
+            datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC"),
+            email,
+            address,
+            data.get("beds", ""),
+            data.get("baths", ""),
+            data.get("halfbaths", ""),
+            data.get("sqft", ""),
+            data.get("tenantLabel", ""),
+            data.get("rent", ""),
+            data.get("mortgage", ""),
+            data.get("score", ""),
+            data.get("band", ""),
+            data.get("gross", ""),
+            data.get("net", ""),
+            data.get("dscr", ""),
+        ])
+
+        # Send score report email via Resend
+        resend.Emails.send({
+            "from": "CoLivingScore <hello@colivingscore.com>",
+            "to": [email],
+            "subject": f"Your CoLivingScore Report — {address or 'Property Analysis'}",
+            "html": _build_score_email(email, data),
+        })
+
         return jsonify({"status": "ok"}), 200
     except Exception as e:
         print(f"save-email error: {e}")
