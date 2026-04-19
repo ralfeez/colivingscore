@@ -1386,11 +1386,9 @@ function setStep(n){
 }
 
 function goToPropertyForm(){
-  if(!window._place){
-    alert('Please select an address from the dropdown suggestions to ensure accuracy.');
-    return;
-  }
-  window._address = window._place.formatted_address;
+  const typed = document.getElementById('f-address').value.trim();
+  if(!typed){ alert('Please enter a property address.'); return; }
+  window._address = window._place ? window._place.formatted_address : typed;
   document.getElementById('r-addr-text').textContent = window._address;
   const prAddr = document.getElementById('pr-addr');
   if(prAddr) prAddr.textContent = window._address;
@@ -1403,8 +1401,8 @@ function resetForm(){
   setStep(1);
   window._place   = null;
   window._address = null;
-  const pac = document.getElementById('f-address-pac');
-  if(pac) pac.value = '';
+  const addrInput = document.getElementById('f-address');
+  if(addrInput) addrInput.value = '';
   document.getElementById('r-pro-gate').innerHTML='';
   document.getElementById('r-referral').innerHTML='';
   document.getElementById('r-email-gate').innerHTML=`
@@ -1424,40 +1422,34 @@ function showProGate(){
 }
 
 // ── GOOGLE PLACES AUTOCOMPLETE ────────────────────────────────────────────────
-window.initAutocomplete = async function(){
-  if(!window.google) return;
+window.initAutocomplete = function(){
   const input = document.getElementById('f-address');
-  if(!input) return;
-  const { PlaceAutocompleteElement } = await google.maps.importLibrary('places');
-  const pac = new PlaceAutocompleteElement({
+  if(!input || !window.google) return;
+  const ac = new google.maps.places.Autocomplete(input, {
     types: ['address'],
     componentRestrictions: { country: 'us' },
+    fields: ['formatted_address','geometry','place_id','address_components']
   });
-  // Replace the plain input with the PlaceAutocompleteElement
-  pac.id = 'f-address-pac';
-  pac.style.cssText = input.style.cssText;
-  pac.className = input.className;
-  pac.setAttribute('placeholder', '123 Main St, City, State ZIP');
-  input.parentNode.replaceChild(pac, input);
-
-  pac.addEventListener('gmp-placeselect', async ({ place }) => {
-    await place.fetchFields({ fields: ['formattedAddress','location','id','addressComponents'] });
+  ac.addListener('place_changed', function(){
+    const place = ac.getPlace();
+    if(!place.geometry) return;
     const comps = {};
-    (place.addressComponents || []).forEach(c => {
-      if(c.types.includes('locality'))                    comps.city   = c.longText;
-      if(c.types.includes('administrative_area_level_2')) comps.county = c.longText;
-      if(c.types.includes('administrative_area_level_1')) comps.state  = c.shortText;
-      if(c.types.includes('postal_code'))                 comps.zip    = c.longText;
+    (place.address_components || []).forEach(c => {
+      if(c.types.includes('locality'))                       comps.city   = c.long_name;
+      if(c.types.includes('administrative_area_level_2'))    comps.county = c.long_name;
+      if(c.types.includes('administrative_area_level_1'))    comps.state  = c.short_name;
+      if(c.types.includes('postal_code'))                    comps.zip    = c.long_name;
     });
     window._place = {
-      formatted_address: place.formattedAddress,
-      lat:      place.location.lat(),
-      lng:      place.location.lng(),
-      place_id: place.id,
+      formatted_address: place.formatted_address,
+      lat:      place.geometry.location.lat(),
+      lng:      place.geometry.location.lng(),
+      place_id: place.place_id,
       ...comps
     };
+    input.value = place.formatted_address;
   });
-}
+};
 
 // ── WIRE BUTTONS ─────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function(){
