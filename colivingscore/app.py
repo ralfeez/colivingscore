@@ -281,28 +281,155 @@ def get_config():
 
 # ── Pro Analysis data routes ──────────────────────────────────────────────────
 
+def _fetch_rentcast(address, beds, baths):
+    resp = requests.get(
+        "https://api.rentcast.io/v1/avm/rent/long-term",
+        params={"address": address, "bedrooms": beds, "bathrooms": baths, "propertyType": "Single Family"},
+        headers={"X-Api-Key": RENTCAST_API_KEY},
+        timeout=10,
+    )
+    if resp.status_code != 200:
+        return {"error": f"RentCast {resp.status_code}"}
+    d = resp.json()
+    return {
+        "rent_estimate": d.get("rent"),
+        "rent_low":      d.get("rentRangeLow"),
+        "rent_high":     d.get("rentRangeHigh"),
+        "comparables":   d.get("comparables", [])[:5],
+    }
+
+
+def _fetch_walkscore(address, lat, lng):
+    resp = requests.get(
+        "https://api.walkscore.com/score",
+        params={
+            "format": "json",
+            "address": address,
+            "lat": lat,
+            "lon": lng,
+            "transit": 1,
+            "bike": 1,
+            "wsapikey": WALKSCORE_API_KEY,
+        },
+        timeout=10,
+    )
+    d = resp.json()
+    return {
+        "walk_score":    d.get("walkscore"),
+        "walk_desc":     d.get("description"),
+        "transit_score": d.get("transit", {}).get("score"),
+        "transit_desc":  d.get("transit", {}).get("description"),
+        "bike_score":    d.get("bike", {}).get("score"),
+        "bike_desc":     d.get("bike", {}).get("description"),
+        "logo_url":      d.get("logo_url"),
+    }
+
+
+def _fetch_nearby(lat, lng, tenant_key):
+    if not lat or not lng:
+        return {"error": "lat/lng required"}
+
+    def nearest(place_type):
+        resp = requests.get(
+            "https://maps.googleapis.com/maps/api/place/nearbysearch/json",
+            params={"location": f"{lat},{lng}", "rankby": "distance",
+                    "type": place_type, "key": GOOGLE_PLACES_API_KEY},
+            timeout=10,
+        )
+        results = resp.json().get("results", [])
+        if not results:
+            return None
+        r    = results[0]
+        rlat = r["geometry"]["location"]["lat"]
+        rlng = r["geometry"]["location"]["lng"]
+        dist = _haversine_miles(lat, lng, rlat, rlng)
+        return {"name": r.get("name"), "distance_miles": round(dist, 2),
+                "vicinity": r.get("vicinity"), "type": place_type}
+
+    transit  = nearest("transit_station")
+    hospital = nearest("hospital")
+
+    amenity_types = TENANT_AMENITY_TYPES.get(tenant_key, TENANT_AMENITY_TYPES["workforce"])
+    amenities = []
+    with ThreadPoolExecutor(max_workers=5) as ex:
+        futures = {ex.submit(nearest, pt): pt for pt in amenity_types}
+        for future in as_completed(futures):
+            result = future.result()
+            if result:
+                amenities.append(result)
+    amenities.sort(key=lambda x: x["distance_miles"])
+
+    def transit_band(d):
+        if d is None: return "far"
+        if d < 0.5:   return "walkable"
+        if d < 1.0:   return "close"
+        if d < 2.0:   return "moderate"
+        return "far"
+
+    def hospital_band(d):
+        if d is None: return "far"
+        if d < 1.0:   return "close"
+        if d < 3.0:   return "moderate"
+        return "far"
+
+    t_dist = transit["distance_miles"]  if transit  else None
+    h_dist = hospital["distance_miles"] if hospital else None
+
+    return {
+        "transit":       transit,
+        "hospital":      hospital,
+        "transit_band":  transit_band(t_dist),
+        "hospital_band": hospital_band(h_dist),
+        "amenities":     amenities,
+    }
+
+
+def _fetch_demographics(zip_code):
+    if not zip_code:
+        return {"error": "zip required"}
+
+    variables = ",".join([
+        "B01003_001E",
+        "B25003_001E",
+        "B25003_002E",
+        "B25003_003E",
+        "B19013_001E",
+        "B25064_001E",
+    ])
+    resp = requests.get(
+        "https://api.census.gov/data/2023/acs/acs5",
+        params={"get": variables, "for": f"zip code tabulation area:{zip_code}"},
+        timeout=10,
+    )
+    if resp.status_code != 200:
+        return {"error": "Census data unavailable"}
+    rows = resp.json()
+    if len(rows) < 2:
+        return {"error": "No data for this zip"}
+    headers, values = rows[0], rows[1]
+    d = dict(zip(headers, values))
+
+    pop        = int(d.get("B01003_001E", 0) or 0)
+    total_hu   = int(d.get("B25003_001E", 1) or 1)
+    renter_hu  = int(d.get("B25003_003E", 0) or 0)
+    income     = int(d.get("B19013_001E", 0) or 0)
+    med_rent   = int(d.get("B25064_001E", 0) or 0)
+    renter_pct = round(renter_hu / total_hu * 100, 1) if total_hu else 0
+
+    return {
+        "population":    pop,
+        "renter_pct":    renter_pct,
+        "median_income": income,
+        "median_rent":   med_rent,
+        "zip":           zip_code,
+    }
+
+
 @app.route("/api/rentcast", methods=["POST"])
 def api_rentcast():
     try:
-        data    = request.get_json(force=True)
-        address = data.get("address", "")
-        beds    = data.get("beds", 3)
-        baths   = data.get("baths", 2)
-        resp = requests.get(
-            "https://api.rentcast.io/v1/avm/rent/long-term",
-            params={"address": address, "bedrooms": beds, "bathrooms": baths, "propertyType": "Single Family"},
-            headers={"X-Api-Key": RENTCAST_API_KEY},
-            timeout=10
-        )
-        if resp.status_code != 200:
-            return jsonify({"error": f"RentCast {resp.status_code}"}), 502
-        d = resp.json()
-        return jsonify({
-            "rent_estimate": d.get("rent"),
-            "rent_low":      d.get("rentRangeLow"),
-            "rent_high":     d.get("rentRangeHigh"),
-            "comparables":   d.get("comparables", [])[:5],
-        })
+        data = request.get_json(force=True)
+        return jsonify(_fetch_rentcast(data.get("address", ""), data.get("beds", 3), data.get("baths", 2)))
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -310,33 +437,8 @@ def api_rentcast():
 @app.route("/api/walkscore", methods=["POST"])
 def api_walkscore():
     try:
-        data    = request.get_json(force=True)
-        address = data.get("address", "")
-        lat     = data.get("lat")
-        lng     = data.get("lng")
-        resp = requests.get(
-            "https://api.walkscore.com/score",
-            params={
-                "format": "json",
-                "address": address,
-                "lat": lat,
-                "lon": lng,
-                "transit": 1,
-                "bike": 1,
-                "wsapikey": WALKSCORE_API_KEY,
-            },
-            timeout=10
-        )
-        d = resp.json()
-        return jsonify({
-            "walk_score":    d.get("walkscore"),
-            "walk_desc":     d.get("description"),
-            "transit_score": d.get("transit", {}).get("score"),
-            "transit_desc":  d.get("transit", {}).get("description"),
-            "bike_score":    d.get("bike", {}).get("score"),
-            "bike_desc":     d.get("bike", {}).get("description"),
-            "logo_url":      d.get("logo_url"),
-        })
+        data = request.get_json(force=True)
+        return jsonify(_fetch_walkscore(data.get("address", ""), data.get("lat"), data.get("lng")))
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -363,67 +465,8 @@ TENANT_AMENITY_TYPES = {
 @app.route("/api/nearby", methods=["POST"])
 def api_nearby():
     try:
-        data       = request.get_json(force=True)
-        lat        = data.get("lat")
-        lng        = data.get("lng")
-        tenant_key = data.get("tenant_key", "workforce")
-        if not lat or not lng:
-            return jsonify({"error": "lat/lng required"}), 400
-
-        def nearest(place_type):
-            resp = requests.get(
-                "https://maps.googleapis.com/maps/api/place/nearbysearch/json",
-                params={"location": f"{lat},{lng}", "rankby": "distance",
-                        "type": place_type, "key": GOOGLE_PLACES_API_KEY},
-                timeout=10
-            )
-            results = resp.json().get("results", [])
-            if not results:
-                return None
-            r    = results[0]
-            rlat = r["geometry"]["location"]["lat"]
-            rlng = r["geometry"]["location"]["lng"]
-            dist = _haversine_miles(lat, lng, rlat, rlng)
-            return {"name": r.get("name"), "distance_miles": round(dist, 2),
-                    "vicinity": r.get("vicinity"), "type": place_type}
-
-        transit  = nearest("transit_station")
-        hospital = nearest("hospital")
-
-        # Fetch tenant-specific amenities in parallel
-        amenity_types = TENANT_AMENITY_TYPES.get(tenant_key, TENANT_AMENITY_TYPES["workforce"])
-        amenities = []
-        with ThreadPoolExecutor(max_workers=5) as ex:
-            futures = {ex.submit(nearest, pt): pt for pt in amenity_types}
-            for future in as_completed(futures):
-                result = future.result()
-                if result:
-                    amenities.append(result)
-        amenities.sort(key=lambda x: x["distance_miles"])
-
-        def transit_band(d):
-            if d is None: return "far"
-            if d < 0.5:   return "walkable"
-            if d < 1.0:   return "close"
-            if d < 2.0:   return "moderate"
-            return "far"
-
-        def hospital_band(d):
-            if d is None: return "far"
-            if d < 1.0:   return "close"
-            if d < 3.0:   return "moderate"
-            return "far"
-
-        t_dist = transit["distance_miles"]  if transit  else None
-        h_dist = hospital["distance_miles"] if hospital else None
-
-        return jsonify({
-            "transit":       transit,
-            "hospital":      hospital,
-            "transit_band":  transit_band(t_dist),
-            "hospital_band": hospital_band(h_dist),
-            "amenities":     amenities,
-        })
+        data = request.get_json(force=True)
+        return jsonify(_fetch_nearby(data.get("lat"), data.get("lng"), data.get("tenant_key", "workforce")))
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -432,45 +475,7 @@ def api_nearby():
 def api_demographics():
     try:
         data = request.get_json(force=True)
-        zip_code = data.get("zip", "")
-        if not zip_code:
-            return jsonify({"error": "zip required"}), 400
-
-        variables = ",".join([
-            "B01003_001E",  # total population
-            "B25003_001E",  # total occupied housing units
-            "B25003_002E",  # owner occupied
-            "B25003_003E",  # renter occupied
-            "B19013_001E",  # median household income
-            "B25064_001E",  # median gross rent
-        ])
-        resp = requests.get(
-            "https://api.census.gov/data/2023/acs/acs5",
-            params={"get": variables, "for": f"zip code tabulation area:{zip_code}"},
-            timeout=10
-        )
-        if resp.status_code != 200:
-            return jsonify({"error": "Census data unavailable"}), 502
-        rows = resp.json()
-        if len(rows) < 2:
-            return jsonify({"error": "No data for this zip"}), 404
-        headers, values = rows[0], rows[1]
-        d = dict(zip(headers, values))
-
-        pop        = int(d.get("B01003_001E", 0) or 0)
-        total_hu   = int(d.get("B25003_001E", 1) or 1)
-        renter_hu  = int(d.get("B25003_003E", 0) or 0)
-        income     = int(d.get("B19013_001E", 0) or 0)
-        med_rent   = int(d.get("B25064_001E", 0) or 0)
-        renter_pct = round(renter_hu / total_hu * 100, 1) if total_hu else 0
-
-        return jsonify({
-            "population":       pop,
-            "renter_pct":       renter_pct,
-            "median_income":    income,
-            "median_rent":      med_rent,
-            "zip":              zip_code,
-        })
+        return jsonify(_fetch_demographics(data.get("zip", "")))
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -609,36 +614,22 @@ def api_pro_data_fast():
         baths      = data.get("baths", 2)
         tenant_key = data.get("tenant_key", "workforce")
 
-        def call_rentcast():
-            r = requests.post(f"{request.host_url}api/rentcast",
-                json={"address": address, "beds": beds, "baths": baths}, timeout=15)
-            return "rentcast", r.json() if r.ok else {"error": r.text}
-
-        def call_walkscore():
-            r = requests.post(f"{request.host_url}api/walkscore",
-                json={"address": address, "lat": lat, "lng": lng}, timeout=15)
-            return "walkscore", r.json() if r.ok else {"error": r.text}
-
-        def call_nearby():
-            r = requests.post(f"{request.host_url}api/nearby",
-                json={"lat": lat, "lng": lng, "tenant_key": tenant_key}, timeout=15)
-            return "nearby", r.json() if r.ok else {"error": r.text}
-
-        def call_demographics():
-            r = requests.post(f"{request.host_url}api/demographics",
-                json={"zip": zip_code}, timeout=15)
-            return "demographics", r.json() if r.ok else {"error": r.text}
+        tasks = {
+            "rentcast":     lambda: _fetch_rentcast(address, beds, baths),
+            "walkscore":    lambda: _fetch_walkscore(address, lat, lng),
+            "nearby":       lambda: _fetch_nearby(lat, lng, tenant_key),
+            "demographics": lambda: _fetch_demographics(zip_code),
+        }
 
         results = {}
         with ThreadPoolExecutor(max_workers=4) as executor:
-            futures = {executor.submit(fn): fn.__name__
-                       for fn in [call_rentcast, call_walkscore, call_nearby, call_demographics]}
+            futures = {executor.submit(fn): key for key, fn in tasks.items()}
             for future in as_completed(futures):
+                key = futures[future]
                 try:
-                    key, value = future.result()
-                    results[key] = value
+                    results[key] = future.result()
                 except Exception as e:
-                    results[futures[future]] = {"error": str(e)}
+                    results[key] = {"error": str(e)}
 
         return jsonify(results)
     except Exception as e:
@@ -667,44 +658,38 @@ def api_pro_data():
         state      = data.get("state", "")
         tenant_key = data.get("tenant_key", "workforce")
 
-        def call_rentcast():
-            r = requests.post(f"{request.host_url}api/rentcast",
-                json={"address": address, "beds": beds, "baths": baths}, timeout=15)
-            return "rentcast", r.json() if r.ok else {"error": r.text}
-
-        def call_walkscore():
-            r = requests.post(f"{request.host_url}api/walkscore",
-                json={"address": address, "lat": lat, "lng": lng}, timeout=15)
-            return "walkscore", r.json() if r.ok else {"error": r.text}
-
-        def call_nearby():
-            r = requests.post(f"{request.host_url}api/nearby",
-                json={"lat": lat, "lng": lng}, timeout=15)
-            return "nearby", r.json() if r.ok else {"error": r.text}
-
-        def call_demographics():
-            r = requests.post(f"{request.host_url}api/demographics",
-                json={"zip": zip_code}, timeout=15)
-            return "demographics", r.json() if r.ok else {"error": r.text}
-
         def call_competitive():
-            r = requests.post(f"{request.host_url}api/competitive",
-                json={"address": address, "city": city, "state": state,
-                      "tenant_key": tenant_key, "beds": beds}, timeout=60)
-            return "competitive", r.json() if r.ok else {"error": r.text}
+            prompt = _build_competitive_prompt(address, city, state, tenant_key, beds)
+            client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+            response = client.messages.create(
+                model="claude-opus-4-5-20251001",
+                max_tokens=4096,
+                tools=[{"type": "web_search_20250305", "name": "web_search", "max_uses": 8}],
+                messages=[{"role": "user", "content": prompt}],
+            )
+            analysis = ""
+            for block in response.content:
+                if hasattr(block, "text"):
+                    analysis += block.text
+            return {"analysis": analysis, "tenant_key": tenant_key, "city": city}
+
+        tasks = {
+            "rentcast":     lambda: _fetch_rentcast(address, beds, baths),
+            "walkscore":    lambda: _fetch_walkscore(address, lat, lng),
+            "nearby":       lambda: _fetch_nearby(lat, lng, tenant_key),
+            "demographics": lambda: _fetch_demographics(zip_code),
+            "competitive":  call_competitive,
+        }
 
         results = {}
-        tasks = [call_rentcast, call_walkscore, call_nearby,
-                 call_demographics, call_competitive]
-
         with ThreadPoolExecutor(max_workers=5) as executor:
-            futures = {executor.submit(fn): fn.__name__ for fn in tasks}
+            futures = {executor.submit(fn): key for key, fn in tasks.items()}
             for future in as_completed(futures):
+                key = futures[future]
                 try:
-                    key, value = future.result()
-                    results[key] = value
+                    results[key] = future.result()
                 except Exception as e:
-                    results[futures[future]] = {"error": str(e)}
+                    results[key] = {"error": str(e)}
 
         return jsonify(results)
     except Exception as e:
