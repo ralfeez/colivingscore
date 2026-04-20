@@ -29,13 +29,20 @@ Scores are clamped to a minimum of 0.
 | Parking          | 12     | 12   | 12     | 6        | 12      | 6     | 12        |
 | Transit          | 10     | 8    | 8      | 25       | 15      | 8     | 8         |
 | Hospital         | 20     | 4    | 4      | 4        | 14      | 10    | 6         |
-| Bed count        | 8      | 8    | 8      | 8        | 8       | 8     | 8         |
+| Laundry          | 10     | 10   | 10     | 10       | 10      | 10    | 10        |
+| Tenant churn     | 8      | 4    | 5      | 3        | 0       | 2     | 5         |
 
 Notes:
 - Parking max penalty is halved for Students and Sober Living — these tenant
   types are less likely to own vehicles.
 - Hospital weight is highest for Nurses (commute) and Seniors (medical access).
 - Transit weight is highest for Students, who most commonly rely on public transit.
+- Laundry is a flat penalty regardless of tenant type — all midterm renters
+  expect in-home laundry as a baseline amenity.
+- Tenant churn penalty reflects the real operational cost of frequent tenant
+  turnover: cleaning, re-listing, gap weeks, and management burden. Seniors
+  receive no penalty as the most stable tenant type. Nurses receive the highest
+  penalty due to standard 3-month travel contracts.
 
 ---
 
@@ -51,6 +58,11 @@ Notes:
 | > 2.5     | 100%      |
 
 Deduction = max_penalty × penalty_pct
+
+**Improvement suggestion:** Adding a bedroom may seem like an easy path to more
+income, but tenants in co-living homes place high value on bathroom access. An
+extra bedroom without an extra bathroom can make the home harder to rent and may
+offset any gain in revenue. Focus on maintaining a strong bed-to-bath ratio first.
 
 ### Square Footage per Bedroom
 
@@ -75,10 +87,6 @@ Spot quality values:
 Average quality across all bedrooms is computed, then:
   Deduction = max_penalty × (1 − avg_quality)
 
-Example: 5 beds, 1 garage + 4 carport
-  Avg quality = (100 + 65 + 65 + 65 + 65) / 5 = 72%
-  Deduction   = 12 × (1 − 0.72) = 3 points
-
 ### Transit Proximity
 
 | Distance       | Penalty % |
@@ -96,15 +104,61 @@ Example: 5 beds, 1 garage + 4 carport
 | Moderate    | 50%       |
 | Far > 3mi   | 100%      |
 
+### Laundry (flat penalty — not tenant-type dependent)
+
+| Status                  | Penalty |
+|-------------------------|---------|
+| In-home W/D provided    | 0       |
+| In-home pay / coin-op   | −3      |
+| None                    | −10     |
+
+Rationale: Co-living tenants are midterm renters without personal appliances.
+Provided laundry is a baseline expectation. Pay laundry is a minor inconvenience.
+No laundry is a genuine detriment that limits the tenant pool and justifies a
+meaningful penalty.
+
+**Improvement suggestion:** Installing an in-home washer and dryer can be a
+relatively low-cost improvement that recovers up to 10 points and broadens your
+tenant pool. If space does not exist, plumbing will not support it, or other
+factors are present, this might be an expensive addition.
+
+### Tenant Churn / Turnover (flat penalty by tenant type)
+
+| Tenant Type         | Penalty | Rationale                                              |
+|---------------------|---------|--------------------------------------------------------|
+| Seniors 55+         | 0       | Most stable, long stays, very low churn                |
+| Sober Living        | −2      | Program-structured, medium stay, reliable income       |
+| Students            | −3      | Long academic-year stays, but seasonal vacancy risk    |
+| Tech / Remote       | −4      | Medium stay, market-driven, moderate churn             |
+| General Workforce   | −5      | Variable stay length, job-dependent instability        |
+| Construction/Trades | −5      | Project-based work, variable duration                  |
+| Travel Nurses       | −8      | Highest churn — 3-month contracts standard; turnover   |
+|                     |         | cost is real and frequent                              |
+
+Rationale: Churn affects profitability beyond rent rate. Frequent turnover means
+cleaning costs, re-listing time, gap weeks between tenants, and higher management
+burden. This penalty is intentionally modest (max 8) since nurses already face
+other penalties if the property isn't near medical facilities.
+
+**Improvement suggestion:** Consider a more stable tenant type — switching to
+Sober Living or Seniors can recover points and reduce management burden. Use the
+tenant type selector to see how the score changes.
+
 ### Bed Count
 
-| Beds  | Penalty % | Rationale                      |
-|-------|-----------|--------------------------------|
-| 4–5   | 0%        | Ideal co-living sweet spot     |
-| 6     | 25%       | Manageable but complex         |
-| 3     | 50%       | Limited income potential       |
-| 7+    | 75%       | High management complexity     |
-| 2     | 100%      | Not suited for co-living       |
+Bed count is NOT a scored factor. There is no penalty for any number of bedrooms.
+The score is determined by the bed-to-bath ratio, profitability (DSCR), and all
+other factors above.
+
+**Informational flag (no score impact):** Properties with 3 or fewer bedrooms
+display a flag: "Properties with 3 or fewer bedrooms have limited income
+potential for co-living. In markets with low acquisition costs, the numbers may
+still work — let your monthly net income and cash flow be the guide."
+
+Rationale: More bedrooms with proper bathroom ratios is better for co-living
+profitability. A 10-bed/10-bath home is an excellent co-living candidate. Penalizing
+bed count would penalize success. The DSCR and bathroom ratio factors already
+handle properties that are too small to be viable.
 
 ---
 
@@ -127,13 +181,6 @@ Example: 5 beds, 1 garage + 4 carport
 | Sober Living | −8 points               |
 | All others   | −4 points               |
 
-Rationale:
-- Seniors: mobility, fall risk, and elevator absence make upper floors a
-  serious liability for this demographic.
-- Sober Living: structure and safety matter in recovery housing; stairs
-  add friction.
-- All others: minor inconvenience, noted but not disqualifying.
-
 ---
 
 ## Mortgage / Cash Flow Factor
@@ -147,12 +194,12 @@ Default utility estimates based on property size:
 - 1,500–2,000 sq ft → $550/month
 - Over 2,000 sq ft  → $700/month
 
-Also assumes: reserves $350/mo, management 10% of effective gross.
+Also assumes: reserves $350/mo, management 15% of effective gross.
 
 Calculation:
   Gross          = beds × rent per room (full potential, no vacancy)
   Effective Gross = Gross × 92% occupancy
-  Management     = Effective Gross × 10%
+  Management     = Effective Gross × 15%
   Operating Exp  = Utilities + Reserves + Management  (no taxes/insurance — in PITI)
   NOI            = Effective Gross − Operating Expenses
   Monthly Net    = NOI − Mortgage (PITI)
@@ -168,25 +215,29 @@ No penalty applied if no mortgage is entered.
 
 ---
 
-## Improvement Suggestions (Free Score Screen)
+## Improvement Suggestions
 
-Only the top 3 scoring deductions are surfaced as improvement suggestions.
+The free score surfaces the **top 3 scoring deductions** as improvement suggestions.
+The Pro Analysis surfaces the **top 4–5**.
+
+Factors that cannot be changed (transit, hospital proximity, floor count) are
+framed as tenant-type pivot suggestions rather than property fixes.
+
 HOA flags are always shown separately as a regulatory notice.
-Suggestions are intentionally general — the Pro Analysis phase provides
-specific ROI estimates and improvement recommendations.
 
 ---
 
-## Pro Analysis Score (Future)
+## Pro Analysis Score
 
-A separate, more accurate score using real market data:
-- Rental comps (RentCast API)
-- Property value trends (Zillow / Attom)
-- Market vacancy rates
-- Actual utility costs
-- Neighborhood quality indices
+Uses real market data from external APIs:
+- Rental comps and market estimate (RentCast API)
+- Walkability, transit, and bike scores (WalkScore API)
+- Neighborhood demographics — population, renter %, median income, median rent (Census ACS)
+- Tenant-type specific amenity proximity (Google Places API)
+- Competitive landscape and market intelligence (Claude AI + web search)
 
-Different algorithm entirely — this document covers the Free Score only.
+The Pro Analysis financial model uses user-provided inputs (actual mortgage,
+taxes, insurance, utilities, management rate) rather than the free score defaults.
 
 ---
 
@@ -206,5 +257,50 @@ Used when no rent is entered. Users should override with local market rates.
 
 ---
 
-*Last updated: 2026-04-18 — corrected PITI double-count (taxes/insurance removed from opex)*
-*Scope: Free Score only. Subject to revision after user testing.*
+## Management Rate
+
+Default: **15%** of effective gross income.
+
+In the Pro Analysis, this is a user-editable input. Co-living operations
+typically run 15–25% due to higher turnover and per-room lease management
+complexity. Self-managed operators still incur significant time costs.
+
+The free score uses a fixed 15% assumption.
+
+---
+
+*Scope: Free Score and Pro Analysis financial model.*
+
+---
+
+## Changelog
+
+### 2026-04-20
+- **Removed:** Bed count penalty factor (was max 8 pts). Replaced with an
+  informational flag for ≤3 beds. Rationale: bed count alone is not a reliable
+  indicator of co-living viability. The DSCR and bathroom ratio factors already
+  penalize properties that are too small or poorly configured.
+- **Added:** Laundry factor (flat penalty, not tenant-type dependent).
+  Provided = 0, Pay/coin-op = −3, None = −10. Rationale: midterm renters
+  expect in-home laundry as a baseline amenity.
+- **Added:** Tenant churn factor (flat penalty by tenant type). Max −8 pts
+  (Travel Nurses). Rationale: turnover cost is a real profitability variable
+  independent of rent rate.
+- **Changed:** Free score management rate from 10% to 15% default.
+  Rationale: 10% reflects single-family property management rates; co-living
+  is significantly more management-intensive.
+- **Changed:** Pro Analysis management rate input default from 10% to 15%.
+  Field remains user-editable.
+- **Added:** Google Places tenant-type amenity lookup in /api/nearby.
+  Returns tenant-specific nearby places alongside existing transit/hospital data.
+- **Added:** "Use This In Your Listing" marketing copy block in Pro Analysis
+  Location Intelligence section.
+- **Added:** Score Improvement Suggestions card in Pro Analysis report (top 4–5).
+- **Added:** Be Aware section in Pro Analysis report.
+- **Added:** Assumptions notation on property form, financial inputs form,
+  and in Pro Analysis report body.
+- **Added:** Legal callout banners for Sober Living and Seniors 55+ tenant types.
+- **Added:** Room size tooltip on Bedrooms field (70 sq ft min, 7 ft ceiling,
+  legal egress, local regulations).
+- **Added:** Sqft per tenant hover tooltip on results screen.
+- **Added:** Insurance tooltip on Pro Analysis financial form.

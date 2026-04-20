@@ -22,6 +22,12 @@
   --shadow-lg:0 8px 24px rgba(0,0,0,0.10);
   --border:1px solid var(--gray-200);
 }
+/* ── TOOLTIPS ── */
+.tip{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:var(--gray-300);color:var(--gray-600);font-size:9px;font-weight:700;cursor:help;position:relative;margin-left:4px;vertical-align:middle;flex-shrink:0}
+.tip:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--gray-900);color:#fff;font-size:11px;font-weight:400;line-height:1.5;padding:8px 10px;border-radius:6px;white-space:normal;width:230px;z-index:300;pointer-events:none;box-shadow:var(--shadow-md)}
+.tip:hover::before{content:'';position:absolute;bottom:calc(100% + 2px);left:50%;transform:translateX(-50%);border:4px solid transparent;border-top-color:var(--gray-900);z-index:300}
+/* ── ASSUMPTION NOTICE ── */
+.assumption-notice{margin-top:14px;padding:10px 12px;background:var(--amber-light);border:1px solid #E8C87A;border-radius:var(--radius);font-size:11.5px;color:var(--gray-700);line-height:1.5}
 body{font-family:var(--font);background:#EEF2EE;color:var(--gray-900);min-height:100vh;font-size:14px;line-height:1.6}
 
 /* ── HEADER ── */
@@ -299,7 +305,7 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
 
       <div class="field-grid">
         <div class="field">
-          <label>Bedrooms <span class="req">*</span></label>
+          <label>Bedrooms <span class="req">*</span><span class="tip" data-tip="Minimum recommended bedroom size: 70 sq ft with a 7 ft or higher ceiling and a legal egress window. Local regulations may also apply — verify requirements in your area before converting or adding bedrooms. This tool cannot verify individual room sizes from total square footage alone.">?</span></label>
           <select id="f-beds">
             <option value="1">1</option>
             <option value="2">2</option>
@@ -412,6 +418,14 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
           <input type="number" id="f-mortgage" value="2850" min="0">
         </div>
         <div class="field">
+          <label>Laundry</label>
+          <select id="f-laundry">
+            <option value="provided" selected>In-home W/D provided</option>
+            <option value="pay">In-home pay / coin-op</option>
+            <option value="none">None</option>
+          </select>
+        </div>
+        <div class="field">
           <label>Target tenant type <span class="req">*</span></label>
           <select id="f-tenant" onchange="updateRentDefault()">
             <option value="nurses" selected>Travel Nurses</option>
@@ -428,7 +442,10 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
           <input type="number" id="f-rent" value="1100" min="0">
           <div class="field-hint">Default based on tenant type — adjust for your market</div>
         </div>
+        <div class="field-full" id="f-tenant-note" style="display:none"></div>
       </div>
+
+      <div class="assumption-notice"><strong>Note:</strong> Results assume you have already verified local zoning and occupancy requirements and that the home is in good to excellent condition. Any legal fees, permits, repairs, or seasonal occupancy shifts should be factored into your decision before proceeding.</div>
 
       <div class="btn-row">
         <button class="btn-primary" id="btn-calculate">Calculate Score →</button>
@@ -550,7 +567,7 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
           <input type="number" id="p-taxes" value="4800">
         </div>
         <div class="field">
-          <label>Annual insurance</label>
+          <label>Annual insurance <span class="tip" data-tip="Standard landlord insurance may not cover co-living operations. Check with your provider before starting.">?</span></label>
           <input type="number" id="p-insurance" value="2400">
         </div>
         <div class="field">
@@ -656,11 +673,13 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
           </select>
         </div>
         <div class="field">
-          <label>Management rate (%)</label>
-          <input type="number" id="p-mgmt-rate" value="10" min="0" max="100" step="0.5">
-          <div class="field-hint">Enter the actual % charged — default 10%</div>
+          <label>Management rate (%) <span class="tip" data-tip="Co-living typically runs 15–25% due to higher turnover and per-room lease management. Self-managed operators still incur time costs.">?</span></label>
+          <input type="number" id="p-mgmt-rate" value="15" min="0" max="100" step="0.5">
+          <div class="field-hint">Co-living typically runs 15–25%</div>
         </div>
       </div>
+
+      <div class="assumption-notice"><strong>Note:</strong> Results assume you have already verified local zoning and occupancy requirements and that the home is in good to excellent condition. Any legal fees, permits, repairs, or seasonal occupancy shifts should be factored into your decision before proceeding.</div>
 
       <div class="btn-row">
         <button class="btn-outline" onclick="showScreen('s-result')">Cancel</button>
@@ -818,11 +837,26 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
       <div id="rpt-tenant-comparison"></div>
     </div>
     <div class="card">
+      <div class="card-title">Score Improvement Opportunities</div>
+      <div class="card-sub">Top factors affecting your score — and what can be done about them.</div>
+      <div id="rpt-score-suggestions"></div>
+    </div>
+    <div class="card">
       <div class="card-title">Capital Improvements — ROI Analysis</div>
       <div class="card-sub">Payback periods at your room count and target rent.</div>
       <div id="rpt-improvements"></div>
     </div>
     <div id="rpt-verdict"></div>
+    <div class="card" style="background:var(--amber-light);border:1px solid #E8C87A">
+      <div class="card-title" style="margin-bottom:10px">⚠ Be Aware</div>
+      <div style="font-size:13px;color:var(--gray-700);line-height:1.7">
+        <p style="margin-bottom:8px"><strong>Zoning &amp; occupancy laws:</strong> Many jurisdictions limit the number of unrelated occupants or require permits for group housing. Verify local ordinances before purchasing or converting a property for co-living use.</p>
+        <p style="margin-bottom:8px"><strong>Minimum room size:</strong> Bedrooms used for co-living should be a minimum of 70 sq ft with a 7 ft or higher ceiling and a legal egress window. Minimum room size standards vary by local jurisdiction — verify requirements in your area before converting or adding bedrooms.</p>
+        <p style="margin-bottom:8px"><strong>Property condition:</strong> This analysis assumes the home is in good to excellent condition. Deferred maintenance, aging systems, or required repairs can significantly affect your real operating costs. Budget for these before committing.</p>
+        <p style="margin-bottom:8px"><strong>Seasonal occupancy:</strong> Demand for certain tenant types — particularly students — fluctuates seasonally. Account for off-peak vacancy periods when evaluating annual cash flow projections.</p>
+        <p><strong>Furnishing:</strong> Most co-living and midterm rental tenants expect a furnished room. Budget for furnishing costs as a one-time capital expense before your first tenant moves in.</p>
+      </div>
+    </div>
     <div class="card" style="text-align:center;padding:28px">
       <div style="font-size:15px;font-weight:600;margin-bottom:6px">Download Lender-Ready PDF Report</div>
       <div style="font-size:13px;color:var(--gray-500);margin-bottom:16px">Full report with financials, market data, and Go/No-Go verdict.</div>
@@ -840,13 +874,13 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
 // ── SCORING ENGINE ────────────────────────────────────────────────────────────
 
 const TENANT_PROFILES = {
-  nurses:    {label:'Travel Nurses',         bathW:25, sqftW:12, parkW:12, transitW:10, hospitalW:20, bedW:8, floorPenalty:4,  rent:1100},
-  tech:      {label:'Tech / Remote Workers', bathW:18, sqftW:12, parkW:12, transitW:8,  hospitalW:4,  bedW:8, floorPenalty:4,  rent:1000},
-  trades:    {label:'Construction / Trades', bathW:18, sqftW:12, parkW:12, transitW:8,  hospitalW:4,  bedW:8, floorPenalty:4,  rent:950},
-  students:  {label:'Students',              bathW:18, sqftW:12, parkW:6,  transitW:25, hospitalW:4,  bedW:8, floorPenalty:4,  rent:800},
-  seniors:   {label:'Seniors 55+',           bathW:25, sqftW:12, parkW:12, transitW:15, hospitalW:14, bedW:8, floorPenalty:15, rent:900},
-  sober:     {label:'Sober Living',          bathW:18, sqftW:12, parkW:6,  transitW:8,  hospitalW:10, bedW:8, floorPenalty:8,  rent:850},
-  workforce: {label:'General Workforce',     bathW:18, sqftW:12, parkW:12, transitW:8,  hospitalW:6,  bedW:8, floorPenalty:4,  rent:875},
+  nurses:    {label:'Travel Nurses',         bathW:25, sqftW:12, parkW:12, transitW:10, hospitalW:20, floorPenalty:4,  churnPenalty:8, rent:1100},
+  tech:      {label:'Tech / Remote Workers', bathW:18, sqftW:12, parkW:12, transitW:8,  hospitalW:4,  floorPenalty:4,  churnPenalty:4, rent:1000},
+  trades:    {label:'Construction / Trades', bathW:18, sqftW:12, parkW:12, transitW:8,  hospitalW:4,  floorPenalty:4,  churnPenalty:5, rent:950},
+  students:  {label:'Students',              bathW:18, sqftW:12, parkW:6,  transitW:25, hospitalW:4,  floorPenalty:4,  churnPenalty:3, rent:800},
+  seniors:   {label:'Seniors 55+',           bathW:25, sqftW:12, parkW:12, transitW:15, hospitalW:14, floorPenalty:15, churnPenalty:0, rent:900},
+  sober:     {label:'Sober Living',          bathW:18, sqftW:12, parkW:6,  transitW:8,  hospitalW:10, floorPenalty:8,  churnPenalty:2, rent:850},
+  workforce: {label:'General Workforce',     bathW:18, sqftW:12, parkW:12, transitW:8,  hospitalW:6,  floorPenalty:4,  churnPenalty:5, rent:875},
 };
 
 function defaultUtilities(sqft){
@@ -879,6 +913,7 @@ function getInputs(){
     tenant:    document.getElementById('f-tenant').value,
     tenantLabel: document.getElementById('f-tenant').options[document.getElementById('f-tenant').selectedIndex].text,
     rent:      parseInt(document.getElementById('f-rent').value)||0,
+    laundry:   document.getElementById('f-laundry').value,
   };
 }
 
@@ -886,6 +921,19 @@ function updateRentDefault(){
   const key = document.getElementById('f-tenant').value;
   const p = TENANT_PROFILES[key];
   if(p) document.getElementById('f-rent').value = p.rent;
+  const noteEl = document.getElementById('f-tenant-note');
+  if(!noteEl) return;
+  const notes = {
+    sober:   'Operating a sober living home requires state licensing in most states. Verify certification requirements before proceeding.',
+    seniors: 'Age-restricted housing (55+) is subject to Fair Housing Act rules. Confirm your property and operating model qualifies before marketing to this tenant type.'
+  };
+  if(notes[key]){
+    noteEl.style.display = '';
+    noteEl.innerHTML = `<div class="banner caution"><div class="banner-icon">!</div><div class="banner-text">${notes[key]}</div></div>`;
+  } else {
+    noteEl.style.display = 'none';
+    noteEl.innerHTML = '';
+  }
 }
 
 function scoreProperty(inp, tenantKey){
@@ -928,12 +976,21 @@ function scoreProperty(inp, tenantKey){
   factors.push({factor:'Hospital proximity', deduction:Math.round(p.hospitalW * hPct),
     message:'Distance to medical facilities is weighted heavily for this tenant type. Closer proximity to hospitals and medical centers improves both score and tenant appeal.'});
 
-  // 6. Bed count
-  const bPct = (inp.beds>=4&&inp.beds<=5)?0 : inp.beds===6?0.25 : inp.beds===3?0.50 : inp.beds>=7?0.75 : 1.0;
-  factors.push({factor:'Bedroom count', deduction:Math.round(p.bedW * bPct),
-    message:'The ideal co-living property has 4–5 bedrooms. Too few limits income potential; too many can increase management complexity without a proportional rent increase.'});
+  // 6. Laundry (flat penalty — not tenant-type dependent)
+  const laundryPenalty = ({provided:0, pay:3, none:10})[inp.laundry] ?? 0;
+  factors.push({factor:'Laundry', deduction:laundryPenalty,
+    message: laundryPenalty > 0
+      ? 'Installing an in-home washer and dryer can be a relatively low-cost improvement that recovers up to 10 points and broadens your tenant pool. If space does not exist, plumbing will not support it, or other factors are present, this might be an expensive addition.'
+      : 'In-home laundry is provided — a valued amenity that supports occupancy and tenant retention.'});
 
-  // 7. Floor penalty
+  // 7. Tenant churn (by tenant type)
+  const churnPenalty = p.churnPenalty || 0;
+  if(churnPenalty > 0){
+    factors.push({factor:'Tenant turnover', deduction:churnPenalty,
+      message:'Consider a more stable tenant type — switching to Sober Living or Seniors can recover points and reduce management burden. Use the tenant type selector to see how the score changes.'});
+  }
+
+  // 8. Floor penalty
   if(inp.floors > 1){
     const floorDed = p.floorPenalty * (inp.floors - 1);
     const floorMsg = tenantKey==='seniors'
@@ -962,7 +1019,7 @@ function scoreProperty(inp, tenantKey){
   const rentUsed = inp.rent || p.rent;
   const fullGross= inp.beds * rentUsed;
   const effGross = Math.round(fullGross * 0.92);
-  const mgmt     = Math.round(effGross * 0.10);
+  const mgmt     = Math.round(effGross * 0.15);
   const resv     = 350;
   const opex     = utils + resv + mgmt;
   const noi      = effGross - opex;
@@ -983,13 +1040,14 @@ function scoreProperty(inp, tenantKey){
   score = Math.max(0, Math.min(100, Math.round(score)));
   const band = score>=85?'Excellent' : score>=70?'Good' : score>=50?'Fair' : score>=30?'Poor' : 'No Go';
 
-  const topFlags = [...factors]
+  const allSortedFlags = [...factors]
     .filter(f => f.factor!=='HOA oversight')
     .sort((a,b) => b.deduction - a.deduction)
-    .slice(0,3)
     .filter(f => f.deduction > 0);
 
-  return {score, band, hoaFlag, topFlags, gross, noi, net, be, dscr};
+  const topFlags = allSortedFlags.slice(0,3);
+
+  return {score, band, hoaFlag, topFlags, allSortedFlags, gross, noi, net, be, dscr};
 }
 
 // ── CALCULATE & SHOW SCORE ────────────────────────────────────────────────────
@@ -1018,7 +1076,8 @@ function calculateScore(){
   document.getElementById('r-tenant-label').textContent = p.label;
   const bathLabel = inp.baths + (inp.halfbaths ? ' full / '+inp.halfbaths+' half' : '') + ' bath';
   document.getElementById('r-beds-baths').textContent   = inp.beds+' bed / '+bathLabel;
-  document.getElementById('r-addr-text').textContent    = inp.beds+' bed · '+bathLabel+' · '+inp.sqft.toLocaleString()+' sq ft';
+  const sqftPerTenant = Math.round(inp.sqft / inp.beds);
+  document.getElementById('r-addr-text').innerHTML = inp.beds+' bed · '+bathLabel+' · '+inp.sqft.toLocaleString()+' sq ft <span class="tip" data-tip="'+sqftPerTenant+' sq ft per bedroom (total sq ft ÷ bedrooms). Useful for comparing what happens to livability when you add or remove a bedroom.">?</span>';
 
   // Reg badge
   const regBadge = document.getElementById('r-reg-badge');
@@ -1060,6 +1119,11 @@ function buildAuditFlags(inp, res){
     html.push(flag('caution','HOA permits co-living','Confirm the rules specifically allow unrelated occupants sharing common areas. HOA oversight adds operational complexity.'));
   else
     html.push(flag('success','No HOA','Clean regulatory status for co-living conversion.'));
+
+  // Low bed count flag
+  if(inp.beds <= 3){
+    html.push(flag('caution','Limited bed count','Properties with 3 or fewer bedrooms have limited income potential for co-living. In markets with low acquisition costs, the numbers may still work — let your monthly net income and cash flow be the guide.'));
+  }
 
   // Top 3 scoring deductions
   res.topFlags.forEach(f => {
@@ -1132,7 +1196,7 @@ function showReviewScreen(){
   const repairs  = parseInt(document.getElementById('p-repairs').value)||0;
   const capex    = parseInt(document.getElementById('p-capex').value)||0;
   const mgmtSel  = document.getElementById('p-mgmt').value;
-  const mgmtRate = Math.min(100, Math.max(0, parseFloat(document.getElementById('p-mgmt-rate').value)||10)) / 100;
+  const mgmtRate = Math.min(100, Math.max(0, parseFloat(document.getElementById('p-mgmt-rate').value)||15)) / 100;
   const mgmtLabels = {self:'Self-Managed', specialist:'Co-Living Manager', padsplit:'PadSplit (8% and up)', other:'Other'};
 
   // Store for use after payment
@@ -1184,6 +1248,8 @@ async function initiatePayment(){
 
   // Save inputs to sessionStorage so we can recover them after Stripe redirect
   sessionStorage.setItem('cls_pending_pro', JSON.stringify(window._pendingProInputs || {}));
+  sessionStorage.setItem('cls_free_inputs', JSON.stringify(window._inputs || {}));
+  if(window._score != null) sessionStorage.setItem('cls_free_score', String(window._score));
 
   try {
     const res = await fetch('/create-checkout-session', {
@@ -1244,7 +1310,7 @@ function generateProAnalysis(overrideInputs){
   const capex    = src.capex    || parseInt(document.getElementById('p-capex').value)||150;
   const mgmtSel  = src.mgmtSel  || document.getElementById('p-mgmt').value;
   const mgmtPct  = src.mgmtRate !== undefined ? src.mgmtRate :
-                   Math.min(100, Math.max(0, parseFloat(document.getElementById('p-mgmt-rate').value)||10)) / 100;
+                   Math.min(100, Math.max(0, parseFloat(document.getElementById('p-mgmt-rate').value)||15)) / 100;
 
   const gross   = Math.round(beds * rent * occ);
   const mgmtFee = Math.round(gross * mgmtPct);
@@ -1606,6 +1672,10 @@ document.addEventListener('DOMContentLoaded', function(){
   if(params.get('paid') === 'true' && pendingData){
     sessionStorage.removeItem('cls_pending_pro');
     window._proInputs = JSON.parse(pendingData);
+    const fi = sessionStorage.getItem('cls_free_inputs');
+    const fs = sessionStorage.getItem('cls_free_score');
+    if(fi){ window._inputs = JSON.parse(fi); sessionStorage.removeItem('cls_free_inputs'); }
+    if(fs){ window._score  = parseInt(fs);   sessionStorage.removeItem('cls_free_score'); }
     runFullProAnalysis(window._proInputs);
     history.replaceState({}, '', '/');
   }
@@ -1643,6 +1713,12 @@ function startLoadingScreen(){
   const stageEl  = document.getElementById('loading-stage');
   const quoteEl  = document.getElementById('loading-quote');
   const authorEl = document.getElementById('loading-author');
+
+  // Reset bar instantly (no transition) so a previous 100% doesn't animate backwards
+  bar.style.transition = 'none';
+  bar.style.width = '0%';
+  void bar.offsetWidth; // force reflow before restoring transition
+  bar.style.transition = '';
 
   // Progress bar stages
   let si = 0;
@@ -1855,9 +1931,59 @@ function renderProReport(md){
       ${band ? `<span class="location-pill-band ${bandClass}">${band.charAt(0).toUpperCase()+band.slice(1)}</span>` : ''}
     </div>`;
   }
+  const amenities = nb.amenities || [];
+  const AMENITY_ICONS = {
+    pharmacy:'💊', grocery_or_supermarket:'🛒', supermarket:'🛒', cafe:'☕',
+    gym:'🏋️', park:'🌳', restaurant:'🍽️', hardware_store:'🔧',
+    gas_station:'⛽', convenience_store:'🏪', university:'🎓'
+  };
+  const amenityPills = amenities.map(a =>
+    pill(AMENITY_ICONS[a.type]||'📍', a.name, a.distance_miles, null)
+  ).join('');
+
+  const listingCopy = (function(){
+    const allPlaces = [];
+    if(tr.name && tr.distance_miles <= 3) allPlaces.push({name:tr.name, dist:tr.distance_miles});
+    if(ho.name && ho.distance_miles <= 5) allPlaces.push({name:ho.name, dist:ho.distance_miles});
+    amenities.forEach(a=>{ if(a.name && a.distance_miles <= 3) allPlaces.push({name:a.name, dist:a.distance_miles}); });
+    allPlaces.sort((a,b)=>a.dist-b.dist);
+    const top = allPlaces.slice(0,4);
+    if(!top.length) return null;
+    const list = top.map(p=>`${p.name} (${p.dist} mi)`).join(', ');
+    const openers = {
+      nurses:   'Perfect for travel nurses — steps from your shift and everything in between.',
+      tech:     'Ideal for remote workers — great coffee, fitness, and daily essentials all nearby.',
+      trades:   'Built for working professionals — fuel up, gear up, and get moving fast.',
+      students: 'Student-friendly location with campus resources and daily needs close by.',
+      seniors:  'Convenient, comfortable, and close to medical care and everyday needs.',
+      sober:    'A quiet, supportive neighborhood with everything you need for daily life nearby.',
+      workforce:'Well-located with all the everyday essentials within easy reach.',
+    };
+    const opener = openers[inp.tenant||'workforce'] || 'Conveniently located near everyday amenities.';
+    return `${opener} Nearby: ${list}.`;
+  })();
+
   document.getElementById('rpt-location').innerHTML =
     pill('🚌', tr.name, tr.distance_miles, nb.transit_band) +
-    pill('🏥', ho.name, ho.distance_miles, nb.hospital_band);
+    pill('🏥', ho.name, ho.distance_miles, nb.hospital_band) +
+    amenityPills +
+    (listingCopy ? `<div style="margin-top:16px;padding:14px;background:var(--green-light);border:1px solid rgba(29,158,117,0.2);border-radius:var(--radius)"><div style="font-size:11px;font-weight:700;color:var(--green-dark);letter-spacing:0.5px;margin-bottom:6px">USE THIS IN YOUR LISTING</div><div style="font-size:13px;color:var(--gray-700);line-height:1.6">${listingCopy}</div></div>` : '');
+
+  // Score improvement suggestions (top 4-5)
+  const allFlags = (fin.allSortedFlags || fin.topFlags || []).slice(0,5);
+  const suggestionsEl = document.getElementById('rpt-score-suggestions');
+  if(suggestionsEl){
+    suggestionsEl.innerHTML = allFlags.length
+      ? allFlags.map(f=>`
+        <div style="padding:12px 0;border-bottom:1px solid var(--gray-100)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+            <div style="font-size:13px;font-weight:600;color:var(--gray-900)">${f.factor}</div>
+            <span style="font-size:12px;font-weight:700;color:var(--red);background:var(--red-light);padding:2px 8px;border-radius:4px">−${f.deduction} pts</span>
+          </div>
+          <div style="font-size:12.5px;color:var(--gray-600);line-height:1.5">${f.message}</div>
+        </div>`).join('')
+      : '<div style="font-size:13px;color:var(--gray-500);padding:12px 0">No significant scoring deductions identified.</div>';
+  }
 
   // Competitive analysis
   const ca = md.competitive || {};
