@@ -1248,11 +1248,13 @@ async function initiatePayment(){
 
   // Save inputs to sessionStorage so we can recover them after Stripe redirect
   sessionStorage.setItem('cls_pending_pro', JSON.stringify(window._pendingProInputs || {}));
-  sessionStorage.setItem('cls_free_inputs', JSON.stringify(window._inputs || {}));
-  if(window._score   != null) sessionStorage.setItem('cls_free_score',   String(window._score));
-  if(window._address != null) sessionStorage.setItem('cls_address',      window._address);
-  if(window._place   != null) sessionStorage.setItem('cls_place',        JSON.stringify(window._place));
-  if(window._fin     != null) sessionStorage.setItem('cls_fin',          JSON.stringify(window._fin));
+  sessionStorage.setItem('cls_free_inputs', JSON.stringify({
+    ...(window._inputs || {}),
+    _address: window._address || '',
+    _place:   window._place   || null,
+  }));
+  if(window._score != null) sessionStorage.setItem('cls_free_score', String(window._score));
+  if(window._fin   != null) sessionStorage.setItem('cls_fin',        JSON.stringify(window._fin));
 
   try {
     const res = await fetch('/create-checkout-session', {
@@ -1680,14 +1682,18 @@ document.addEventListener('DOMContentLoaded', function(){
     window._proInputs = JSON.parse(pendingData);
     const fi = sessionStorage.getItem('cls_free_inputs');
     const fs = sessionStorage.getItem('cls_free_score');
-    const fa = sessionStorage.getItem('cls_address');
-    const fp = sessionStorage.getItem('cls_place');
     const ff = sessionStorage.getItem('cls_fin');
-    if(fi){ window._inputs  = JSON.parse(fi);  sessionStorage.removeItem('cls_free_inputs'); }
-    if(fs){ window._score   = parseInt(fs);    sessionStorage.removeItem('cls_free_score'); }
-    if(fa){ window._address = fa;              sessionStorage.removeItem('cls_address'); }
-    if(fp){ window._place   = JSON.parse(fp);  sessionStorage.removeItem('cls_place'); }
-    if(ff){ window._fin     = JSON.parse(ff);  sessionStorage.removeItem('cls_fin'); }
+    if(fi){
+      const parsed    = JSON.parse(fi);
+      window._address = parsed._address || '';
+      window._place   = parsed._place   || null;
+      delete parsed._address;
+      delete parsed._place;
+      window._inputs  = parsed;
+      sessionStorage.removeItem('cls_free_inputs');
+    }
+    if(fs){ window._score = parseInt(fs);    sessionStorage.removeItem('cls_free_score'); }
+    if(ff){ window._fin   = JSON.parse(ff);  sessionStorage.removeItem('cls_fin'); }
     runFullProAnalysis(window._proInputs);
     history.replaceState({}, '', '/');
   }
