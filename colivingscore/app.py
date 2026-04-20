@@ -349,16 +349,28 @@ def _haversine_miles(lat1, lng1, lat2, lng2):
     return R * 2 * math.asin(math.sqrt(a))
 
 
+TENANT_AMENITY_TYPES = {
+    "nurses":    ["pharmacy", "grocery_or_supermarket", "cafe"],
+    "tech":      ["cafe", "gym", "grocery_or_supermarket", "park"],
+    "trades":    ["hardware_store", "gas_station", "restaurant", "convenience_store"],
+    "students":  ["cafe", "grocery_or_supermarket", "gym", "restaurant", "university"],
+    "seniors":   ["pharmacy", "grocery_or_supermarket", "restaurant", "park"],
+    "sober":     ["pharmacy", "grocery_or_supermarket", "park", "cafe"],
+    "workforce": ["grocery_or_supermarket", "gas_station", "gym", "restaurant"],
+}
+
+
 @app.route("/api/nearby", methods=["POST"])
 def api_nearby():
     try:
-        data = request.get_json(force=True)
-        lat  = data.get("lat")
-        lng  = data.get("lng")
+        data       = request.get_json(force=True)
+        lat        = data.get("lat")
+        lng        = data.get("lng")
+        tenant_key = data.get("tenant_key", "workforce")
         if not lat or not lng:
             return jsonify({"error": "lat/lng required"}), 400
 
-        def nearest(place_type, radius=8000):
+        def nearest(place_type):
             resp = requests.get(
                 "https://maps.googleapis.com/maps/api/place/nearbysearch/json",
                 params={"location": f"{lat},{lng}", "rankby": "distance",
@@ -368,15 +380,26 @@ def api_nearby():
             results = resp.json().get("results", [])
             if not results:
                 return None
-            r   = results[0]
+            r    = results[0]
             rlat = r["geometry"]["location"]["lat"]
             rlng = r["geometry"]["location"]["lng"]
             dist = _haversine_miles(lat, lng, rlat, rlng)
             return {"name": r.get("name"), "distance_miles": round(dist, 2),
-                    "vicinity": r.get("vicinity")}
+                    "vicinity": r.get("vicinity"), "type": place_type}
 
         transit  = nearest("transit_station")
         hospital = nearest("hospital")
+
+        # Fetch tenant-specific amenities in parallel
+        amenity_types = TENANT_AMENITY_TYPES.get(tenant_key, TENANT_AMENITY_TYPES["workforce"])
+        amenities = []
+        with ThreadPoolExecutor(max_workers=5) as ex:
+            futures = {ex.submit(nearest, pt): pt for pt in amenity_types}
+            for future in as_completed(futures):
+                result = future.result()
+                if result:
+                    amenities.append(result)
+        amenities.sort(key=lambda x: x["distance_miles"])
 
         def transit_band(d):
             if d is None: return "far"
@@ -399,6 +422,7 @@ def api_nearby():
             "hospital":      hospital,
             "transit_band":  transit_band(t_dist),
             "hospital_band": hospital_band(h_dist),
+            "amenities":     amenities,
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -583,6 +607,7 @@ def api_pro_data_fast():
         zip_code   = data.get("zip", "")
         beds       = data.get("beds", 4)
         baths      = data.get("baths", 2)
+        tenant_key = data.get("tenant_key", "workforce")
 
         def call_rentcast():
             r = requests.post(f"{request.host_url}api/rentcast",
@@ -596,7 +621,7 @@ def api_pro_data_fast():
 
         def call_nearby():
             r = requests.post(f"{request.host_url}api/nearby",
-                json={"lat": lat, "lng": lng}, timeout=15)
+                json={"lat": lat, "lng": lng, "tenant_key": tenant_key}, timeout=15)
             return "nearby", r.json() if r.ok else {"error": r.text}
 
         def call_demographics():
