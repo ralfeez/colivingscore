@@ -1289,6 +1289,7 @@ function startProAnalysis(){
 }
 
 function generateProAnalysis(overrideInputs){
+  const mgmtLabels = {self:'Self-Managed', specialist:'Co-Living Manager', padsplit:'PadSplit (8% and up)', other:'Other'};
   const inp = window._inputs;
   const beds = inp ? inp.beds : 5;
   const tenant = inp ? inp.tenant : 'nurses';
