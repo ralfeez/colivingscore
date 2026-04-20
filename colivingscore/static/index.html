@@ -1248,6 +1248,8 @@ async function initiatePayment(){
 
   // Save inputs to sessionStorage so we can recover them after Stripe redirect
   sessionStorage.setItem('cls_pending_pro', JSON.stringify(window._pendingProInputs || {}));
+  sessionStorage.setItem('cls_free_inputs', JSON.stringify(window._inputs || {}));
+  if(window._score != null) sessionStorage.setItem('cls_free_score', String(window._score));
 
   try {
     const res = await fetch('/create-checkout-session', {
@@ -1670,6 +1672,10 @@ document.addEventListener('DOMContentLoaded', function(){
   if(params.get('paid') === 'true' && pendingData){
     sessionStorage.removeItem('cls_pending_pro');
     window._proInputs = JSON.parse(pendingData);
+    const fi = sessionStorage.getItem('cls_free_inputs');
+    const fs = sessionStorage.getItem('cls_free_score');
+    if(fi){ window._inputs = JSON.parse(fi); sessionStorage.removeItem('cls_free_inputs'); }
+    if(fs){ window._score  = parseInt(fs);   sessionStorage.removeItem('cls_free_score'); }
     runFullProAnalysis(window._proInputs);
     history.replaceState({}, '', '/');
   }
@@ -1707,6 +1713,12 @@ function startLoadingScreen(){
   const stageEl  = document.getElementById('loading-stage');
   const quoteEl  = document.getElementById('loading-quote');
   const authorEl = document.getElementById('loading-author');
+
+  // Reset bar instantly (no transition) so a previous 100% doesn't animate backwards
+  bar.style.transition = 'none';
+  bar.style.width = '0%';
+  void bar.offsetWidth; // force reflow before restoring transition
+  bar.style.transition = '';
 
   // Progress bar stages
   let si = 0;
