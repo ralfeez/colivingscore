@@ -299,6 +299,9 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
 
   <!-- ══ SCREEN 1: PROPERTY FORM ══ -->
   <div class="screen" id="s-form">
+    <div class="addr-strip">
+      <div class="addr-text" id="addr-form" style="color:rgba(255,255,255,0.75)"></div>
+    </div>
     <div class="card">
       <div class="card-title">Score your property for co-living</div>
       <div class="card-sub">Enter the property details to get your free suitability score.</div>
@@ -529,7 +532,7 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
   <div class="screen" id="s-pro-form">
 
     <div class="addr-strip">
-      <div class="addr-text">Pro Analysis — Financial Inputs</div>
+      <div class="addr-text">Pro Analysis — Financial Inputs &nbsp;·&nbsp; <span id="addr-pro-form" style="color:#4DBF8F"></span></div>
       <button style="height:28px;font-size:12px;padding:0 12px;background:transparent;color:var(--white);border:1px solid rgba(255,255,255,0.4);border-radius:var(--radius);cursor:pointer;font-family:var(--font);font-weight:500" onclick="showScreen('s-result')">← Property Details</button>
     </div>
 
@@ -692,7 +695,7 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
   <div class="screen" id="s-review">
 
     <div class="addr-strip">
-      <div class="addr-text">Review Your Inputs Before Payment</div>
+      <div class="addr-text">Review Your Inputs Before Payment &nbsp;·&nbsp; <span id="addr-review" style="color:#4DBF8F"></span></div>
       <button style="height:28px;font-size:12px;padding:0 12px;background:transparent;color:var(--white);border:1px solid rgba(255,255,255,0.4);border-radius:var(--radius);cursor:pointer;font-family:var(--font);font-weight:500" onclick="showScreen('s-pro-form')">← Edit Inputs</button>
     </div>
 
@@ -1579,9 +1582,10 @@ function goToPropertyForm(){
   const typed = document.getElementById('f-address').value.trim();
   if(!typed){ alert('Please enter a property address.'); return; }
   window._address = window._place ? window._place.formatted_address : typed;
-  document.getElementById('r-addr-text').textContent = window._address;
-  const prAddr = document.getElementById('pr-addr');
-  if(prAddr) prAddr.textContent = window._address;
+  ['r-addr-text','pr-addr','rpt-addr','addr-form','addr-pro-form','addr-review'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.textContent = window._address;
+  });
   showScreen('s-form');
   setStep(2);
 }
