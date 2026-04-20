@@ -1958,7 +1958,6 @@ function renderProReport(md){
     (listingCopy ? `<div style="margin-top:16px;padding:14px;background:var(--green-light);border:1px solid rgba(29,158,117,0.2);border-radius:var(--radius)"><div style="font-size:11px;font-weight:700;color:var(--green-dark);letter-spacing:0.5px;margin-bottom:6px">USE THIS IN YOUR LISTING</div><div style="font-size:13px;color:var(--gray-700);line-height:1.6">${listingCopy}</div></div>` : '');
 
   // Score improvement suggestions (top 4-5)
-  const fin = window._fin || {};
   const allFlags = (fin.allSortedFlags || fin.topFlags || []).slice(0,5);
   const suggestionsEl = document.getElementById('rpt-score-suggestions');
   if(suggestionsEl){
