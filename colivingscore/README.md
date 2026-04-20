@@ -1,62 +1,60 @@
 # CoLivingScore.com
 
-Property Score & Analysis tool for co-living investment decisions.
+Property scoring and analysis tool for co-living investment decisions.
 
 ## What it does
 
-- Free tier: Scores any residential property for co-living suitability (0–100)
-- Pro Analysis ($29): Full market narrative, itemized expense model, financial ratios, tenant type comparison, improvement ROI, and a lender-ready PDF report
+- **Free Score**: Scores any residential property for co-living suitability (0–100) using a penalty-based algorithm across six weighted factors
+- **Pro Analysis ($29)**: Full P&L, DSCR breakdown, 5-year projection, tenant type comparison, improvement ROI table, and a downloadable PDF report
 
 ## Stack
 
 - **Frontend**: Vanilla HTML/CSS/JS (no framework)
 - **Backend**: Python + Flask
 - **PDF generation**: ReportLab
-- **Payments**: Stripe
-- **Email capture**: Kit
-- **Hosting**: Render
+- **Payments**: Stripe Checkout
+- **Email**: Resend (score report to user) + Google Sheets (data capture)
+- **Hosting**: Render (auto-deploy from `master`)
 
 ## Local development
 
 ```bash
-# Clone the repo
 git clone https://github.com/ralfeez/colivingscore.git
 cd colivingscore
 
-# Create a virtual environment
 python3 -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 
-# Install dependencies
 pip install -r requirements.txt
 
-# Create a .env file with your keys (never commit this)
-cp .env.example .env
+# Place your Google service account JSON one level above colivingscore/
+# e.g. colivingscore-1e18ab77fce0.json
 
-# Run locally
 python app.py
 # Visit http://localhost:5000
 ```
 
 ## Environment variables
 
-Set these in Render dashboard under Environment:
+Set in Render dashboard → Environment:
 
 | Variable | Description |
 |---|---|
-| `STRIPE_SECRET_KEY` | Stripe secret key (sk_live_...) |
-| `STRIPE_PUBLISHABLE_KEY` | Stripe publishable key (pk_live_...) |
+| `STRIPE_SECRET_KEY` | Stripe secret key (`sk_live_...`) |
+| `STRIPE_PUBLISHABLE_KEY` | Stripe publishable key (`pk_live_...`) |
 | `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret |
-| `KIT_API_KEY` | Kit (formerly ConvertKit) API key |
+| `GOOGLE_SHEETS_CREDS` | Minified single-line JSON of Google service account credentials |
+| `RESEND_API_KEY` | Resend API key for transactional email |
+| `BASE_URL` | Production URL (default: `https://colivingscore.onrender.com`) |
 
 ## Deployment
 
-Push to `main` branch. Render auto-deploys on every commit.
+Push to `master`. Render auto-deploys on every commit.
 
 ```bash
 git add .
 git commit -m "your message"
-git push origin main
+git push origin master
 ```
 
 ## API endpoints
@@ -64,13 +62,18 @@ git push origin main
 | Endpoint | Method | Description |
 |---|---|---|
 | `/` | GET | Serves the scoring tool |
-| `/generate-pdf` | POST | Accepts JSON inputs, returns PDF |
 | `/health` | GET | Health check for Render |
+| `/config` | GET | Returns Stripe publishable key |
+| `/save-email` | POST | Saves lead to Google Sheets + sends score report email |
+| `/generate-pdf` | POST | Accepts Pro Analysis JSON, returns PDF |
+| `/create-checkout-session` | POST | Creates Stripe Checkout session |
+| `/success` | GET | Post-payment redirect; retrieves session data |
+| `/stripe-webhook` | POST | Stripe webhook handler |
 
-## Pre-launch spec notes
+## Scoring overview
 
-- **Half-bath logic**: Input allows 0.5 increments. Floor value used for ratio scoring. Half-bath triggers improvement suggestion with lower cost estimate ($8k–$12k vs $15k–$22k for full addition).
-- **Market narrative**: At launch, AI-generated via Claude API per report. Phase 2 enriches with RentCast and Google Places live data.
-- **Free analysis improvements**: NOI orphan row fix, P&L donut sizing — documented for free tier build.
-- **DSCR gauge**: Needle pivot and zone label rendering needs rebuild before launch.
-- **Live data (Phase 2)**: RentCast for rent comps, Google Places for proximity scoring, Census for demographics.
+See [scoring-algorithm.md](scoring-algorithm.md) for the full Free Score specification.
+
+**Short version**: Start at 100, deduct points for deficiencies in six factors (bathroom ratio, sqft/bed, parking, transit, hospital proximity, bed count). Factor weights vary by tenant type. HOA status can cap or disqualify. A DSCR-based cash flow penalty (max 20 pts) applies when a mortgage is entered.
+
+Score bands: 85–100 Excellent · 70–84 Good · 50–69 Fair · 30–49 Poor · 0–29 No Go
