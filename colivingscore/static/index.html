@@ -1320,10 +1320,12 @@ function generateProAnalysis(overrideInputs){
   const mgmtFee = Math.round(gross * mgmtPct);
   const taxMo   = Math.round(taxes/12);
   const insMo   = Math.round(ins/12);
-  const total   = mortgage + taxMo + insMo + hoa + uv.utilTotal + internet + yard + pest + repairs + capex + mgmtFee;
+  const opEx    = taxMo + insMo + hoa + uv.utilTotal + internet + yard + pest + repairs + capex + mgmtFee;
+  const total   = mortgage + opEx;
   const noi     = gross - total;
   const noiAnn  = noi * 12;
-  const dscr    = mortgage ? +(noi/mortgage).toFixed(2) : 0;
+  const trueNOI = gross - opEx;
+  const dscr    = mortgage ? +(trueNOI/mortgage).toFixed(2) : 0;
   const oer     = gross ? +(total/gross).toFixed(2) : 0;
   const be      = (beds*rent) ? +(total/(beds*rent)).toFixed(2) : 0;
   const margin  = gross ? +(noi/gross).toFixed(2) : 0;
@@ -1369,10 +1371,10 @@ function generateProAnalysis(overrideInputs){
     </div>`;
   };
   document.getElementById('pr-ratios').innerHTML =
-    ratioRow('DSCR', dscr+'x', 'Lender minimum: 1.25x', dscr>=1.25) +
-    ratioRow('Operating Expense Ratio', Math.round(oer*100)+'%', 'Target: under 65%', oer<=0.65) +
-    ratioRow('Break-Even Occupancy', Math.round(be*100)+'%', 'Lower is safer', be<=0.75) +
-    ratioRow('NOI Margin', Math.round(margin*100)+'%', 'Target: 20%+', margin>=0.20);
+    ratioRow('Debt Service Coverage Ratio — how many times your income covers the mortgage. Lenders require 1.25x minimum.', dscr+'x', dscr>=1.25 ? '✓ Meets lender threshold' : '✗ Below lender minimum of 1.25x', dscr>=1.25) +
+    ratioRow('Operating Expense Ratio — what share of income goes to expenses (excluding mortgage). Lower is healthier.', Math.round(oer*100)+'%', oer<=0.65 ? '✓ Within healthy range' : '✗ Target is under 65%', oer<=0.65) +
+    ratioRow('Break-Even Occupancy — the minimum occupancy needed to cover all costs including mortgage.', Math.round(be*100)+'%', be<=0.75 ? '✓ Good cushion above break-even' : '✗ Target is under 75%', be<=0.75) +
+    ratioRow('Cash Flow Margin — how much of your gross income is left after all expenses and mortgage.', Math.round(margin*100)+'%', margin>=0.20 ? '✓ Strong margin' : '✗ Target is 20% or higher', margin>=0.20);
 
   // Tenant comparison
   const tenantNOIs = Object.entries(TENANT_PROFILES).map(([key,prof])=>{
