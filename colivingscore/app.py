@@ -526,21 +526,34 @@ SECTION_KEYS = [
 
 
 def _parse_market_sections(text):
-    """Split Claude's response into a dict keyed by section name."""
+    """Split Claude's response into a dict keyed by section name.
+
+    Tries case-insensitive matching for the exact section headers first.
+    Falls back to putting the full text in executive_summary so the
+    user always sees something rather than a blank page.
+    """
     result = {k: "" for k in SECTION_KEYS}
+    text_upper = text.upper()
+
     for i, key in enumerate(SECTION_KEYS):
         header = f"## {key.upper()}"
-        start = text.find(header)
+        start = text_upper.find(header)
         if start == -1:
             continue
         start = text.find("\n", start) + 1
         end = len(text)
         for next_key in SECTION_KEYS[i + 1:]:
-            pos = text.find(f"## {next_key.upper()}")
+            pos = text_upper.find(f"## {next_key.upper()}")
             if pos != -1 and pos < end:
                 end = pos
                 break
         result[key] = text[start:end].strip()
+
+    # If every section is empty, Claude didn't follow the format.
+    # Put the full response into executive_summary so it's visible.
+    if not any(result.values()):
+        result["executive_summary"] = text.strip()
+
     return result
 
 
@@ -695,23 +708,38 @@ def api_market_analysis():
         prompt = _build_market_analysis_prompt(data)
 
         client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
-        response = client.messages.create(
-            model="claude-opus-4-5-20251001",
-            max_tokens=8192,
-            tools=[{"type": "web_search_20250305", "name": "web_search", "max_uses": 20}],
-            messages=[{"role": "user", "content": prompt}],
-        )
 
-        # Collect all text blocks from the response
+        # Try with web search first; fall back to training-data-only if it fails.
         full_text = ""
-        for block in response.content:
-            if hasattr(block, "text"):
-                full_text += block.text
+        used_web_search = False
+        try:
+            response = client.messages.create(
+                model="claude-opus-4-5-20251001",
+                max_tokens=8192,
+                betas=["web-search-2025-03-05"],
+                tools=[{"type": "web_search_20250305", "name": "web_search", "max_uses": 20}],
+                messages=[{"role": "user", "content": prompt}],
+            )
+            for block in response.content:
+                if hasattr(block, "text"):
+                    full_text += block.text
+            used_web_search = True
+        except Exception as ws_err:
+            print(f"market-analysis web-search attempt failed: {ws_err} — retrying without tools")
+            response = client.messages.create(
+                model="claude-opus-4-5-20251001",
+                max_tokens=8192,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            for block in response.content:
+                if hasattr(block, "text"):
+                    full_text += block.text
 
         sections = _parse_market_sections(full_text)
-        sections["tenant_key"] = tenant_key
-        sections["city"]       = city
-        sections["raw"]        = full_text  # keep raw for debugging
+        sections["tenant_key"]      = tenant_key
+        sections["city"]            = city
+        sections["used_web_search"] = used_web_search
+        sections["raw"]             = full_text  # keep raw for debugging
 
         return jsonify(sections)
     except Exception as e:
@@ -819,18 +847,30 @@ def api_competitive():
         prompt = _build_competitive_prompt(address, city, state, tenant_key, beds)
 
         client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
-        response = client.messages.create(
-            model="claude-opus-4-5-20251001",
-            max_tokens=4096,
-            tools=[{"type": "web_search_20250305", "name": "web_search", "max_uses": 8}],
-            messages=[{"role": "user", "content": prompt}],
-        )
 
-        # Extract text from response (may include tool_use blocks)
+        # Try with web search first; fall back to training-data-only if it fails.
         analysis = ""
-        for block in response.content:
-            if hasattr(block, "text"):
-                analysis += block.text
+        try:
+            response = client.messages.create(
+                model="claude-opus-4-5-20251001",
+                max_tokens=4096,
+                betas=["web-search-2025-03-05"],
+                tools=[{"type": "web_search_20250305", "name": "web_search", "max_uses": 8}],
+                messages=[{"role": "user", "content": prompt}],
+            )
+            for block in response.content:
+                if hasattr(block, "text"):
+                    analysis += block.text
+        except Exception as ws_err:
+            print(f"competitive web-search attempt failed: {ws_err} — retrying without tools")
+            response = client.messages.create(
+                model="claude-opus-4-5-20251001",
+                max_tokens=4096,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            for block in response.content:
+                if hasattr(block, "text"):
+                    analysis += block.text
 
         return jsonify({"analysis": analysis, "tenant_key": tenant_key, "city": city})
     except Exception as e:
