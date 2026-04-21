@@ -282,21 +282,46 @@ def get_config():
 # ── Pro Analysis data routes ──────────────────────────────────────────────────
 
 def _fetch_rentcast(address, beds, baths):
-    resp = requests.get(
-        "https://api.rentcast.io/v1/avm/rent/long-term",
-        params={"address": address, "bedrooms": beds, "bathrooms": baths, "propertyType": "Single Family"},
-        headers={"X-Api-Key": RENTCAST_API_KEY},
-        timeout=10,
-    )
-    if resp.status_code != 200:
-        return {"error": f"RentCast {resp.status_code}"}
-    d = resp.json()
-    return {
-        "rent_estimate": d.get("rent"),
-        "rent_low":      d.get("rentRangeLow"),
-        "rent_high":     d.get("rentRangeHigh"),
-        "comparables":   d.get("comparables", [])[:5],
-    }
+    def _query(bedrooms, bathrooms):
+        resp = requests.get(
+            "https://api.rentcast.io/v1/avm/rent/long-term",
+            params={"address": address, "bedrooms": bedrooms, "bathrooms": bathrooms,
+                    "propertyType": "Single Family"},
+            headers={"X-Api-Key": RENTCAST_API_KEY},
+            timeout=10,
+        )
+        if resp.status_code != 200:
+            return None
+        return resp.json()
+
+    # Primary query — actual bedroom count
+    d = _query(beds, baths)
+    if d and d.get("rent"):
+        return {
+            "rent_estimate": d.get("rent"),
+            "rent_low":      d.get("rentRangeLow"),
+            "rent_high":     d.get("rentRangeHigh"),
+            "comparables":   d.get("comparables", [])[:5],
+            "source":        "direct",
+        }
+
+    # Fallback — 1-bedroom query, scale to per-room co-living rate (65%)
+    d1 = _query(1, 1)
+    if d1 and d1.get("rent"):
+        base       = d1["rent"]
+        per_room   = round(base * 0.65)
+        total_est  = per_room * beds
+        return {
+            "rent_estimate":    total_est,
+            "rent_low":         round((d1.get("rentRangeLow") or base) * 0.60) * beds,
+            "rent_high":        round((d1.get("rentRangeHigh") or base) * 0.70) * beds,
+            "per_room_estimate": per_room,
+            "one_br_base":      base,
+            "comparables":      d1.get("comparables", [])[:5],
+            "source":           "1BR_scaled",
+        }
+
+    return {"error": "No rental data available for this address"}
 
 
 def _fetch_walkscore(address, lat, lng):
@@ -477,6 +502,220 @@ def api_demographics():
         data = request.get_json(force=True)
         return jsonify(_fetch_demographics(data.get("zip", "")))
     except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ── Full market analysis — Claude AI + web search (15-page report) ───────────
+
+TENANT_LABELS = {
+    "nurses":    "Travel Nurses",
+    "tech":      "Tech / Remote Workers",
+    "trades":    "Construction / Trades Workers",
+    "students":  "Students",
+    "seniors":   "Seniors 55+",
+    "sober":     "Sober Living",
+    "workforce": "General Workforce",
+}
+
+SECTION_KEYS = [
+    "executive_summary", "housing_market", "tenant_profile", "demand_drivers",
+    "supply_analysis",   "rent_pricing",   "regulatory",     "occupancy_turnover",
+    "swot",              "risk_analysis",  "employer_mapping","platform_strategy",
+    "exit_strategy",
+]
+
+
+def _parse_market_sections(text):
+    """Split Claude's response into a dict keyed by section name."""
+    result = {k: "" for k in SECTION_KEYS}
+    for i, key in enumerate(SECTION_KEYS):
+        header = f"## {key.upper()}"
+        start = text.find(header)
+        if start == -1:
+            continue
+        start = text.find("\n", start) + 1
+        end = len(text)
+        for next_key in SECTION_KEYS[i + 1:]:
+            pos = text.find(f"## {next_key.upper()}")
+            if pos != -1 and pos < end:
+                end = pos
+                break
+        result[key] = text[start:end].strip()
+    return result
+
+
+def _build_market_analysis_prompt(data):
+    address    = data.get("address", "")
+    city       = data.get("city", "")
+    state      = data.get("state", "")
+    zip_code   = data.get("zip", "")
+    beds       = data.get("beds", 4)
+    baths      = data.get("baths", 2)
+    sqft       = data.get("sqft", 0)
+    tenant_key = data.get("tenant_key", "workforce")
+    rent_per_room = data.get("rent_per_room", 0)
+    mortgage   = data.get("mortgage", 0)
+    mgmt_model = data.get("mgmt_model", "self")
+
+    tenant_label = TENANT_LABELS.get(tenant_key, "General Workforce")
+
+    # Gathered API data provided as context
+    rc  = data.get("rentcast", {})
+    ws  = data.get("walkscore", {})
+    dm  = data.get("demographics", {})
+    nb  = data.get("nearby", {})
+
+    walk        = ws.get("walk_score",    "unknown")
+    transit     = ws.get("transit_score", "unknown")
+    bike        = ws.get("bike_score",    "unknown")
+    pop         = dm.get("population",    "unknown")
+    renter_pct  = dm.get("renter_pct",    "unknown")
+    med_income  = dm.get("median_income", "unknown")
+    med_rent    = dm.get("median_rent",   "unknown")
+
+    rc_estimate  = rc.get("rent_estimate") or rc.get("scaled_estimate")
+    rc_source    = rc.get("source", "direct")
+    rc_per_room  = rc.get("per_room_estimate")
+
+    transit_info = nb.get("transit") or {}
+    hospital_info = nb.get("hospital") or {}
+    amenities    = nb.get("amenities", [])
+
+    transit_str  = (f"{transit_info.get('name','?')} ({transit_info.get('distance_miles','?')} mi)"
+                    if transit_info else "None found nearby")
+    hospital_str = (f"{hospital_info.get('name','?')} ({hospital_info.get('distance_miles','?')} mi)"
+                    if hospital_info else "None found nearby")
+    amenity_lines = "\n".join(
+        f"  - {a['name']} ({a['distance_miles']} mi)" for a in amenities[:6]
+    ) if amenities else "  - Not available"
+
+    rc_line = (f"${rc_estimate:,}/month (source: {rc_source}"
+               + (f", per-room estimate: ${rc_per_room:,}" if rc_per_room else "") + ")"
+               if rc_estimate else "No data returned")
+
+    mgmt_labels = {
+        "self": "Self-managed", "specialist": "Co-living property manager",
+        "padsplit": "PadSplit platform", "other": "Other",
+    }
+    mgmt_label = mgmt_labels.get(mgmt_model, "Self-managed")
+
+    pop_str        = f"{pop:,}" if isinstance(pop, int) else str(pop)
+    income_str     = f"${med_income:,}" if isinstance(med_income, int) else str(med_income)
+    med_rent_str   = f"${med_rent:,}" if isinstance(med_rent, int) else str(med_rent)
+    rent_room_str  = f"${rent_per_room:,}" if rent_per_room else "not specified"
+    mortgage_str   = f"${mortgage:,}" if mortgage else "not specified"
+
+    return f"""You are a professional co-living investment analyst. Write a comprehensive, specific market analysis for the investor below. Use web search to find current, real data — not generic statements.
+
+## PROPERTY
+- Address: {address} ({city}, {state} {zip_code})
+- Configuration: {beds} bed / {baths} bath / {sqft or "unknown"} sq ft
+- Target tenant type: {tenant_label}
+- Investor's target rent per room: {rent_room_str}/month
+- Monthly mortgage: {mortgage_str}
+- Management approach: {mgmt_label}
+
+## DATA ALREADY GATHERED (use this as context, do not re-search)
+- Walkability Score: {walk}/100 | Public Transportation Score: {transit}/100 | Bike Score: {bike}/100
+- ZIP population: {pop_str} | Renter-occupied: {renter_pct}% | Median income: {income_str} | Median rent: {med_rent_str}/month
+- Nearest transit: {transit_str}
+- Nearest hospital: {hospital_str}
+- Nearby amenities:
+{amenity_lines}
+- RentCast estimate: {rc_line}
+
+## RESEARCH TASKS (use your web search tool for each of these)
+1. Search Furnished Finder, Craigslist, and Facebook Marketplace for room rentals near {city}, {state} — find actual listed rates
+2. Search for PadSplit listings in {city}, {state} — count, neighborhoods, and rate range
+3. Search for extended stay hotels and weekly motels near {address} — weekly and monthly rates
+4. Search for 1-bedroom apartment rents in {city}, {state} on Zillow, Zumper, or Apartments.com
+5. Search for major employers within 5 miles of {address} — warehouses, hospitals, factories, logistics hubs
+6. Search for {city} {state} rental market vacancy rates and rent trends
+7. Search for {city} {state} zoning or occupancy rules for room rentals and shared housing
+8. Search for {tenant_label} housing demand or workforce housing demand in {city}, {state}
+
+## RESPONSE FORMAT
+Return your analysis using EXACTLY these section headers in this order. Write in direct, investor-friendly language — specific numbers, real names, straight talk. No corporate fluff.
+
+## EXECUTIVE_SUMMARY
+[3-5 bullet points: Is this market viable for co-living? Expected cash flow potential? Top 2-3 risks? Bottom-line verdict. Use the tone of a straight-talking investor mentor.]
+
+## HOUSING_MARKET
+[Median 1BR rent found, 2BR rent, overall vacancy rate estimate, home price-to-rent ratio, affordability gap — income needed to rent independently vs. median wages in {city}. Explain why the gap creates co-living demand.]
+
+## TENANT_PROFILE
+[Who specifically fills rooms in {city}: named tenant groups with income ranges, what they need most (furnished, utilities included, flexible terms, parking), how well {tenant_label} fits this specific market.]
+
+## DEMAND_DRIVERS
+[Rising rents, population growth, job growth in lower-to-mid wage sectors, housing shortages — specific to {city}, {state}. Use real data found in search.]
+
+## SUPPLY_ANALYSIS
+[PadSplit listing count and rate range found. Private room listings count on Craigslist/Facebook. Low-cost apartment availability assessment. Extended stay hotel count and rates within 3 miles. Overall competitive density: sparse / moderate / saturated.]
+
+## RENT_PRICING
+[Per-room rates found on Furnished Finder, Craigslist, Facebook Marketplace — list actual ranges found. Weekly vs. monthly rate comparison. Utilities-included pricing vs. not. Extended stay hotel rate comparison. Recommended per-room rate for this property and why. Total estimated gross monthly income = recommended rate × {beds} rooms.]
+
+## REGULATORY
+[Local rules on room rentals in {city} / {state}. Occupancy limits (unrelated persons per unit). Any known permit requirements or enforcement actions for shared housing. Risk level: Low / Moderate / High. What to verify before purchasing.]
+
+## OCCUPANCY_TURNOVER
+[Typical stabilized occupancy for {tenant_label} in this type of market (range). Average length of stay for this tenant type. Turnover frequency and cost per turnover estimate. Seasonal vacancy patterns. How {tenant_label} compares to other tenant types on stability.]
+
+## SWOT
+Strengths:
+[2-3 specific to this property and market]
+Weaknesses:
+[2-3 specific to this property — not generic]
+Opportunities:
+[2-3 specific to {city} market conditions]
+Threats:
+[2-3 specific risks: regulatory, competition, market ceiling]
+
+## RISK_ANALYSIS
+[Top 3-4 risks specific to THIS deal. Each gets a short paragraph: what the risk is, how likely, and how to mitigate. Include bathroom ratio risk if applicable, market rent ceiling, tenant quality variability, management intensity.]
+
+## EMPLOYER_MAPPING
+[Named major employers found within 5 miles: warehouses, hospitals, manufacturers, logistics hubs. Distance from property. Why job cluster proximity drives co-living demand here. Assessment of employer-to-affordable-housing supply ratio.]
+
+## PLATFORM_STRATEGY
+[Side-by-side comparison of management options for THIS property: self-managed, co-living specialist, PadSplit. Monthly gross income estimate under each after fees. Control vs. convenience trade-off. Clear recommendation for this property based on its configuration and this market.]
+
+## EXIT_STRATEGY
+[Can this property convert back to single-family rental or owner-occupied? How does co-living configuration affect resale appeal and buyer pool in {city}? Long-term appreciation vs. cash flow — which play is stronger here? Estimated timeline to recoup initial investment at the projected revenue figures.]"""
+
+
+@app.route("/api/market-analysis", methods=["POST"])
+def api_market_analysis():
+    """Full 13-section market analysis powered by Claude AI + web search."""
+    try:
+        data       = request.get_json(force=True)
+        tenant_key = data.get("tenant_key", "workforce")
+        city       = data.get("city", "")
+
+        prompt = _build_market_analysis_prompt(data)
+
+        client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+        response = client.messages.create(
+            model="claude-opus-4-5-20251001",
+            max_tokens=8192,
+            tools=[{"type": "web_search_20250305", "name": "web_search", "max_uses": 20}],
+            messages=[{"role": "user", "content": prompt}],
+        )
+
+        # Collect all text blocks from the response
+        full_text = ""
+        for block in response.content:
+            if hasattr(block, "text"):
+                full_text += block.text
+
+        sections = _parse_market_sections(full_text)
+        sections["tenant_key"] = tenant_key
+        sections["city"]       = city
+        sections["raw"]        = full_text  # keep raw for debugging
+
+        return jsonify(sections)
+    except Exception as e:
+        print(f"market-analysis error: {e}")
         return jsonify({"error": str(e)}), 500
 
 
