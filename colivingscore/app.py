@@ -717,7 +717,7 @@ def api_market_analysis():
                 model="claude-sonnet-4-6",
                 max_tokens=8192,
                 extra_headers={"anthropic-beta": "web-search-2025-03-05"},
-                tools=[{"type": "web_search_20250305", "name": "web_search", "max_uses": 20}],
+                tools=[{"type": "web_search_20250305", "name": "web_search", "max_uses": 10}],
                 messages=[{"role": "user", "content": prompt}],
             )
             for block in response.content:
