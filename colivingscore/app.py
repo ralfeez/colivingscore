@@ -714,9 +714,9 @@ def api_market_analysis():
         used_web_search = False
         try:
             response = client.messages.create(
-                model="claude-opus-4-5-20251001",
+                model="claude-sonnet-4-6",
                 max_tokens=8192,
-                betas=["web-search-2025-03-05"],
+                extra_headers={"anthropic-beta": "web-search-2025-03-05"},
                 tools=[{"type": "web_search_20250305", "name": "web_search", "max_uses": 20}],
                 messages=[{"role": "user", "content": prompt}],
             )
@@ -727,7 +727,7 @@ def api_market_analysis():
         except Exception as ws_err:
             print(f"market-analysis web-search attempt failed: {ws_err} — retrying without tools")
             response = client.messages.create(
-                model="claude-opus-4-5-20251001",
+                model="claude-sonnet-4-6",
                 max_tokens=8192,
                 messages=[{"role": "user", "content": prompt}],
             )
@@ -852,9 +852,9 @@ def api_competitive():
         analysis = ""
         try:
             response = client.messages.create(
-                model="claude-opus-4-5-20251001",
+                model="claude-sonnet-4-6",
                 max_tokens=4096,
-                betas=["web-search-2025-03-05"],
+                extra_headers={"anthropic-beta": "web-search-2025-03-05"},
                 tools=[{"type": "web_search_20250305", "name": "web_search", "max_uses": 8}],
                 messages=[{"role": "user", "content": prompt}],
             )
@@ -864,7 +864,7 @@ def api_competitive():
         except Exception as ws_err:
             print(f"competitive web-search attempt failed: {ws_err} — retrying without tools")
             response = client.messages.create(
-                model="claude-opus-4-5-20251001",
+                model="claude-sonnet-4-6",
                 max_tokens=4096,
                 messages=[{"role": "user", "content": prompt}],
             )
@@ -940,12 +940,20 @@ def api_pro_data():
         def call_competitive():
             prompt = _build_competitive_prompt(address, city, state, tenant_key, beds)
             client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
-            response = client.messages.create(
-                model="claude-opus-4-5-20251001",
-                max_tokens=4096,
-                tools=[{"type": "web_search_20250305", "name": "web_search", "max_uses": 8}],
-                messages=[{"role": "user", "content": prompt}],
-            )
+            try:
+                response = client.messages.create(
+                    model="claude-sonnet-4-6",
+                    max_tokens=4096,
+                    extra_headers={"anthropic-beta": "web-search-2025-03-05"},
+                    tools=[{"type": "web_search_20250305", "name": "web_search", "max_uses": 8}],
+                    messages=[{"role": "user", "content": prompt}],
+                )
+            except Exception:
+                response = client.messages.create(
+                    model="claude-sonnet-4-6",
+                    max_tokens=4096,
+                    messages=[{"role": "user", "content": prompt}],
+                )
             analysis = ""
             for block in response.content:
                 if hasattr(block, "text"):
