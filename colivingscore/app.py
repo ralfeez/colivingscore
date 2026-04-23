@@ -282,14 +282,17 @@ def get_config():
 # ── Pro Analysis data routes ──────────────────────────────────────────────────
 
 def _fetch_rentcast(address, beds, baths):
-    def _query(bedrooms, bathrooms):
+    def _query(bedrooms, bathrooms, property_type="Single Family"):
+        params = {"address": address, "bedrooms": bedrooms, "bathrooms": bathrooms}
+        if property_type:
+            params["propertyType"] = property_type
         resp = requests.get(
             "https://api.rentcast.io/v1/avm/rent/long-term",
-            params={"address": address, "bedrooms": bedrooms, "bathrooms": bathrooms,
-                    "propertyType": "Single Family"},
+            params=params,
             headers={"X-Api-Key": RENTCAST_API_KEY},
             timeout=10,
         )
+        print(f"RentCast query beds={bedrooms} baths={bathrooms} type={property_type} → {resp.status_code}: {resp.text[:200]}")
         if resp.status_code != 200:
             return None
         return resp.json()
@@ -305,7 +308,7 @@ def _fetch_rentcast(address, beds, baths):
             "source":        "direct",
         }
 
-    # Fallback — 1-bedroom query, scale to per-room co-living rate (65%)
+    # Fallback 1 — 1-bedroom query with propertyType, scale to per-room co-living rate (65%)
     d1 = _query(1, 1)
     if d1 and d1.get("rent"):
         base       = d1["rent"]
@@ -319,6 +322,22 @@ def _fetch_rentcast(address, beds, baths):
             "one_br_base":      base,
             "comparables":      d1.get("comparables", [])[:5],
             "source":           "1BR_scaled",
+        }
+
+    # Fallback 2 — 1-bedroom without propertyType filter (broader match)
+    d2 = _query(1, 1, property_type=None)
+    if d2 and d2.get("rent"):
+        base       = d2["rent"]
+        per_room   = round(base * 0.65)
+        total_est  = per_room * beds
+        return {
+            "rent_estimate":    total_est,
+            "rent_low":         round((d2.get("rentRangeLow") or base) * 0.60) * beds,
+            "rent_high":        round((d2.get("rentRangeHigh") or base) * 0.70) * beds,
+            "per_room_estimate": per_room,
+            "one_br_base":      base,
+            "comparables":      d2.get("comparables", [])[:5],
+            "source":           "1BR_scaled_broad",
         }
 
     return {"error": "No rental data available for this address"}
