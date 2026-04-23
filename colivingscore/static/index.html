@@ -790,7 +790,7 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
 
     <!-- Tenant comparison -->
     <div class="card">
-      <div class="card-title">Tenant Type Comparison — Ranked by Monthly NOI</div>
+      <div class="card-title">Tenant Type Comparison — Ranked by Monthly Cash Flow</div>
       <div class="card-sub">Using your actual expense inputs. Best fit highlighted.</div>
       <div id="pr-tenant-comparison"></div>
     </div>
@@ -1309,13 +1309,13 @@ function generateProAnalysis(overrideInputs){
   const insMo   = Math.round(ins/12);
   const opEx    = taxMo + insMo + hoa + uv.utilTotal + internet + yard + pest + repairs + capex + mgmtFee;
   const total   = mortgage + opEx;
-  const noi     = gross - total;
-  const noiAnn  = noi * 12;
-  const trueNOI = gross - opEx;
-  const dscr    = mortgage ? +(trueNOI/mortgage).toFixed(2) : 0;
-  const oer     = gross ? +(total/gross).toFixed(2) : 0;
+  const noi     = gross - opEx;      // Net Operating Income = gross minus operating expenses (before mortgage)
+  const cashFlow = gross - total;    // Cash Flow = NOI minus mortgage
+  const cashFlowAnn = cashFlow * 12;
+  const dscr    = mortgage ? +(noi/mortgage).toFixed(2) : 0;
+  const oer     = gross ? +(opEx/gross).toFixed(2) : 0;  // OER excludes mortgage
   const be      = (beds*rent) ? +(total/(beds*rent)).toFixed(2) : 0;
-  const margin  = gross ? +(noi/gross).toFixed(2) : 0;
+  const margin  = gross ? +(cashFlow/gross).toFixed(2) : 0;
 
   // Save for PDF
   window._proData = {
@@ -1332,12 +1332,12 @@ function generateProAnalysis(overrideInputs){
     mgmt_model: (mgmtLabels[mgmtSel]||mgmtSel) + ' (' + Math.round(mgmtPct*100) + '%)',
     mgmt_model_key: mgmtSel,
     mgmt_rate: mgmtPct,
-    gross_monthly:gross, total_expenses:total, noi_monthly:noi, noi_annual:noiAnn,
-    dscr, oer, breakeven_occ:be, noi_margin:margin, per_room_noi:Math.round(noi/beds)
+    gross_monthly:gross, total_expenses:total, noi_monthly:noi, cash_flow_monthly:cashFlow, cash_flow_annual:cashFlowAnn,
+    dscr, oer, breakeven_occ:be, cash_flow_margin:margin, per_room_noi:Math.round(noi/beds)
   };
 
   // Store pro financials for page 1 KPI strip
-  window._proFin = { gross, total, noi, trueNOI, dscr, oer, be, margin, mortgage, mgmtSel, beds };
+  window._proFin = { gross, opEx, total, noi, cashFlow, cashFlowAnn, dscr, oer, be, margin, mortgage, mgmtSel, beds };
 
   // Render Pro results
   document.getElementById('pr-addr').textContent = p.label + ' Analysis';
@@ -1346,11 +1346,11 @@ function generateProAnalysis(overrideInputs){
   const greenOrRed = v => v>0 ? 'color:var(--green-dark);font-weight:700' : 'color:var(--red);font-weight:700';
   document.getElementById('pr-fin-grid').innerHTML = `
     <div class="fin-card"><div class="fin-label">Gross Monthly Income</div><div class="fin-value green">$${gross.toLocaleString()}</div></div>
-    <div class="fin-card"><div class="fin-label">Total Monthly Expenses</div><div class="fin-value">$${total.toLocaleString()}</div></div>
-    <div class="fin-card"><div class="fin-label">Monthly NOI</div><div class="fin-value" style="${greenOrRed(noi)}">$${noi.toLocaleString()}</div></div>
-    <div class="fin-card"><div class="fin-label">Annual NOI</div><div class="fin-value" style="${greenOrRed(noiAnn)}">$${noiAnn.toLocaleString()}</div></div>
-    <div class="fin-card"><div class="fin-label">Per-Room NOI</div><div class="fin-value" style="${greenOrRed(Math.round(noi/beds))}">$${Math.round(noi/beds).toLocaleString()}</div></div>
-    <div class="fin-card"><div class="fin-label">Break-Even Occupancy</div><div class="fin-value">${Math.round(be*100)}%</div></div>`;
+    <div class="fin-card"><div class="fin-label">Operating Expenses (excl. mortgage)</div><div class="fin-value">$${opEx.toLocaleString()}</div></div>
+    <div class="fin-card"><div class="fin-label">Net Operating Income</div><div class="fin-value" style="${greenOrRed(noi)}">$${noi.toLocaleString()}</div></div>
+    <div class="fin-card"><div class="fin-label">Monthly Mortgage</div><div class="fin-value">$${mortgage.toLocaleString()}</div></div>
+    <div class="fin-card"><div class="fin-label">Monthly Cash Flow</div><div class="fin-value" style="${greenOrRed(cashFlow)}">$${cashFlow.toLocaleString()}</div></div>
+    <div class="fin-card"><div class="fin-label">Annual Cash Flow</div><div class="fin-value" style="${greenOrRed(cashFlowAnn)}">$${cashFlowAnn.toLocaleString()}</div></div>`;
 
   // Ratios
   const ratioRow = (label, value, benchmark, good) => {
@@ -1361,25 +1361,28 @@ function generateProAnalysis(overrideInputs){
     </div>`;
   };
   document.getElementById('pr-ratios').innerHTML =
-    ratioRow('Debt Service Coverage Ratio — how many times your income covers the mortgage. Lenders require 1.25x minimum.', dscr+'x', dscr>=1.25 ? '✓ Meets lender threshold' : '✗ Below lender minimum of 1.25x', dscr>=1.25) +
-    ratioRow('Operating Expense Ratio — what share of income goes to expenses (excluding mortgage). Lower is healthier.', Math.round(oer*100)+'%', oer<=0.65 ? '✓ Within healthy range' : '✗ Target is under 65%', oer<=0.65) +
+    ratioRow('Debt Service Coverage Ratio (NOI ÷ Mortgage) — how many times your operating income covers the mortgage. Lenders require 1.25x minimum.', dscr+'x', dscr>=1.25 ? '✓ Meets lender threshold' : '✗ Below lender minimum of 1.25x', dscr>=1.25) +
+    ratioRow('Operating Expense Ratio (Operating Expenses ÷ Gross Income) — excludes mortgage. Measures operating efficiency. Lower is healthier.', Math.round(oer*100)+'%', oer<=0.65 ? '✓ Within healthy range' : '✗ Target is under 65%', oer<=0.65) +
     ratioRow('Break-Even Occupancy — the minimum occupancy needed to cover all costs including mortgage.', Math.round(be*100)+'%', be<=0.75 ? '✓ Good cushion above break-even' : '✗ Target is under 75%', be<=0.75) +
-    ratioRow('Cash Flow Margin — how much of your gross income is left after all expenses and mortgage.', Math.round(margin*100)+'%', margin>=0.20 ? '✓ Strong margin' : '✗ Target is 20% or higher', margin>=0.20);
+    ratioRow('Cash Flow Margin — how much of your gross income remains after all expenses including mortgage.', Math.round(margin*100)+'%', margin>=0.20 ? '✓ Strong margin' : '✗ Target is 20% or higher', margin>=0.20);
 
-  // Tenant comparison
-  const tenantNOIs = Object.entries(TENANT_PROFILES).map(([key,prof])=>{
-    const g = Math.round(beds * prof.rent * occ);
+  // Tenant comparison — scale each type's rent relative to the user's entered rent
+  const baseProfileRent = TENANT_PROFILES[tenant] ? TENANT_PROFILES[tenant].rent : 875;
+  const tenantCFs = Object.entries(TENANT_PROFILES).map(([key,prof])=>{
+    const scaledRent = Math.round(rent * (prof.rent / baseProfileRent));
+    const g = Math.round(beds * scaledRent * occ);
     const m = Math.round(g * mgmtPct);
-    const n = g - (total - mgmtFee) - m;
-    return {key, label:prof.label, noi:n, best:key===tenant};
-  }).sort((a,b)=>b.noi-a.noi);
+    const cf = g - (total - mgmtFee) - m;
+    return {key, label:prof.label, cf, scaledRent, best:key===tenant};
+  }).sort((a,b)=>b.cf-a.cf);
 
-  const bestNoi = tenantNOIs[0].noi;
-  document.getElementById('pr-tenant-comparison').innerHTML = tenantNOIs.map(t=>`
+  const bestCF = tenantCFs[0].cf;
+  document.getElementById('pr-tenant-comparison').innerHTML = tenantCFs.map(t=>`
     <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--gray-100)${t.best?';background:var(--green-light);margin:0 -24px;padding:10px 24px;':''}">
-      <div style="width:130px;font-size:13px;font-weight:${t.best?'600':'400'};color:${t.best?'var(--green-dark)':'var(--gray-700)'};flex-shrink:0">${t.label}${t.best?' ✓':''}</div>
-      <div style="flex:1;background:var(--gray-100);border-radius:4px;height:10px"><div style="background:${t.best?'var(--green)':'var(--gray-300)'};height:10px;border-radius:4px;width:${Math.max(0,t.noi/bestNoi*100)}%"></div></div>
-      <div style="font-size:13px;font-weight:600;color:${t.noi>0?'var(--green-dark)':'var(--red)'};width:80px;text-align:right">$${t.noi.toLocaleString()}/mo</div>
+      <div style="width:140px;font-size:13px;font-weight:${t.best?'600':'400'};color:${t.best?'var(--green-dark)':'var(--gray-700)'};flex-shrink:0">${t.label}${t.best?' ✓':''}</div>
+      <div style="flex:1;background:var(--gray-100);border-radius:4px;height:10px"><div style="background:${t.best?'var(--green)':'var(--gray-300)'};height:10px;border-radius:4px;width:${Math.max(0,bestCF>0?t.cf/bestCF*100:0)}%"></div></div>
+      <div style="font-size:11px;color:var(--gray-400);width:60px;text-align:right;flex-shrink:0">$${t.scaledRent}/rm</div>
+      <div style="font-size:13px;font-weight:600;color:${t.cf>0?'var(--green-dark)':'var(--red)'};width:80px;text-align:right;flex-shrink:0">$${t.cf.toLocaleString()}/mo</div>
     </div>`).join('');
 
   // Improvements
@@ -1414,7 +1417,7 @@ function generateProAnalysis(overrideInputs){
       <div style="font-size:18px;font-weight:700;color:${isGo?'var(--green-dark)':'var(--red)'};margin-bottom:10px">${isGo?'✓ GO — Strong Co-Living Candidate':'✕ NO-GO — Does Not Meet Thresholds'}</div>
       <div style="font-size:13px;color:var(--gray-700);line-height:1.7">
         ${isGo
-          ? `DSCR of ${dscr}x ${dscr>=1.25?'exceeds':'is approaching'} the 1.25x lender benchmark. Break-even occupancy of ${Math.round(be*100)}% provides a ${be<=0.75?'comfortable':'tight'} cushion. Monthly NOI of $${noi.toLocaleString()} supports a viable co-living operation at this rent level.`
+          ? `DSCR of ${dscr}x ${dscr>=1.25?'exceeds':'is approaching'} the 1.25x lender benchmark. Break-even occupancy of ${Math.round(be*100)}% provides a ${be<=0.75?'comfortable':'tight'} cushion. Monthly cash flow of $${cashFlow.toLocaleString()} supports a viable co-living operation at this rent level.`
           : `This property does not meet minimum thresholds for co-living investment at current inputs. Review the improvement recommendations above and re-run the analysis with adjusted rent or expense assumptions.`
         }
       </div>
@@ -1949,8 +1952,8 @@ function renderPagedReport(md, ai){
   const band   = fin.band || '';
   const bColor = score>=70?'#1D9E75':score>=50?'#D97706':'#E24B4A';
   const gross  = pf.gross  || 0;
-  const trNOI  = pf.trueNOI || 0;
-  const cf     = pf.noi    || 0;
+  const trNOI  = pf.noi      || 0;
+  const cf     = pf.cashFlow || 0;
   const dscr   = pf.dscr   || 0;
   const fmt    = n => n!=null ? '$'+Math.abs(Math.round(n)).toLocaleString() : '—';
   set('rpt-pg-1',`
@@ -2124,7 +2127,7 @@ function renderPagedReport(md, ai){
       <div style="font-size:12.5px;color:var(--gray-600);line-height:1.5">${f.message}</div>
     </div>`).join('') : '';
   set('rpt-pg-11',`
-    <div style="font-size:11px;font-weight:700;color:var(--gray-500);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:12px">Tenant Type Comparison — Ranked by Monthly Net Operating Income</div>
+    <div style="font-size:11px;font-weight:700;color:var(--gray-500);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:12px">Tenant Type Comparison — Ranked by Monthly Cash Flow</div>
     ${tenComp?tenComp.innerHTML:''}
     <div class="divider"></div>
     <div style="font-size:11px;font-weight:700;color:var(--gray-500);letter-spacing:0.5px;text-transform:uppercase;margin:16px 0 12px">Capital Improvements — Return on Investment Analysis</div>
