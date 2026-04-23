@@ -699,7 +699,7 @@ Threats:
 
 @app.route("/api/market-analysis", methods=["POST"])
 def api_market_analysis():
-    """Full 13-section market analysis powered by Claude AI + web search."""
+    """13-section market analysis powered by Claude training data + provided property/market context."""
     try:
         data       = request.get_json(force=True)
         tenant_key = data.get("tenant_key", "workforce")
@@ -709,37 +709,20 @@ def api_market_analysis():
 
         client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
-        # Try with web search first; fall back to training-data-only if it fails.
+        response = client.messages.create(
+            model="claude-sonnet-4-6",
+            max_tokens=8192,
+            messages=[{"role": "user", "content": prompt}],
+        )
         full_text = ""
-        used_web_search = False
-        try:
-            response = client.messages.create(
-                model="claude-sonnet-4-6",
-                max_tokens=8192,
-                extra_headers={"anthropic-beta": "web-search-2025-03-05"},
-                tools=[{"type": "web_search_20250305", "name": "web_search", "max_uses": 10}],
-                messages=[{"role": "user", "content": prompt}],
-            )
-            for block in response.content:
-                if hasattr(block, "text"):
-                    full_text += block.text
-            used_web_search = True
-        except Exception as ws_err:
-            print(f"market-analysis web-search attempt failed: {ws_err} — retrying without tools")
-            response = client.messages.create(
-                model="claude-sonnet-4-6",
-                max_tokens=8192,
-                messages=[{"role": "user", "content": prompt}],
-            )
-            for block in response.content:
-                if hasattr(block, "text"):
-                    full_text += block.text
+        for block in response.content:
+            if hasattr(block, "text"):
+                full_text += block.text
 
         sections = _parse_market_sections(full_text)
-        sections["tenant_key"]      = tenant_key
-        sections["city"]            = city
-        sections["used_web_search"] = used_web_search
-        sections["raw"]             = full_text  # keep raw for debugging
+        sections["tenant_key"] = tenant_key
+        sections["city"]       = city
+        sections["raw"]        = full_text
 
         return jsonify(sections)
     except Exception as e:
