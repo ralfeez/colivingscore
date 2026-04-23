@@ -790,8 +790,8 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
 
     <!-- Tenant comparison -->
     <div class="card">
-      <div class="card-title">Tenant Type Comparison — Ranked by Monthly Cash Flow</div>
-      <div class="card-sub">Using your actual expense inputs. Best fit highlighted.</div>
+      <div class="card-title">Tenant Type Suitability Analysis</div>
+      <div class="card-sub">Based on property characteristics and location data</div>
       <div id="pr-tenant-comparison"></div>
     </div>
 
@@ -1366,24 +1366,12 @@ function generateProAnalysis(overrideInputs){
     ratioRow('Break-Even Occupancy — the minimum occupancy needed to cover all costs including mortgage.', Math.round(be*100)+'%', be<=0.75 ? '✓ Good cushion above break-even' : '✗ Target is under 75%', be<=0.75) +
     ratioRow('Cash Flow Margin — how much of your gross income remains after all expenses including mortgage.', Math.round(margin*100)+'%', margin>=0.20 ? '✓ Strong margin' : '✗ Target is 20% or higher', margin>=0.20);
 
-  // Tenant comparison — scale each type's rent relative to the user's entered rent
-  const baseProfileRent = TENANT_PROFILES[tenant] ? TENANT_PROFILES[tenant].rent : 875;
-  const tenantCFs = Object.entries(TENANT_PROFILES).map(([key,prof])=>{
-    const scaledRent = Math.round(rent * (prof.rent / baseProfileRent));
-    const g = Math.round(beds * scaledRent * occ);
-    const m = Math.round(g * mgmtPct);
-    const cf = g - (total - mgmtFee) - m;
-    return {key, label:prof.label, cf, scaledRent, best:key===tenant};
-  }).sort((a,b)=>b.cf-a.cf);
-
-  const bestCF = tenantCFs[0].cf;
-  document.getElementById('pr-tenant-comparison').innerHTML = tenantCFs.map(t=>`
-    <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--gray-100)${t.best?';background:var(--green-light);margin:0 -24px;padding:10px 24px;':''}">
-      <div style="width:140px;font-size:13px;font-weight:${t.best?'600':'400'};color:${t.best?'var(--green-dark)':'var(--gray-700)'};flex-shrink:0">${t.label}${t.best?' ✓':''}</div>
-      <div style="flex:1;background:var(--gray-100);border-radius:4px;height:10px"><div style="background:${t.best?'var(--green)':'var(--gray-300)'};height:10px;border-radius:4px;width:${Math.max(0,bestCF>0?t.cf/bestCF*100:0)}%"></div></div>
-      <div style="font-size:11px;color:var(--gray-400);width:60px;text-align:right;flex-shrink:0">$${t.scaledRent}/rm</div>
-      <div style="font-size:13px;font-weight:600;color:${t.cf>0?'var(--green-dark)':'var(--red)'};width:80px;text-align:right;flex-shrink:0">$${t.cf.toLocaleString()}/mo</div>
-    </div>`).join('');
+  // Tenant suitability comparison
+  const fd = window._fastData || null;
+  const suitResults = computeTenantSuitability(inp, fd);
+  document.getElementById('pr-tenant-comparison').innerHTML = fd
+    ? renderSuitabilityTable(suitResults, tenant)
+    : `<div style="padding:20px;background:var(--gray-50);border-radius:var(--radius);text-align:center;color:var(--gray-500);font-size:13px">Full suitability analysis — hospital proximity, transit, parking, walkability — included in your Pro Report.</div>`;
 
   // Improvements
   const imps = [
@@ -1872,6 +1860,143 @@ function renderAIContent(text){
   return `<div class="ai-content">${html}</div>`;
 }
 
+// ── TENANT SUITABILITY ENGINE ─────────────────────────────────────────────────
+function computeTenantSuitability(inp, fd) {
+  const ws = fd ? (fd.walkscore || {}) : {};
+  const nb = fd ? (fd.nearby    || {}) : {};
+  const hospitalDist   = (nb.hospital && nb.hospital.distance_miles != null) ? parseFloat(nb.hospital.distance_miles) : null;
+  const transitAvail   = (ws.transit_score || 0) >= 25;
+  const parkingAvail   = (inp.garage||0) + (inp.carport||0) + (inp.uncovered||0) > 0;
+  const coveredParking = (inp.garage||0) + (inp.carport||0) > 0;
+  const singleStory    = (inp.floors||1) <= 1;
+  const walkScore      = ws.walk_score || 0;
+  const walkHigh       = walkScore >= 70;
+  const walkMed        = walkScore >= 50;
+  const uniPlace       = (nb.amenities||[]).find(a => a.type === 'university');
+  const campusDist     = uniPlace ? parseFloat(uniPlace.distance_miles) : null;
+
+  function sig(type, text){ return {type, text}; }
+
+  const profiles = {
+    nurses: { label:'Travel Nurses', eval(){
+      const signals=[]; let fit='marginal';
+      if(hospitalDist!==null){
+        if(hospitalDist<3){      signals.push(sig('strong-pos',`Hospital ${hospitalDist} mi away — strong draw for travel nurse placements`)); fit='strong'; }
+        else if(hospitalDist<=7){signals.push(sig('marginal',  `Hospital ${hospitalDist} mi away — acceptable but not ideal (target: under 3 mi)`)); }
+        else{                    signals.push(sig('strong-neg',`Hospital ${hospitalDist} mi away — too far for most travel nurse placements`)); fit='poor'; }
+      } else { signals.push(sig('note','Hospital distance unavailable')); }
+      if(parkingAvail) signals.push(sig('pos','Parking available — travel nurses typically have vehicles'));
+      else             signals.push(sig('neg','No parking — travel nurses typically have vehicles'));
+      return {fit, signals};
+    }},
+    tech: { label:'Tech / Remote Workers', eval(){
+      const signals=[]; let pos=0;
+      if(walkHigh){       signals.push(sig('pos','Walkable area — appealing to remote workers')); pos++; }
+      else if(!walkMed){  signals.push(sig('neg','Low walkability — remote workers prefer walkable neighborhoods')); }
+      if(transitAvail){   signals.push(sig('pos','Transit accessible')); pos++; }
+      signals.push(sig('note','Internet quality not assessed — verify fiber/cable availability'));
+      return {fit: pos>=2?'good':pos===1?'marginal':'marginal', signals};
+    }},
+    trades: { label:'Construction / Trades', eval(){
+      const signals=[]; let fit='marginal';
+      if(coveredParking){  signals.push(sig('strong-pos','Covered parking — trades workers need secure vehicle and tool storage')); fit='good'; }
+      else if(parkingAvail){signals.push(sig('pos','Parking available')); }
+      else{                signals.push(sig('strong-neg','No parking — dealbreaker for most trades workers')); fit='poor'; }
+      if(walkHigh) signals.push(sig('neg','Highly walkable urban area — typically not proximate to trades job sites'));
+      signals.push(sig('note','Employer and job site proximity not assessed'));
+      return {fit, signals};
+    }},
+    seniors: { label:'Seniors 55+', eval(){
+      const signals=[]; let penalty=false, pos=0;
+      if(singleStory){ signals.push(sig('pos','Single-story layout — ideal for 55+ mobility')); pos++; }
+      else{            signals.push(sig('strong-neg','Multi-story layout — significant accessibility barrier for 55+ residents')); penalty=true; }
+      if(hospitalDist!==null && hospitalDist<3){ signals.push(sig('pos',`Medical facilities ${hospitalDist} mi away`)); pos++; }
+      else if(hospitalDist!==null){              signals.push(sig('neg',`Medical facilities ${hospitalDist} mi away — seniors prefer under 3 mi`)); }
+      if(transitAvail){ signals.push(sig('pos','Transit accessible — important for non-driving residents')); pos++; }
+      if(walkHigh){     signals.push(sig('pos','Walkable neighborhood — quality of life for 55+')); pos++; }
+      return {fit: penalty?'poor':pos>=2?'good':'marginal', signals};
+    }},
+    sober: { label:'Sober Living', eval(){
+      const signals=[];
+      if(transitAvail) signals.push(sig('pos','Transit accessible — important for residents without vehicles'));
+      else             signals.push(sig('neg','No transit — limits mobility for residents without vehicles'));
+      signals.push(sig('note','Higher than average damage and turnover risk — not disqualifying'));
+      signals.push(sig('note','Requires active management oversight and house rules enforcement'));
+      signals.push(sig('note','Support services proximity not assessed'));
+      return {fit:'marginal', signals};
+    }},
+    students: { label:'Students', eval(){
+      const signals=[]; let fit='marginal';
+      if(campusDist!==null){
+        if(campusDist<3){                              signals.push(sig('strong-pos',`Campus ${campusDist} mi away — strong student demand driver`)); fit='strong'; }
+        else if(campusDist<=5 && transitAvail){        signals.push(sig('marginal',  `Campus ${campusDist} mi — manageable with transit access`)); }
+        else{                                          signals.push(sig('strong-neg', campusDist>5?`Campus ${campusDist} mi away — too far for consistent student demand`:`Campus ${campusDist} mi without transit — difficult commute`)); fit='poor'; }
+      } else { signals.push(sig('strong-neg','No university detected nearby — student demand unlikely')); fit='poor'; }
+      if(transitAvail) signals.push(sig('pos','Transit accessible'));
+      signals.push(sig('note','Seasonal vacancy risk — budget for summer months'));
+      signals.push(sig('note','Above average damage risk'));
+      return {fit, signals};
+    }},
+    workforce: { label:'General Workforce', eval(){
+      const signals=[]; let pos=0;
+      if(parkingAvail){ signals.push(sig('pos','Parking available')); pos++; }
+      if(transitAvail){ signals.push(sig('pos','Transit accessible')); pos++; }
+      signals.push(sig('note','Baseline tenant type — stable demand in most markets'));
+      return {fit: pos>=1?'good':'marginal', signals};
+    }}
+  };
+
+  return Object.entries(profiles).map(([key,p])=>{ const r=p.eval(); return {key, label:p.label, fit:r.fit, signals:r.signals}; });
+}
+
+function renderSuitabilityTable(results, currentTenant){
+  const FIT_ORDER  = {strong:0, good:1, marginal:2, poor:3};
+  const FIT_LABELS = {
+    strong:  {text:'Strong Fit', bg:'#dcfce7', color:'#15803d'},
+    good:    {text:'Good Fit',   bg:'#f0fdf4', color:'#166534'},
+    marginal:{text:'Marginal',   bg:'#fef9c3', color:'#854d0e'},
+    poor:    {text:'Poor Fit',   bg:'#fee2e2', color:'#991b1b'},
+  };
+  const SIG_STYLES = {
+    'strong-pos':{icon:'✓', color:'#15803d', weight:'700'},
+    'pos':       {icon:'✓', color:'#1D9E75', weight:'400'},
+    'marginal':  {icon:'⚠', color:'#92400e', weight:'400'},
+    'neg':       {icon:'✗', color:'#dc2626', weight:'400'},
+    'strong-neg':{icon:'✗', color:'#991b1b', weight:'700'},
+    'note':      {icon:'·', color:'#6B7280', weight:'400'},
+  };
+  const sorted = [...results].sort((a,b)=>{
+    if(a.key===currentTenant) return -1;
+    if(b.key===currentTenant) return 1;
+    return (FIT_ORDER[a.fit]??2)-(FIT_ORDER[b.fit]??2);
+  });
+  const topFit   = sorted.find(r=>r.key!==currentTenant && (FIT_ORDER[r.fit]??2) < (FIT_ORDER[sorted.find(r2=>r2.key===currentTenant)?.fit??'marginal']??2));
+  const selected = sorted.find(r=>r.key===currentTenant);
+  const callout  = topFit && selected && (FIT_ORDER[topFit.fit]??2) < (FIT_ORDER[selected.fit]??2)
+    ? `<div style="padding:10px 14px;background:var(--amber-light);border:1px solid #E8C87A;border-radius:var(--radius);font-size:12.5px;color:#92400E;margin-bottom:14px">
+        ⚠ <strong>${topFit.label}</strong> scores higher than your selected type for this property. See comparison below.
+       </div>` : '';
+
+  return callout + sorted.map(r=>{
+    const isSel = r.key===currentTenant;
+    const fl    = FIT_LABELS[r.fit]||FIT_LABELS.marginal;
+    const sigHtml = r.signals.map(s=>{
+      const st = SIG_STYLES[s.type]||SIG_STYLES.note;
+      return `<div style="font-size:12.5px;color:${st.color};font-weight:${st.weight};margin-bottom:3px;display:flex;gap:6px;align-items:baseline">
+        <span style="flex-shrink:0;width:12px">${st.icon}</span><span style="line-height:1.4">${s.text}</span></div>`;
+    }).join('');
+    return `<div style="padding:14px 0;border-bottom:1px solid var(--gray-100)${isSel?';background:var(--green-light);margin:0 -24px;padding:14px 24px':''}">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <div style="font-size:13px;font-weight:${isSel?'700':'600'};color:${isSel?'var(--green-dark)':'var(--dark)'};flex:1">
+          ${r.label}${isSel?' <span style="font-size:11px;font-weight:400;color:var(--green-dark)">(your selection)</span>':''}
+        </div>
+        <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;background:${fl.bg};color:${fl.color}">${fl.text}</span>
+      </div>
+      <div>${sigHtml}</div>
+    </div>`;
+  }).join('');
+}
+
 // ── FULL PRO ANALYSIS ORCHESTRATOR ───────────────────────────────────────────
 async function runFullProAnalysis(overrideInputs){
   startLoadingScreen();
@@ -1898,6 +2023,7 @@ async function runFullProAnalysis(overrideInputs){
     });
     clearTimeout(t);
     fastData = await res.json();
+    window._fastData = fastData; // make available to generateProAnalysis
   } catch(e){ console.warn('pro-data-fast failed:',e); }
 
   // Step 2 — Full AI market analysis (Claude + 20 web searches, up to 3 min)
@@ -2127,7 +2253,8 @@ function renderPagedReport(md, ai){
       <div style="font-size:12.5px;color:var(--gray-600);line-height:1.5">${f.message}</div>
     </div>`).join('') : '';
   set('rpt-pg-11',`
-    <div style="font-size:11px;font-weight:700;color:var(--gray-500);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:12px">Tenant Type Comparison — Ranked by Monthly Cash Flow</div>
+    <div style="font-size:11px;font-weight:700;color:var(--gray-500);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px">Tenant Type Suitability Analysis</div>
+    <div style="font-size:11.5px;color:var(--gray-500);margin-bottom:12px">Signals assessed: hospital proximity · transit · parking · stories · walkability · campus proximity</div>
     ${tenComp?tenComp.innerHTML:''}
     <div class="divider"></div>
     <div style="font-size:11px;font-weight:700;color:var(--gray-500);letter-spacing:0.5px;text-transform:uppercase;margin:16px 0 12px">Capital Improvements — Return on Investment Analysis</div>
