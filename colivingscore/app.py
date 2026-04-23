@@ -536,8 +536,12 @@ def _parse_market_sections(text):
     text_upper = text.upper()
 
     for i, key in enumerate(SECTION_KEYS):
-        header = f"## {key.upper()}"
-        start = text_upper.find(header)
+        # Match both underscore and space variants (e.g. PLATFORM_STRATEGY or PLATFORM STRATEGY)
+        header_underscore = f"## {key.upper()}"
+        header_space = f"## {key.upper().replace('_', ' ')}"
+        start = text_upper.find(header_underscore)
+        if start == -1:
+            start = text_upper.find(header_space)
         if start == -1:
             continue
         start = text.find("\n", start) + 1
@@ -618,7 +622,7 @@ def _build_market_analysis_prompt(data):
     rent_room_str  = f"${rent_per_room:,}" if rent_per_room else "not specified"
     mortgage_str   = f"${mortgage:,}" if mortgage else "not specified"
 
-    return f"""You are a professional co-living investment analyst. Write a comprehensive, specific market analysis for the investor below. Use web search to find current, real data — not generic statements.
+    return f"""You are a professional co-living investment analyst. Write a comprehensive, specific market analysis for the investor below. Use your training data and the property context provided — be specific, use real city/market knowledge, and give straight investor-friendly analysis.
 
 ## PROPERTY
 - Address: {address} ({city}, {state} {zip_code})
@@ -628,7 +632,7 @@ def _build_market_analysis_prompt(data):
 - Monthly mortgage: {mortgage_str}
 - Management approach: {mgmt_label}
 
-## DATA ALREADY GATHERED (use this as context, do not re-search)
+## MARKET DATA (provided — use as context)
 - Walkability Score: {walk}/100 | Public Transportation Score: {transit}/100 | Bike Score: {bike}/100
 - ZIP population: {pop_str} | Renter-occupied: {renter_pct}% | Median income: {income_str} | Median rent: {med_rent_str}/month
 - Nearest transit: {transit_str}
@@ -637,18 +641,8 @@ def _build_market_analysis_prompt(data):
 {amenity_lines}
 - RentCast estimate: {rc_line}
 
-## RESEARCH TASKS (use your web search tool for each of these)
-1. Search Furnished Finder, Craigslist, and Facebook Marketplace for room rentals near {city}, {state} — find actual listed rates
-2. Search for PadSplit listings in {city}, {state} — count, neighborhoods, and rate range
-3. Search for extended stay hotels and weekly motels near {address} — weekly and monthly rates
-4. Search for 1-bedroom apartment rents in {city}, {state} on Zillow, Zumper, or Apartments.com
-5. Search for major employers within 5 miles of {address} — warehouses, hospitals, factories, logistics hubs
-6. Search for {city} {state} rental market vacancy rates and rent trends
-7. Search for {city} {state} zoning or occupancy rules for room rentals and shared housing
-8. Search for {tenant_label} housing demand or workforce housing demand in {city}, {state}
-
 ## RESPONSE FORMAT
-Return your analysis using EXACTLY these section headers in this order. Write in direct, investor-friendly language — specific numbers, real names, straight talk. No corporate fluff.
+Return your analysis using EXACTLY these section headers in this order. Be concise but specific — 3-6 sentences or bullet points per section. Write in direct, investor-friendly language — specific numbers, real names, straight talk. No corporate fluff. IMPORTANT: Do not use markdown tables — use plain bullet points instead.
 
 ## EXECUTIVE_SUMMARY
 [3-5 bullet points: Is this market viable for co-living? Expected cash flow potential? Top 2-3 risks? Bottom-line verdict. Use the tone of a straight-talking investor mentor.]
@@ -711,7 +705,7 @@ def api_market_analysis():
 
         response = client.messages.create(
             model="claude-sonnet-4-6",
-            max_tokens=8192,
+            max_tokens=16000,
             messages=[{"role": "user", "content": prompt}],
         )
         full_text = ""
