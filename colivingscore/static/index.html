@@ -295,6 +295,66 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
 .ai-table th{background:var(--gray-100);font-weight:700;color:var(--gray-600);text-transform:uppercase;font-size:10.5px;letter-spacing:0.4px;padding:8px 10px;text-align:left;border-bottom:2px solid var(--gray-200)}
 .ai-table td{padding:7px 10px;border-bottom:1px solid var(--gray-100);color:var(--gray-700);vertical-align:top}
 .ai-table tr:last-child td{border-bottom:none}
+#print-cover{display:none}
+
+/* ── PRINT / PDF ── */
+@page{size:letter;margin:.7in .65in .75in}
+@media print{
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  body{background:#fff!important;margin:0!important;padding:0!important}
+  header{display:none!important}
+  .container{max-width:none!important;padding:0!important;margin:0!important}
+  .screen{display:none!important}
+  #s-pro-report{display:block!important}
+  .addr-strip,#rpt-nav,.rpt-nav-arrow,.rpt-page-foot,.btn-row{display:none!important}
+  #print-cover{display:flex!important;flex-direction:column;min-height:100vh;page-break-after:always;break-after:page}
+  .pcv-top{flex:1;background:#1e3a5f!important;display:flex;flex-direction:column;justify-content:center;padding:72px 80px}
+  .pcv-wordmark{font-size:13pt;font-weight:700;color:rgba(255,255,255,.5);letter-spacing:1px;text-transform:uppercase;margin-bottom:48px}
+  .pcv-wordmark span{color:#a8c4e0}
+  .pcv-report-type{font-size:10pt;font-weight:600;color:#a8c4e0;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px}
+  .pcv-address{font-size:24pt;font-weight:700;color:#fff;line-height:1.2;margin-bottom:6px}
+  .pcv-city{font-size:13pt;font-weight:400;color:rgba(255,255,255,.65);margin-bottom:36px}
+  .pcv-rule{width:48px;height:3px;background:#c8973a;margin-bottom:36px}
+  .pcv-tenant-label{font-size:9pt;color:rgba(255,255,255,.5);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px}
+  .pcv-tenant-value{font-size:12pt;font-weight:600;color:#fff}
+  .pcv-bottom{background:#f7f9fc!important;border-top:3px solid #c8973a;padding:24px 80px;display:flex!important;align-items:center;justify-content:space-between}
+  .pcv-date{font-size:9.5pt;color:#4a5568}
+  .pcv-disclaimer{font-size:8.5pt;color:#718096;text-align:right;max-width:300px;line-height:1.5}
+  .rpt-page{display:block!important;page-break-before:always;break-before:page}
+  .rpt-page-hdr{background:#1e3a5f!important;border-radius:0!important;margin-top:0!important;padding:9px 20px!important}
+  .rpt-page-hdr-brand{font-size:11pt!important;font-weight:700!important;color:#fff!important}
+  .rpt-page-hdr-title{font-size:10pt!important;color:#a8c4e0!important}
+  .rpt-page-hdr-pg{font-size:9pt!important;color:rgba(255,255,255,.6)!important}
+  .rpt-page-body{border:none!important;padding:18px 24px!important}
+  .ai-content{font-size:10.5pt!important;line-height:1.75!important;color:#1a202c!important}
+  .ai-content h3{font-size:11.5pt!important;color:#1e3a5f!important;border-bottom-color:#e2e8f0!important;margin:16px 0 7px!important}
+  .ai-content h4{font-size:10.5pt!important;color:#2c5282!important;margin:11px 0 5px!important}
+  .ai-content p{margin-bottom:9px!important}
+  .ai-content strong{color:#1a202c!important}
+  .ai-table{font-size:9.5pt!important}
+  .ai-table th{background:#1e3a5f!important;color:#fff!important;padding:7px 10px!important}
+  .ai-table td{padding:6px 10px!important;border-bottom-color:#e2e8f0!important}
+  .ai-table tr:nth-child(even) td{background:#f7f9fc!important}
+  .rpt-kpi-strip{grid-template-columns:repeat(4,1fr)!important}
+  .rpt-kpi-cell{background:#f0f4f8!important;border-color:#cbd5e0!important}
+  .rpt-kpi-value{color:#1e3a5f!important;font-size:20px!important}
+  .rpt-kpi-label{color:#4a5568!important}
+  .rpt-kpi-sub{color:#4a5568!important}
+  .fin-grid{grid-template-columns:1fr 1fr 1fr!important}
+  .fin-card{background:#f7f9fc!important;border-color:#e2e8f0!important}
+  .fin-label{color:#4a5568!important}
+  .fin-value{color:#1e3a5f!important}
+  .fin-value.green{color:#276749!important}
+  .market-grid{grid-template-columns:repeat(3,1fr)!important}
+  .market-stat{background:#f7f9fc!important;border-color:#e2e8f0!important}
+  .market-stat-value{color:#1e3a5f!important}
+  .location-pill{background:#f7f9fc!important;border-color:#e2e8f0!important;break-inside:avoid}
+  .location-pill-name{color:#1e3a5f!important}
+  .fin-card,.market-stat,.rpt-kpi-cell,.location-pill{break-inside:avoid}
+  h3,h4{break-after:avoid}
+  a{color:inherit!important;text-decoration:none!important}
+  .assumption-notice{background:#fffbeb!important;border-color:#fcd34d!important}
+}
 </style>
 </head>
 <body>
@@ -852,6 +912,22 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
       <div style="display:flex;gap:8px;align-items:center">
         <button id="btn-pdf-hdr" style="height:28px;font-size:12px;padding:0 12px;background:transparent;color:var(--white);border:1px solid rgba(255,255,255,0.4);border-radius:var(--radius);cursor:pointer;font-family:var(--font);font-weight:500">↓ Download PDF</button>
         <button style="height:28px;font-size:12px;padding:0 12px;background:transparent;color:var(--white);border:1px solid rgba(255,255,255,0.4);border-radius:var(--radius);cursor:pointer;font-family:var(--font);font-weight:500" onclick="showScreen('s-result')">← Free Score</button>
+      </div>
+    </div>
+    <!-- Print-only cover page -->
+    <div id="print-cover">
+      <div class="pcv-top">
+        <div class="pcv-wordmark">CoLiving<span>Score</span>.com</div>
+        <div class="pcv-report-type">Pro Analysis Report</div>
+        <div class="pcv-address" id="pc-address"></div>
+        <div class="pcv-city" id="pc-city"></div>
+        <div class="pcv-rule"></div>
+        <div class="pcv-tenant-label">Target Tenant Type</div>
+        <div class="pcv-tenant-value" id="pc-tenant"></div>
+      </div>
+      <div class="pcv-bottom">
+        <div class="pcv-date" id="pc-date"></div>
+        <div class="pcv-disclaimer">For informational purposes only. Not financial or investment advice.</div>
       </div>
     </div>
     <!-- Navigation tabs — built by JS -->
@@ -1566,29 +1642,12 @@ function generateProAnalysis(overrideInputs){
 }
 
 // ── PDF DOWNLOAD ──────────────────────────────────────────────────────────────
-async function downloadPDF(){
-  const statusEl = document.getElementById('pdf-status');
-  statusEl.textContent = 'Generating your PDF report...';
-  try {
-    const response = await fetch('/generate-pdf', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify(window._proData||{})
-    });
-    if(!response.ok) throw new Error('Server error');
-    const blob = await response.blob();
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    a.href     = url;
-    a.download = 'CoLivingScore_ProAnalysis.pdf';
-    a.click();
-    URL.revokeObjectURL(url);
-    statusEl.textContent = '✓ Download started';
-    statusEl.style.color = 'var(--green-dark)';
-  } catch(err){
-    statusEl.textContent = 'Error generating PDF. Please try again.';
-    statusEl.style.color = 'var(--red)';
-  }
+function downloadPDF(){
+  const addr = (window._address || window._inputs?.address || 'Property').split(',')[0].trim();
+  const prev = document.title;
+  document.title = `CoLivingScore Pro Analysis — ${addr}`;
+  window.print();
+  document.title = prev;
 }
 
 // ── EMAIL CAPTURE ─────────────────────────────────────────────────────────────
@@ -2086,6 +2145,13 @@ function renderPagedReport(md, ai){
   // Update address in addr-strip
   const addrEl = document.getElementById('rpt-addr');
   if(addrEl) addrEl.textContent = addr;
+
+  // Populate print cover page
+  const aParts = addr.split(',');
+  document.getElementById('pc-address').textContent = aParts[0]?.trim() || addr;
+  document.getElementById('pc-city').textContent    = aParts.slice(1).join(',').trim();
+  document.getElementById('pc-tenant').textContent  = TENANT_PROFILES[inp.tenant||'nurses']?.label || '';
+  document.getElementById('pc-date').textContent    = 'Generated ' + new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
 
   // ── PAGE 1: Home — Score & Performance ───────────────────────────────
   const score  = window._score || 0;
