@@ -2381,92 +2381,93 @@ function renderPagedReport(md, ai){
 
   // ── PAGE 9: P&L Waterfall + Occupancy Sensitivity ────────────────────
   {
-    const p9 = window._proFin || {};
-    const fm = n => '$' + Math.abs(Math.round(n||0)).toLocaleString();
-    const wRow = (label, val, indent=false) =>
-      `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--gray-100)">
-        <div style="font-size:12.5px;color:var(--gray-700);${indent?'padding-left:14px':'font-weight:500'}">${label}</div>
-        <div style="font-size:12.5px;font-weight:500;color:var(--gray-900);font-family:var(--mono)">${fm(val)}</div>
-       </div>`;
-    const wTot = (label, val, color) =>
-      `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;margin:2px 0;border-top:2px solid var(--gray-300);border-bottom:2px solid var(--gray-300)">
-        <div style="font-size:13px;font-weight:700;color:${color}">${label}</div>
-        <div style="font-size:14px;font-weight:700;color:${color};font-family:var(--mono)">${val<0?'('+fm(val)+')':fm(val)}</div>
-       </div>`;
-    const sect = label =>
-      `<div style="font-size:10px;font-weight:700;color:var(--gray-500);letter-spacing:0.8px;text-transform:uppercase;margin:16px 0 4px">${label}</div>`;
+    const p9  = window._proFin || {};
+    const fm  = function(n){ return '$' + Math.abs(Math.round(n||0)).toLocaleString(); };
+    const row = function(lbl, val, indent){
+      var ps = indent ? 'padding-left:14px' : 'font-weight:500';
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--gray-100)">'
+        + '<div style="font-size:12.5px;color:var(--gray-700);' + ps + '">' + lbl + '</div>'
+        + '<div style="font-size:12.5px;font-weight:500;color:var(--gray-900);font-family:var(--mono)">' + fm(val) + '</div>'
+        + '</div>';
+    };
+    const tot = function(lbl, val, col){
+      var disp = val < 0 ? '(' + fm(val) + ')' : fm(val);
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;margin:2px 0;border-top:2px solid var(--gray-300);border-bottom:2px solid var(--gray-300)">'
+        + '<div style="font-size:13px;font-weight:700;color:' + col + '">' + lbl + '</div>'
+        + '<div style="font-size:14px;font-weight:700;color:' + col + ';font-family:var(--mono)">' + disp + '</div>'
+        + '</div>';
+    };
+    const sec = function(lbl){
+      return '<div style="font-size:10px;font-weight:700;color:var(--gray-500);letter-spacing:0.8px;text-transform:uppercase;margin:16px 0 4px">' + lbl + '</div>';
+    };
 
-    const occLevels = [0.65, 0.75, 0.85, p9.occ||0.92, 1.0]
-      .filter((v,i,a) => a.findIndex(x=>Math.abs(x-v)<0.005)===i)
-      .sort((a,b)=>a-b);
-    const sensRows = occLevels.map(o => {
-      const g  = Math.round((p9.beds||0)*(p9.rent||0)*o);
-      const n  = g - (p9.opEx||0);
-      const cf = n  - (p9.mortgage||0);
-      const d  = p9.mortgage ? +(n/p9.mortgage).toFixed(2) : 0;
-      const isCur = Math.abs(o-(p9.occ||0.92))<0.005;
-      const cfC = cf>=0?'#15803d':'#b91c1c';
-      const dC  = d>=1.25?'#15803d':d>=1.0?'#92400e':'#b91c1c';
-      return `<tr style="background:${isCur?'#f0fdf4':''}">
-        <td style="padding:7px 10px;font-size:12px;font-weight:${isCur?700:400}">${Math.round(o*100)}%${isCur?' ◀':''}</td>
-        <td style="padding:7px 10px;font-size:12px;text-align:right">${fm(g)}</td>
-        <td style="padding:7px 10px;font-size:12px;text-align:right;color:${n>=0?'inherit':'#b91c1c'}">${fm(n)}</td>
-        <td style="padding:7px 10px;font-size:12px;text-align:right;color:${cfC}">${cf<0?'('+fm(cf)+')':fm(cf)}</td>
-        <td style="padding:7px 10px;font-size:12px;text-align:right;color:${dC}">${d}x</td>
-      </tr>`;
+    var grossLbl = 'Gross Rent <span style="font-size:11px;color:var(--gray-500);font-weight:400">'
+      + (p9.beds||0) + ' rooms \u00d7 ' + fm(p9.rent) + '/mo \u00d7 ' + Math.round((p9.occ||0.92)*100) + '% occupancy</span>';
+    var mgmtLbl  = 'Management Fee <span style="font-size:11px;color:var(--gray-500);font-weight:400">'
+      + Math.round((p9.mgmtPct||0)*100) + '% of gross</span>';
+
+    var kpis = [
+      ['Annual Cash Flow', p9.cashFlowAnn >= 0 ? fm(p9.cashFlowAnn) : '(' + fm(p9.cashFlowAnn) + ')', p9.cashFlowAnn >= 0 ? '#15803d' : '#b91c1c'],
+      ['DSCR', (p9.dscr||0) + 'x', (p9.dscr||0) >= 1.25 ? '#15803d' : '#b91c1c'],
+      ['OER', Math.round((p9.oer||0)*100) + '%', 'var(--dark)'],
+      ['Break-Even Occ.', Math.round((p9.be||0)*100) + '%', 'var(--dark)'],
+    ];
+    var kpiHtml = kpis.map(function(k){
+      return '<div style="background:var(--gray-50);border:var(--border);border-radius:var(--radius);padding:12px;text-align:center">'
+        + '<div style="font-size:9.5px;font-weight:700;color:var(--gray-500);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:6px">' + k[0] + '</div>'
+        + '<div style="font-size:18px;font-weight:700;color:' + k[2] + ';font-family:var(--mono)">' + k[1] + '</div>'
+        + '</div>';
     }).join('');
 
-    set('rpt-pg-9',`
-      <div style="font-size:11px;font-weight:700;color:var(--gray-500);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:14px">Year 1 P&amp;L — Line Item Detail</div>
+    var occLevels = [0.65, 0.75, 0.85, p9.occ||0.92, 1.0]
+      .filter(function(v,i,a){ return a.findIndex(function(x){ return Math.abs(x-v)<0.005; })===i; })
+      .sort(function(a,b){ return a-b; });
+    var sensRows = occLevels.map(function(o){
+      var g  = Math.round((p9.beds||0)*(p9.rent||0)*o);
+      var n  = g - (p9.opEx||0);
+      var cf = n - (p9.mortgage||0);
+      var d  = p9.mortgage ? +(n/p9.mortgage).toFixed(2) : 0;
+      var cur = Math.abs(o-(p9.occ||0.92))<0.005;
+      var cfC = cf>=0 ? '#15803d' : '#b91c1c';
+      var dC  = d>=1.25 ? '#15803d' : d>=1.0 ? '#92400e' : '#b91c1c';
+      return '<tr style="background:' + (cur?'#f0fdf4':'') + '">'
+        + '<td style="padding:7px 10px;font-size:12px;font-weight:' + (cur?700:400) + '">' + Math.round(o*100) + '%' + (cur?' \u25c4':'') + '</td>'
+        + '<td style="padding:7px 10px;font-size:12px;text-align:right">' + fm(g) + '</td>'
+        + '<td style="padding:7px 10px;font-size:12px;text-align:right;color:' + (n>=0?'inherit':'#b91c1c') + '">' + fm(n) + '</td>'
+        + '<td style="padding:7px 10px;font-size:12px;text-align:right;color:' + cfC + '">' + (cf<0?'('+fm(cf)+')':fm(cf)) + '</td>'
+        + '<td style="padding:7px 10px;font-size:12px;text-align:right;color:' + dC + '">' + d + 'x</td>'
+        + '</tr>';
+    }).join('');
 
-      ${sect('Revenue')}
-      ${wRow(`Gross Rent &nbsp;<span style="font-size:11px;color:var(--gray-500);font-weight:400">${p9.beds} rooms × ${fm(p9.rent)}/mo × ${Math.round((p9.occ||0.92)*100)}% occupancy</span>`, p9.gross)}
+    var html9 = '<div style="font-size:11px;font-weight:700;color:var(--gray-500);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:14px">Year 1 P&amp;L \u2014 Line Item Detail</div>'
+      + sec('Revenue')
+      + row(grossLbl, p9.gross, false)
+      + sec('Operating Expenses')
+      + row('Property Taxes', p9.taxMo, true)
+      + row('Insurance', p9.insMo, true)
+      + (p9.hoa ? row('HOA', p9.hoa, true) : '')
+      + row('Utilities', p9.utilTotal, true)
+      + row('Internet', p9.internet, true)
+      + row('Yard Maintenance', p9.yard, true)
+      + row('Pest Control', p9.pest, true)
+      + row('Repairs Reserve', p9.repairs, true)
+      + row('CapEx Reserve', p9.capex, true)
+      + row(mgmtLbl, p9.mgmtFee, true)
+      + tot('Total Operating Expenses', p9.opEx, '#b91c1c')
+      + tot('Net Operating Income (NOI)', p9.noi, p9.noi>=0?'#15803d':'#b91c1c')
+      + sec('Debt Service')
+      + row('Mortgage (P&amp;I)', p9.mortgage, true)
+      + tot('Monthly Cash Flow', p9.cashFlow, p9.cashFlow>=0?'#15803d':'#b91c1c')
+      + '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:20px">' + kpiHtml + '</div>'
+      + '<div style="margin-top:24px">'
+      + '<div style="font-size:10px;font-weight:700;color:var(--gray-500);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:10px">Occupancy Sensitivity</div>'
+      + '<table class="ai-table" style="width:100%"><thead><tr>'
+      + '<th>Occupancy</th><th style="text-align:right">Gross Income</th><th style="text-align:right">NOI</th><th style="text-align:right">Cash Flow</th><th style="text-align:right">DSCR</th>'
+      + '</tr></thead><tbody>' + sensRows + '</tbody></table>'
+      + '<div style="font-size:11px;color:var(--gray-400);margin-top:6px">\u25c4 = your occupancy assumption. Op. expenses fixed at ' + fm(p9.opEx) + '/mo across all scenarios.</div>'
+      + '</div>';
 
-      ${sect('Operating Expenses')}
-      ${wRow('Property Taxes', p9.taxMo, true)}
-      ${wRow('Insurance', p9.insMo, true)}
-      ${p9.hoa ? wRow('HOA', p9.hoa, true) : ''}
-      ${wRow('Utilities', p9.utilTotal, true)}
-      ${wRow('Internet', p9.internet, true)}
-      ${wRow('Yard Maintenance', p9.yard, true)}
-      ${wRow('Pest Control', p9.pest, true)}
-      ${wRow('Repairs Reserve', p9.repairs, true)}
-      ${wRow('CapEx Reserve', p9.capex, true)}
-      ${wRow(`Management Fee &nbsp;<span style="font-size:11px;color:var(--gray-500);font-weight:400">${Math.round((p9.mgmtPct||0)*100)}% of gross</span>`, p9.mgmtFee, true)}
-      ${wTot('Total Operating Expenses', p9.opEx, '#b91c1c')}
-
-      ${wTot('Net Operating Income (NOI)', p9.noi, p9.noi>=0?'#15803d':'#b91c1c')}
-
-      ${sect('Debt Service')}
-      ${wRow('Mortgage (P&amp;I)', p9.mortgage, true)}
-      ${wTot('Monthly Cash Flow', p9.cashFlow, p9.cashFlow>=0?'#15803d':'#b91c1c')}
-
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:20px">
-        ${[
-          ['Annual Cash Flow', (p9.cashFlowAnn<0?'('+fm(p9.cashFlowAnn)+')':fm(p9.cashFlowAnn)), p9.cashFlowAnn>=0?'#15803d':'#b91c1c'],
-          ['DSCR', (p9.dscr||0)+'x', (p9.dscr||0)>=1.25?'#15803d':'#b91c1c'],
-          ['OER', Math.round((p9.oer||0)*100)+'%', 'var(--dark)'],
-          ['Break-Even Occ.', Math.round((p9.be||0)*100)+'%', 'var(--dark)'],
-        ].map(([l,v,c])=>`<div style="background:var(--gray-50);border:var(--border);border-radius:var(--radius);padding:12px;text-align:center">
-          <div style="font-size:9.5px;font-weight:700;color:var(--gray-500);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:6px">${l}</div>
-          <div style="font-size:18px;font-weight:700;color:${c};font-family:var(--mono)">${v}</div>
-        </div>`).join('')}
-      </div>
-
-      <div style="margin-top:24px">
-        <div style="font-size:10px;font-weight:700;color:var(--gray-500);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:10px">Occupancy Sensitivity</div>
-        <table class="ai-table" style="width:100%">
-          <thead><tr>
-            <th>Occupancy</th>
-            <th style="text-align:right">Gross Income</th>
-            <th style="text-align:right">NOI</th>
-            <th style="text-align:right">Cash Flow</th>
-            <th style="text-align:right">DSCR</th>
-          </tr></thead>
-          <tbody>${sensRows}</tbody>
-        </table>
-        <div style="font-size:11px;color:var(--gray-400);margin-top:6px">◀ = your occupancy assumption. Op. expenses fixed at ${fm(p9.opEx)}/mo across all scenarios.</div>
-      </div>`);
+    set('rpt-pg-9', html9);
   }
 
   // ── PAGE 10: Occupancy & Turnover ─────────────────────────────────────
