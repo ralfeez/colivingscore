@@ -662,7 +662,7 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
           <div class="field-grid">
             <div class="field" id="water-combined-field">
               <label>Water, Sewer & Garbage / month</label>
-              <input type="number" id="p-water-combined" value="265">
+              <input type="number" id="p-water-combined" value="150">
             </div>
             <div class="field" id="water-water-field" style="display:none">
               <label>Water & Sewer / month</label>
@@ -678,12 +678,12 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
         <div class="field-grid" style="margin-top:4px">
           <div class="field">
             <label>Internet / month</label>
-            <input type="number" id="p-internet" value="120">
+            <input type="number" id="p-internet" value="100">
             <div class="field-hint">Scaled by bedroom count</div>
           </div>
           <div class="field">
             <label>Yard maintenance / month</label>
-            <input type="number" id="p-yard" value="80">
+            <input type="number" id="p-yard" value="100">
           </div>
           <div class="field">
             <label>Pest control / month</label>
@@ -757,16 +757,16 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
     <div class="card" style="text-align:center;padding:28px;background:linear-gradient(135deg,#0D2818 0%,#0D6B52 100%)">
       <div style="font-size:13px;color:rgba(255,255,255,0.75);margin-bottom:6px">One-time payment</div>
       <div style="font-size:36px;font-weight:700;color:var(--white);margin-bottom:6px">$29</div>
-      <div style="font-size:13px;color:rgba(255,255,255,0.75);margin-bottom:20px">Full Pro Analysis + 12-Page Lender-Ready PDF</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.75);margin-bottom:20px">Full 15-Page Pro Analysis + Lender-Ready PDF</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px;text-align:left;max-width:420px;margin-left:auto;margin-right:auto">
-        <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--green-mid)">✓</span>Full P&L Statement</div>
-        <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--green-mid)">✓</span>DSCR & Key Ratios</div>
-        <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--green-mid)">✓</span>Break-Even Analysis</div>
-        <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--green-mid)">✓</span>Tenant Comparison</div>
-        <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--green-mid)">✓</span>Improvement ROI</div>
-        <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--green-mid)">✓</span>5-Year Projection</div>
-        <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--green-mid)">✓</span>Lender Package</div>
-        <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--green-mid)">✓</span>PDF Download</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--green-mid)">✓</span>Executive Summary & Market Overview</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--green-mid)">✓</span>Rent Pricing Analysis</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--green-mid)">✓</span>P&L, DSCR & Key Ratios</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--green-mid)">✓</span>Location Intelligence</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--green-mid)">✓</span>SWOT & Risk Analysis</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--green-mid)">✓</span>Capital Improvement ROI</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--green-mid)">✓</span>Platform vs. Self-Managed</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--green-mid)">✓</span>Lender-Ready PDF Download</div>
       </div>
       <button class="btn-pro" style="height:50px;font-size:16px;padding:0 40px" id="btn-pay">
         Looks Good — Pay $29 →
@@ -849,7 +849,10 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
   <div class="screen" id="s-pro-report">
     <div class="addr-strip">
       <div class="addr-text">Pro Analysis — <span id="rpt-addr" style="color:#4DBF8F"></span></div>
-      <button style="height:28px;font-size:12px;padding:0 12px;background:transparent;color:var(--white);border:1px solid rgba(255,255,255,0.4);border-radius:var(--radius);cursor:pointer;font-family:var(--font);font-weight:500" onclick="showScreen('s-result')">← Free Score</button>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button id="btn-pdf-hdr" style="height:28px;font-size:12px;padding:0 12px;background:transparent;color:var(--white);border:1px solid rgba(255,255,255,0.4);border-radius:var(--radius);cursor:pointer;font-family:var(--font);font-weight:500">↓ Download PDF</button>
+        <button style="height:28px;font-size:12px;padding:0 12px;background:transparent;color:var(--white);border:1px solid rgba(255,255,255,0.4);border-radius:var(--radius);cursor:pointer;font-family:var(--font);font-weight:500" onclick="showScreen('s-result')">← Free Score</button>
+      </div>
     </div>
     <!-- Navigation tabs — built by JS -->
     <div class="rpt-nav" id="rpt-nav"></div>
@@ -1273,6 +1276,140 @@ async function initiatePayment(){
   }
 }
 
+// ── TENANT SUITABILITY ENGINE ─────────────────────────────────────────────────
+function computeTenantSuitability(inp, fd) {
+  if (!inp) return [];
+  const ws = fd ? (fd.walkscore || {}) : {};
+  const nb = fd ? (fd.nearby    || {}) : {};
+  const hospitalDist   = (nb.hospital && nb.hospital.distance_miles != null) ? parseFloat(nb.hospital.distance_miles) : null;
+  const transitAvail   = (ws.transit_score || 0) >= 25;
+  const parkingAvail   = (inp.garage||0) + (inp.carport||0) + (inp.uncovered||0) > 0;
+  const coveredParking = (inp.garage||0) + (inp.carport||0) > 0;
+  const singleStory    = (inp.floors||1) <= 1;
+  const walkScore      = ws.walk_score || 0;
+  const walkHigh       = walkScore >= 70;
+  const walkMed        = walkScore >= 50;
+  const uniPlace       = (nb.amenities||[]).find(a => a.type === 'university');
+  const campusDist     = uniPlace ? parseFloat(uniPlace.distance_miles) : null;
+
+  function sig(type, text){ return {type, text}; }
+
+  const profiles = {
+    nurses: { label:'Travel Nurses', eval(){
+      const signals=[]; let fit='marginal';
+      if(hospitalDist!==null){
+        if(hospitalDist<3){       signals.push(sig('strong-pos',`Hospital ${hospitalDist} mi — strong draw for travel nurse placements`)); fit='strong'; }
+        else if(hospitalDist<=7){ signals.push(sig('marginal',  `Hospital ${hospitalDist} mi — acceptable but not ideal (target: under 3 mi)`)); }
+        else{                     signals.push(sig('strong-neg',`Hospital ${hospitalDist} mi — too far for most travel nurse placements`)); fit='poor'; }
+      } else { signals.push(sig('note','Hospital distance unavailable')); }
+      if(parkingAvail) signals.push(sig('pos','Parking available — travel nurses typically have vehicles'));
+      else             signals.push(sig('neg','No parking — travel nurses typically have vehicles'));
+      return {fit, signals};
+    }},
+    tech: { label:'Tech / Remote Workers', eval(){
+      const signals=[]; let pos=0;
+      if(walkHigh){      signals.push(sig('pos','Walkable area — appealing to remote workers')); pos++; }
+      else if(!walkMed){ signals.push(sig('neg','Low walkability — remote workers prefer walkable neighborhoods')); }
+      if(transitAvail){  signals.push(sig('pos','Transit accessible')); pos++; }
+      else{              signals.push(sig('note','Limited transit access')); }
+      signals.push(sig('note','Internet quality not assessed — verify fiber/cable availability'));
+      return {fit: pos>=2?'good':'marginal', signals};
+    }},
+    trades: { label:'Construction / Trades', eval(){
+      const signals=[]; let fit='marginal';
+      if(coveredParking){    signals.push(sig('strong-pos','Covered parking — trades workers need secure vehicle and tool storage')); fit='good'; }
+      else if(parkingAvail){ signals.push(sig('pos','Parking available')); }
+      else{                  signals.push(sig('strong-neg','No parking — dealbreaker for most trades workers')); fit='poor'; }
+      if(walkHigh) signals.push(sig('neg','Highly walkable urban area — typically not proximate to trades job sites'));
+      signals.push(sig('note','Employer and job site proximity not assessed'));
+      return {fit, signals};
+    }},
+    seniors: { label:'Seniors 55+', eval(){
+      const signals=[]; let penalty=false, pos=0;
+      if(singleStory){ signals.push(sig('pos','Single-story layout — ideal for 55+ mobility')); pos++; }
+      else{            signals.push(sig('strong-neg','Multi-story layout — significant accessibility barrier for 55+ residents')); penalty=true; }
+      if(hospitalDist!==null && hospitalDist<3){ signals.push(sig('pos',`Medical facilities ${hospitalDist} mi away`)); pos++; }
+      else if(hospitalDist!==null){              signals.push(sig('neg',`Medical facilities ${hospitalDist} mi away — seniors prefer under 3 mi`)); }
+      if(transitAvail){ signals.push(sig('pos','Transit accessible — important for non-driving residents')); pos++; }
+      if(walkHigh){     signals.push(sig('pos','Walkable neighborhood — quality of life for 55+')); pos++; }
+      return {fit: penalty?'poor':pos>=2?'good':'marginal', signals};
+    }},
+    sober: { label:'Sober Living', eval(){
+      const signals=[];
+      if(transitAvail) signals.push(sig('pos','Transit accessible — important for residents without vehicles'));
+      else             signals.push(sig('neg','No transit — limits mobility for residents without vehicles'));
+      signals.push(sig('note','Higher than average damage and turnover risk'));
+      signals.push(sig('note','Requires active management oversight and house rules enforcement'));
+      return {fit:'marginal', signals};
+    }},
+    students: { label:'Students', eval(){
+      const signals=[]; let fit='marginal';
+      if(campusDist!==null){
+        if(campusDist<3){                         signals.push(sig('strong-pos',`Campus ${campusDist} mi — strong student demand driver`)); fit='strong'; }
+        else if(campusDist<=5 && transitAvail){   signals.push(sig('marginal',  `Campus ${campusDist} mi — manageable with transit access`)); }
+        else{                                     signals.push(sig('strong-neg', campusDist>5?`Campus ${campusDist} mi — too far for consistent student demand`:`Campus ${campusDist} mi without transit — difficult commute`)); fit='poor'; }
+      } else { signals.push(sig('strong-neg','No university detected nearby — student demand unlikely')); fit='poor'; }
+      if(transitAvail) signals.push(sig('pos','Transit accessible'));
+      signals.push(sig('note','Seasonal vacancy risk — budget for summer months'));
+      return {fit, signals};
+    }},
+    workforce: { label:'General Workforce', eval(){
+      const signals=[]; let pos=0;
+      if(parkingAvail){ signals.push(sig('pos','Parking available')); pos++; }
+      if(transitAvail){ signals.push(sig('pos','Transit accessible')); pos++; }
+      signals.push(sig('note','Baseline tenant type — stable demand in most markets'));
+      return {fit: pos>=1?'good':'marginal', signals};
+    }}
+  };
+
+  return Object.entries(profiles).map(([key,p])=>{ const r=p.eval(); return {key, label:p.label, fit:r.fit, signals:r.signals}; });
+}
+
+function renderSuitabilityTable(results, currentTenant){
+  const FIT_ORDER  = {strong:0, good:1, marginal:2, poor:3};
+  const FIT_LABELS = {
+    strong:  {text:'Strong Fit', bg:'#dcfce7', color:'#15803d'},
+    good:    {text:'Good Fit',   bg:'#f0fdf4', color:'#166534'},
+    marginal:{text:'Marginal',   bg:'#fef9c3', color:'#854d0e'},
+    poor:    {text:'Poor Fit',   bg:'#fee2e2', color:'#991b1b'},
+  };
+  const SIG_ICONS = {
+    'strong-pos':{icon:'✓', color:'#15803d'},
+    'pos':       {icon:'✓', color:'#166534'},
+    'marginal':  {icon:'⚠', color:'#854d0e'},
+    'neg':       {icon:'✗', color:'#b91c1c'},
+    'strong-neg':{icon:'✗', color:'#991b1b'},
+    'note':      {icon:'·', color:'#6b7280'},
+  };
+
+  const current = results.find(r=>r.key===currentTenant);
+  const others  = results.filter(r=>r.key!==currentTenant).sort((a,b)=>FIT_ORDER[a.fit]-FIT_ORDER[b.fit]);
+  const sorted  = current ? [current, ...others] : [...results].sort((a,b)=>FIT_ORDER[a.fit]-FIT_ORDER[b.fit]);
+
+  const betterExists = current && others.length && FIT_ORDER[others[0].fit] < FIT_ORDER[current.fit];
+  let html = '';
+
+  if(betterExists){
+    html += `<div style="padding:10px 14px;background:#fef9c3;border:1px solid #fcd34d;border-radius:var(--radius);font-size:12.5px;color:#854d0e;margin-bottom:12px">
+      ⚠ A stronger tenant fit exists for this property. See <strong>${others[0].label}</strong> below.
+    </div>`;
+  }
+
+  sorted.forEach(r => {
+    const isCurrent = r.key === currentTenant;
+    const fl = FIT_LABELS[r.fit] || FIT_LABELS.marginal;
+    const shownSignals = isCurrent ? r.signals : r.signals.filter(s=>s.type!=='note').slice(0,2);
+    html += `<div style="padding:12px 14px;border-radius:var(--radius);margin-bottom:8px;border:1px solid ${isCurrent?'#86efac':'var(--gray-200)'};background:${isCurrent?'#f0fdf4':'var(--white)'}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:${shownSignals.length?'8px':'0'}">
+        <div style="font-size:13px;font-weight:${isCurrent?'700':'600'};color:var(--dark)">${r.label}${isCurrent?` <span style="font-size:11px;font-weight:500;color:var(--green-dark)">(your selection)</span>`:''}</div>
+        <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;background:${fl.bg};color:${fl.color}">${fl.text}</span>
+      </div>
+      ${shownSignals.map(s=>{ const si=SIG_ICONS[s.type]||SIG_ICONS.note; return `<div style="font-size:12px;color:${si.color};line-height:1.6"><span style="font-weight:700;margin-right:4px">${si.icon}</span>${s.text}</div>`; }).join('')}
+    </div>`;
+  });
+  return html;
+}
+
 // ── PRO ANALYSIS ─────────────────────────────────────────────────────────────
 function startProAnalysis(){
   // Pre-fill mortgage from free form
@@ -1305,8 +1442,8 @@ function generateProAnalysis(overrideInputs){
   const ins      = src.ins      || parseInt(document.getElementById('p-insurance').value)||2400;
   const hoa      = src.hoa      !== undefined ? src.hoa : (parseInt(document.getElementById('p-hoa').value)||0);
   const uv       = src.utilTotal !== undefined ? src : getUtilityValues();
-  const internet = src.internet || parseInt(document.getElementById('p-internet').value)||120;
-  const yard     = src.yard     || parseInt(document.getElementById('p-yard').value)||80;
+  const internet = src.internet || parseInt(document.getElementById('p-internet').value)||100;
+  const yard     = src.yard     || parseInt(document.getElementById('p-yard').value)||100;
   const pest     = src.pest     || parseInt(document.getElementById('p-pest').value)||40;
   const repairs  = src.repairs  || parseInt(document.getElementById('p-repairs').value)||200;
   const capex    = src.capex    || parseInt(document.getElementById('p-capex').value)||150;
@@ -1377,24 +1514,15 @@ function generateProAnalysis(overrideInputs){
     ratioRow('Break-Even Occupancy — the minimum occupancy needed to cover all costs including mortgage.', Math.round(be*100)+'%', be<=0.75 ? '✓ Good cushion above break-even' : '✗ Target is under 75%', be<=0.75) +
     ratioRow('Cash Flow Margin — how much of your gross income remains after all expenses including mortgage.', Math.round(margin*100)+'%', margin>=0.20 ? '✓ Strong margin' : '✗ Target is 20% or higher', margin>=0.20);
 
-  // Tenant comparison — scale each type's rent relative to the user's entered rent
-  const baseProfileRent = TENANT_PROFILES[tenant] ? TENANT_PROFILES[tenant].rent : 875;
-  const tenantCFs = Object.entries(TENANT_PROFILES).map(([key,prof])=>{
-    const scaledRent = Math.round(rent * (prof.rent / baseProfileRent));
-    const g = Math.round(beds * scaledRent * occ);
-    const m = Math.round(g * mgmtPct);
-    const cf = g - (total - mgmtFee) - m;
-    return {key, label:prof.label, cf, scaledRent, best:key===tenant};
-  }).sort((a,b)=>b.cf-a.cf);
-
-  const bestCF = tenantCFs[0].cf;
-  document.getElementById('pr-tenant-comparison').innerHTML = tenantCFs.map(t=>`
-    <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--gray-100)${t.best?';background:var(--green-light);margin:0 -24px;padding:10px 24px;':''}">
-      <div style="width:140px;font-size:13px;font-weight:${t.best?'600':'400'};color:${t.best?'var(--green-dark)':'var(--gray-700)'};flex-shrink:0">${t.label}${t.best?' ✓':''}</div>
-      <div style="flex:1;background:var(--gray-100);border-radius:4px;height:10px"><div style="background:${t.best?'var(--green)':'var(--gray-300)'};height:10px;border-radius:4px;width:${Math.max(0,bestCF>0?t.cf/bestCF*100:0)}%"></div></div>
-      <div style="font-size:11px;color:var(--gray-400);width:60px;text-align:right;flex-shrink:0">$${t.scaledRent}/rm</div>
-      <div style="font-size:13px;font-weight:600;color:${t.cf>0?'var(--green-dark)':'var(--red)'};width:80px;text-align:right;flex-shrink:0">$${t.cf.toLocaleString()}/mo</div>
-    </div>`).join('');
+  // Tenant suitability analysis
+  try {
+    const fd = window._fastData || null;
+    const suitResults = computeTenantSuitability(inp, fd);
+    document.getElementById('pr-tenant-comparison').innerHTML = renderSuitabilityTable(suitResults, tenant);
+  } catch(e) {
+    console.warn('Suitability engine error:', e);
+    document.getElementById('pr-tenant-comparison').innerHTML = '';
+  }
 
   // Improvements
   const imps = [
@@ -1669,6 +1797,7 @@ document.addEventListener('DOMContentLoaded', function(){
   wire('btn-save-email',  submitEmail);
   wire('btn-pdf',         downloadPDF);
   wire('btn-pdf-rpt',     downloadPDF);
+  wire('btn-pdf-hdr',     downloadPDF);
   wire('btn-back-pro',    function(){ showScreen('s-result'); });
   wire('btn-pay',         initiatePayment);
 
@@ -1793,7 +1922,7 @@ const RPT_PAGES = [
   [8,  'Zoning',    'Regulatory & Zoning Environment'],
   [9,  'P&L',       'Monthly Profit & Loss + Key Financial Ratios'],
   [10, 'Turnover',  'Occupancy & Turnover'],
-  [11, 'Comparison','Tenant Comparison + Capital Improvements'],
+  [11, 'Suitability','Tenant Suitability + Capital Improvements'],
   [12, 'SWOT',      'SWOT + Risk Analysis'],
   [13, 'Employers', 'Employer Mapping & Amenity Optimization'],
   [14, 'Platform',  'Platform vs. Independent Strategy'],
@@ -2004,10 +2133,7 @@ function renderPagedReport(md, ai){
     <div style="margin-top:20px;padding:14px 16px;background:var(--gray-50);border-radius:var(--radius);font-size:12.5px;color:var(--gray-600);line-height:1.6">
       <strong>Score guide:</strong> 85–100 Excellent &nbsp;·&nbsp; 70–84 Good &nbsp;·&nbsp; 50–69 Fair &nbsp;·&nbsp; 30–49 Poor &nbsp;·&nbsp; 0–29 No Go
     </div>
-    <div style="margin-top:16px;text-align:center">
-      <button class="btn-primary" style="height:42px;font-size:14px;padding:0 28px" id="btn-pdf-rpt">Download Lender-Ready PDF Report</button>
-      <div style="font-size:11px;color:var(--gray-400);margin-top:6px" id="pdf-status-rpt"></div>
-    </div>`);
+    `);
 
   // ── PAGE 2: Executive Summary ─────────────────────────────────────────
   set('rpt-pg-2', renderAIContent(ai.executive_summary));
@@ -2128,7 +2254,8 @@ function renderPagedReport(md, ai){
       <div style="font-size:12.5px;color:var(--gray-600);line-height:1.5">${f.message}</div>
     </div>`).join('') : '';
   set('rpt-pg-11',`
-    <div style="font-size:11px;font-weight:700;color:var(--gray-500);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:12px">Tenant Type Comparison — Ranked by Monthly Cash Flow</div>
+    <div style="font-size:11px;font-weight:700;color:var(--gray-500);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px">Tenant Suitability Analysis</div>
+    <div style="font-size:11.5px;color:var(--gray-500);margin-bottom:12px">Signals assessed: hospital proximity · transit · parking · stories · walkability · campus proximity</div>
     ${tenComp?tenComp.innerHTML:''}
     <div class="divider"></div>
     <div style="font-size:11px;font-weight:700;color:var(--gray-500);letter-spacing:0.5px;text-transform:uppercase;margin:16px 0 12px">Capital Improvements — Return on Investment Analysis</div>
