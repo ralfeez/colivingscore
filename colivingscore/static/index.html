@@ -296,6 +296,7 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
 .ai-table td{padding:7px 10px;border-bottom:1px solid var(--gray-100);color:var(--gray-700);vertical-align:top}
 .ai-table tr:last-child td{border-bottom:none}
 #print-cover{display:none}
+.pdf-break{display:none}
 
 /* ── PRINT / PDF ── */
 @page{
@@ -369,6 +370,7 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
   #rpt-page-4 .ai-content p,#rpt-page-11 .ai-content p,#rpt-page-14 .ai-content p{margin-bottom:5px!important}
   #rpt-page-11 .rpt-page-body{padding:8px 16px!important}
   #rpt-page-11 .divider{margin:6px 0!important}
+  .pdf-break{display:block!important;page-break-before:always!important;break-before:page!important;height:0;margin:0;padding:0}
   #rpt-page-12 .rpt-page-body{padding:10px 18px!important}
   #rpt-page-12 .ai-content{font-size:9.5pt!important;line-height:1.6!important}
   #rpt-page-12 .ai-content h3{margin:10px 0 5px!important;font-size:10.5pt!important}
@@ -2345,10 +2347,10 @@ function renderPagedReport(md, ai){
     <div class="divider"></div>
     <div style="font-size:11px;font-weight:700;color:var(--gray-500);letter-spacing:0.5px;text-transform:uppercase;margin:16px 0 12px">Capital Improvements — Return on Investment Analysis</div>
     ${improv?improv.innerHTML:''}
-    ${suggHtml?`<div class="divider"></div><div style="font-size:11px;font-weight:700;color:var(--gray-500);letter-spacing:0.5px;text-transform:uppercase;margin:16px 0 12px">Score Improvement Opportunities</div>${suggHtml}`:''}`);
+    ${suggHtml?`<div class="pdf-break"></div><div style="font-size:11px;font-weight:700;color:var(--gray-500);letter-spacing:0.5px;text-transform:uppercase;margin:16px 0 12px">Score Improvement Opportunities</div>${suggHtml}`:''}`);
 
   // ── PAGE 12: SWOT + Risk Analysis ─────────────────────────────────────
-  set('rpt-pg-12', renderAIContent((ai.swot||'') + '\n\n' + (ai.risk_analysis||'')));
+  set('rpt-pg-12', renderAIContent(ai.swot||'') + '<div class="pdf-break"></div>' + renderAIContent(ai.risk_analysis||''));
 
   // ── PAGE 13: Employer Mapping + Amenity Optimization ─────────────────
   set('rpt-pg-13', renderAIContent(ai.employer_mapping));
