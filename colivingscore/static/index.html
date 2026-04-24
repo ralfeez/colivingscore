@@ -1671,11 +1671,24 @@ function generateProAnalysis(overrideInputs){
 
 // ── PDF DOWNLOAD ──────────────────────────────────────────────────────────────
 function downloadPDF(){
-  const addr = (window._address || window._inputs?.address || 'Property').split(',')[0].trim();
-  const prev = document.title;
-  document.title = `CoLivingScore Pro Analysis — ${addr}`;
-  window.print();
-  document.title = prev;
+  var addr = ((window._address || (window._inputs && window._inputs.address) || 'Property')).split(',')[0].trim();
+  var prev = document.title;
+  document.title = 'CoLivingScore Pro Analysis \u2014 ' + addr;
+  // Force all rpt-page elements to display:block before printing.
+  // Chrome does not properly print content inside display:none elements
+  // even when @media print sets display:block — pages that were never
+  // "active" render blank. Temporarily making them visible lets the
+  // layout engine include them before the print snapshot is taken.
+  var style = document.createElement('style');
+  style.id = '_pdf_force';
+  style.textContent = '.rpt-page{display:block!important;visibility:visible!important}';
+  document.head.appendChild(style);
+  setTimeout(function(){
+    window.print();
+    var s = document.getElementById('_pdf_force');
+    if(s) s.parentNode.removeChild(s);
+    document.title = prev;
+  }, 150);
 }
 
 // ── EMAIL CAPTURE ─────────────────────────────────────────────────────────────
