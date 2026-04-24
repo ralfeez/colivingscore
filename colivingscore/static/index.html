@@ -307,8 +307,8 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
   .screen{display:none!important}
   #s-pro-report{display:block!important}
   .addr-strip,#rpt-nav,.rpt-nav-arrow,.rpt-page-foot,.btn-row{display:none!important}
-  #print-cover{display:flex!important;flex-direction:column;min-height:100vh;page-break-after:always;break-after:page}
-  .pcv-top{flex:1;background:#1e3a5f!important;display:flex;flex-direction:column;justify-content:center;padding:72px 80px}
+  #print-cover{display:block!important;page-break-after:always;break-after:page}
+  .pcv-top{display:block!important;background:#1e3a5f!important;padding:3in 1in 2.5in}
   .pcv-wordmark{font-size:13pt;font-weight:700;color:rgba(255,255,255,.5);letter-spacing:1px;text-transform:uppercase;margin-bottom:48px}
   .pcv-wordmark span{color:#a8c4e0}
   .pcv-report-type{font-size:10pt;font-weight:600;color:#a8c4e0;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px}
@@ -317,10 +317,11 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
   .pcv-rule{width:48px;height:3px;background:#c8973a;margin-bottom:36px}
   .pcv-tenant-label{font-size:9pt;color:rgba(255,255,255,.5);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px}
   .pcv-tenant-value{font-size:12pt;font-weight:600;color:#fff}
-  .pcv-bottom{background:#f7f9fc!important;border-top:3px solid #c8973a;padding:24px 80px;display:flex!important;align-items:center;justify-content:space-between}
-  .pcv-date{font-size:9.5pt;color:#4a5568}
-  .pcv-disclaimer{font-size:8.5pt;color:#718096;text-align:right;max-width:300px;line-height:1.5}
+  .pcv-bottom{display:block!important;background:#f7f9fc!important;border-top:3px solid #c8973a;padding:0.4in 1in}
+  .pcv-date{font-size:9.5pt;color:#4a5568;margin-bottom:6px}
+  .pcv-disclaimer{font-size:8.5pt;color:#718096;max-width:300px;line-height:1.5}
   .rpt-page{display:block!important;page-break-before:always;break-before:page}
+  #rpt-page-2{page-break-before:auto!important;break-before:auto!important}
   .rpt-page-hdr{background:#1e3a5f!important;border-radius:0!important;margin-top:0!important;padding:9px 20px!important}
   .rpt-page-hdr-brand{font-size:11pt!important;font-weight:700!important;color:#fff!important}
   .rpt-page-hdr-title{font-size:10pt!important;color:#a8c4e0!important}
@@ -348,12 +349,18 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
   .market-grid{grid-template-columns:repeat(3,1fr)!important}
   .market-stat{background:#f7f9fc!important;border-color:#e2e8f0!important}
   .market-stat-value{color:#1e3a5f!important}
-  .location-pill{background:#f7f9fc!important;border-color:#e2e8f0!important;break-inside:avoid}
+  .location-pill{break-inside:avoid}
   .location-pill-name{color:#1e3a5f!important}
   .fin-card,.market-stat,.rpt-kpi-cell,.location-pill{break-inside:avoid}
   h3,h4{break-after:avoid}
   a{color:inherit!important;text-decoration:none!important}
   .assumption-notice{background:#fffbeb!important;border-color:#fcd34d!important}
+  #rpt-page-11 .rpt-page-body,#rpt-page-12 .rpt-page-body{padding:12px 18px!important}
+  #rpt-page-11 .ai-content,#rpt-page-12 .ai-content{font-size:9.5pt!important;line-height:1.6!important}
+  #rpt-page-11 .ai-content h3,#rpt-page-12 .ai-content h3{margin:10px 0 5px!important;font-size:10.5pt!important}
+  #rpt-page-11 .ai-content h4,#rpt-page-12 .ai-content h4{margin:7px 0 3px!important}
+  #rpt-page-11 .ai-content p,#rpt-page-12 .ai-content p{margin-bottom:6px!important}
+  #rpt-page-11 .divider{margin:8px 0!important}
 }
 </style>
 </head>
