@@ -2287,8 +2287,61 @@ function renderPagedReport(md, ai){
   amenities.forEach(a=>{if(a.name&&a.distance_miles<=3) allP.push({name:a.name,dist:a.distance_miles});});
   allP.sort((a,b)=>a.dist-b.dist);
   const top4=allP.slice(0,4);
-  const openers={nurses:'Perfect for travel nurses — steps from your shift and everything in between.',tech:'Ideal for remote workers — great coffee, fitness, and daily essentials all nearby.',trades:'Built for working professionals — fuel up, gear up, and get moving fast.',students:'Student-friendly location with campus resources and daily needs close by.',seniors:'Convenient, comfortable, and close to medical care and everyday needs.',sober:'A quiet, supportive neighborhood with everything you need for daily life nearby.',workforce:'Well-located with all the everyday essentials within easy reach.'};
-  const listingCopy = top4.length ? (openers[inp.tenant||'workforce']+' Nearby: '+top4.map(p=>`${p.name} (${p.dist} mi)`).join(', ')+'.') : null;
+  const city = aParts[1]?.trim() || '';
+  const hasParking = (inp.garage||0)+(inp.carport||0)+(inp.uncovered||0) > 0;
+  const utilitiesIncluded = window._utilPayer === 'landlord';
+  const LISTING = {
+    nurses:   {
+      headline: `🏥 Furnished Co-Living for Travel Nurses — ${city}`,
+      hook: `Private furnished room in a ${inp.beds}-bedroom home built for healthcare professionals. Quiet house, professional tenants, and flexible lease terms designed to match your contract.`,
+      tags: '#TravelNurse #TravelNurseHousing #NurseLife #FurnishedRoom #CoLiving'
+    },
+    tech:     {
+      headline: `💻 Co-Living for Remote Workers — ${city}`,
+      hook: `Private furnished room with a dedicated workspace in a ${inp.beds}-bedroom home. High-speed internet, quiet environment, and professional housemates — everything you need to work from home.`,
+      tags: '#RemoteWork #CoLiving #FurnishedRoom #WorkFromHome #DigitalNomad'
+    },
+    trades:   {
+      headline: `🔧 Furnished Co-Living for Working Professionals — ${city}`,
+      hook: `Clean, furnished private room in a ${inp.beds}-bedroom home close to job sites and daily essentials. Flexible lease terms and an easy commute.`,
+      tags: '#WorkforceHousing #FurnishedRoom #CoLiving #AffordableHousing'
+    },
+    students: {
+      headline: `🎓 Student Co-Living — ${city}`,
+      hook: `Private furnished room in a ${inp.beds}-bedroom home minutes from campus. Quiet study environment, fast internet, and all the daily essentials nearby.`,
+      tags: '#StudentHousing #CollegeLife #FurnishedRoom #CoLiving #OffCampus'
+    },
+    seniors:  {
+      headline: `🏡 55+ Co-Living — ${city}`,
+      hook: `Private furnished room in a quiet ${inp.beds}-bedroom home close to medical care and everyday needs. Comfortable, safe, and professionally managed.`,
+      tags: '#SeniorLiving #55Plus #IndependentLiving #CoLiving #AffordableSeniorHousing'
+    },
+    sober:    {
+      headline: `🌿 Sober Living Home — ${city}`,
+      hook: `Safe, structured co-living in a ${inp.beds}-bedroom home. Quiet neighborhood, supportive environment, and all the daily essentials within easy reach.`,
+      tags: '#SoberLiving #RecoveryHousing #SoberLife #CleanAndSober'
+    },
+    workforce:{
+      headline: `🏠 Furnished Co-Living — ${city}`,
+      hook: `Private furnished room in a ${inp.beds}-bedroom home. All the essentials nearby, flexible lease terms, and a quiet professional environment.`,
+      tags: '#CoLiving #FurnishedRoom #WorkforceHousing #AffordableHousing'
+    },
+  };
+  const tpl = LISTING[inp.tenant||'workforce'] || LISTING.workforce;
+  const perks = [
+    'Private furnished room',
+    utilitiesIncluded ? 'All utilities included' : null,
+    'High-speed internet',
+    hasParking ? 'Parking available' : null,
+    `${inp.beds} bed · ${inp.baths} bath`,
+  ].filter(Boolean);
+  const nearbyLine = top4.length ? '📍 Nearby: ' + top4.map(p=>`${p.name} (${p.dist} mi)`).join(' · ') : '';
+  const listingBlock = `
+    <div style="font-size:14px;font-weight:700;color:var(--dark);margin-bottom:10px">${tpl.headline}</div>
+    <div style="font-size:13px;color:var(--gray-700);line-height:1.7;margin-bottom:10px">${tpl.hook}</div>
+    <div style="font-size:12.5px;color:var(--gray-700);margin-bottom:10px">${perks.map(p=>`✓ ${p}`).join('&emsp;')}</div>
+    ${nearbyLine?`<div style="font-size:12.5px;color:var(--gray-600);margin-bottom:12px;line-height:1.6">${nearbyLine}</div>`:''}
+    <div style="font-size:11.5px;color:var(--green-dark);font-style:italic">${tpl.tags}</div>`;
   set('rpt-pg-7',`
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px">
       <span class="score-badge walk">🚶 Walkability ${walk}</span>
@@ -2300,7 +2353,10 @@ function renderPagedReport(md, ai){
     ${pill('🚌',tr.name,tr.distance_miles,nb.transit_band,'transit')}
     ${pill('🏥',ho.name,ho.distance_miles,nb.hospital_band,'hospital')}
     ${amenityPills}
-    ${listingCopy?`<div style="margin-top:16px;padding:14px;background:var(--green-light);border:1px solid rgba(29,158,117,0.2);border-radius:var(--radius)"><div style="font-size:11px;font-weight:700;color:var(--green-dark);letter-spacing:0.5px;margin-bottom:6px">USE THIS IN YOUR LISTING</div><div style="font-size:13px;color:var(--gray-700);line-height:1.6">${listingCopy}</div></div>`:''}`);
+    <div style="margin-top:16px;padding:16px 18px;background:var(--green-light);border:1px solid rgba(29,158,117,0.2);border-radius:var(--radius)">
+      <div style="font-size:11px;font-weight:700;color:var(--green-dark);letter-spacing:0.5px;margin-bottom:12px">SAMPLE LISTING TEXT — Copy, edit, and make it your own</div>
+      ${listingBlock}
+    </div>`);
 
   // ── PAGE 8: Regulatory & Zoning ───────────────────────────────────────
   const beAware = `
