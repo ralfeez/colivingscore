@@ -567,6 +567,8 @@ def _build_market_analysis_prompt(data):
 
     return f"""You are a professional co-living investment analyst. Write a comprehensive, specific market analysis for the investor below. Use your training data and the property context provided — be specific, use real city/market knowledge, and give straight investor-friendly analysis.
 
+FINANCIAL GROUND RULE — READ FIRST: The investor's actual P&L is calculated separately from their exact inputs and presented in the report. Do NOT state, calculate, or estimate any specific dollar figures for revenue, expenses, NOI, cash flow, or DSCR in your analysis. If financial performance is relevant to a section, reference it qualitatively (e.g. "at the investor's target rent and occupancy assumption" or "per the financial model"). Inventing financial figures that conflict with the investor's actual inputs destroys the report's credibility.
+
 ## PROPERTY
 - Address: {address} ({city}, {state} {zip_code})
 - Configuration: {beds} bed / {baths} bath / {sqft or "unknown"} sq ft
