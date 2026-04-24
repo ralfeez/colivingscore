@@ -1151,17 +1151,21 @@ function buildReferral(score, inp){
 }
 
 function buildProGate(score, inp){
-  if(score < 50) return; // Don't show Pro for very weak properties
+  const headline = score < 50
+    ? 'Pro Analysis — Understand Why & What It Would Take to Fix It'
+    : 'Pro Analysis — Full 15-Page Financial Report';
   const html = `<div class="pro-gate">
-    <h3>Pro Analysis — Full Financial Report</h3>
-    <p>Get the complete picture: market narrative, itemized P&L, financial ratios, tenant type comparison, improvement ROI, and a lender-ready PDF.</p>
+    <h3>${headline}</h3>
+    <p>Get the complete picture: 15-page market analysis, itemized P&L, financial ratios, location intelligence, SWOT, risk analysis, and a lender-ready PDF.</p>
     <div class="pro-features">
-      <div class="pro-feature">Year 1 P&L with expense breakdown</div>
-      <div class="pro-feature">DSCR & lender benchmarks</div>
-      <div class="pro-feature">All 7 tenant types ranked by NOI</div>
-      <div class="pro-feature">Capital improvement ROI analysis</div>
-      <div class="pro-feature">Go / No-Go verdict</div>
-      <div class="pro-feature">Downloadable PDF report</div>
+      <div class="pro-feature">Executive Summary & Market Overview</div>
+      <div class="pro-feature">Rent Pricing Analysis</div>
+      <div class="pro-feature">P&L, DSCR & Key Ratios</div>
+      <div class="pro-feature">Location Intelligence</div>
+      <div class="pro-feature">SWOT & Risk Analysis</div>
+      <div class="pro-feature">Capital Improvement ROI</div>
+      <div class="pro-feature">Platform vs. Self-Managed</div>
+      <div class="pro-feature">Lender-Ready PDF Download</div>
     </div>
     <div class="pro-price">$29 <span>one-time · no subscription</span></div>
     <button class="btn-pro" onclick="startProAnalysis()">Unlock Pro Analysis →</button>
@@ -2029,37 +2033,8 @@ function renderPagedReport(md, ai){
   // ── PAGE 5: Supply Analysis ───────────────────────────────────────────
   set('rpt-pg-5', renderAIContent(ai.supply_analysis));
 
-  // ── PAGE 6: Rent-by-Room Pricing (RentCast + AI) ─────────────────────
-  const rc = md.rentcast||{};
-  const rcNote = rc.source==='1BR_scaled' ? `
-    <div style="padding:10px 14px;background:var(--amber-light);border-radius:var(--radius);font-size:12.5px;color:#92400E;margin-bottom:16px">
-      ⚠ No direct comps found for this bedroom count. Estimate is based on the local 1-bedroom market rate
-      ${rc.one_br_base?` ($${rc.one_br_base.toLocaleString()}/mo 1BR baseline)`:''} — co-living rooms typically rent at 60–70% of a comparable whole-unit rate.
-    </div>` : '';
-  const estR = rc.rent_estimate ? '$'+Math.round(rc.rent_estimate).toLocaleString() : '—';
-  const loR  = rc.rent_low      ? '$'+Math.round(rc.rent_low).toLocaleString()      : '—';
-  const hiR  = rc.rent_high     ? '$'+Math.round(rc.rent_high).toLocaleString()     : '—';
-  const prR  = rc.per_room_estimate ? `<div style="font-size:13px;color:var(--green);font-weight:700;margin-bottom:16px">Estimated per-room co-living rate: $${rc.per_room_estimate.toLocaleString()}/room/month</div>` : '';
-  const comps = rc.comparables||[];
-  const compRows = comps.map(c=>`
-    <div class="rentcast-comp">
-      <div style="color:var(--dark);font-weight:500">${c.address||c.formattedAddress||'—'}</div>
-      <div style="text-align:right;color:var(--dark)">${c.rent?'$'+c.rent:'—'}</div>
-      <div style="text-align:right;color:var(--gray-500)">${c.bedrooms||'—'} bd</div>
-    </div>`).join('');
-  set('rpt-pg-6',`
-    ${rcNote}
-    <div style="font-size:11px;font-weight:700;color:var(--gray-500);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:10px">RentCast Market Estimate</div>
-    <div class="market-grid" style="margin-bottom:12px">
-      <div class="market-stat"><div class="market-stat-label">Estimated Total Rent</div><div class="market-stat-value">${estR}</div><div class="market-stat-sub">per month</div></div>
-      <div class="market-stat"><div class="market-stat-label">Market Low</div><div class="market-stat-value">${loR}</div></div>
-      <div class="market-stat"><div class="market-stat-label">Market High</div><div class="market-stat-value">${hiR}</div></div>
-    </div>
-    ${prR}
-    ${comps.length?`<div style="font-size:11px;font-weight:700;color:var(--gray-500);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:8px">Comparable Rentals</div>
-    <div class="rentcast-comp" style="font-weight:700;color:var(--gray-500)"><div>Address</div><div style="text-align:right">Rent</div><div style="text-align:right">Beds</div></div>
-    ${compRows}<div style="margin-top:20px"></div>`:''}
-    ${renderAIContent(ai.rent_pricing)}`);
+  // ── PAGE 6: Rent-by-Room Pricing (Claude training data) ──────────────
+  set('rpt-pg-6', renderAIContent(ai.rent_pricing));
 
   // ── PAGE 7: Location Intelligence ────────────────────────────────────
   const nb = md.nearby||{};

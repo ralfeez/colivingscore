@@ -281,66 +281,6 @@ def get_config():
 
 # ── Pro Analysis data routes ──────────────────────────────────────────────────
 
-def _fetch_rentcast(address, beds, baths):
-    def _query(bedrooms, bathrooms, property_type="Single Family"):
-        params = {"address": address, "bedrooms": bedrooms, "bathrooms": bathrooms}
-        if property_type:
-            params["propertyType"] = property_type
-        resp = requests.get(
-            "https://api.rentcast.io/v1/avm/rent/long-term",
-            params=params,
-            headers={"X-Api-Key": RENTCAST_API_KEY},
-            timeout=10,
-        )
-        print(f"RentCast query beds={bedrooms} baths={bathrooms} type={property_type} → {resp.status_code}: {resp.text[:200]}")
-        if resp.status_code != 200:
-            return None
-        return resp.json()
-
-    # Primary query — actual bedroom count
-    d = _query(beds, baths)
-    if d and d.get("rent"):
-        return {
-            "rent_estimate": d.get("rent"),
-            "rent_low":      d.get("rentRangeLow"),
-            "rent_high":     d.get("rentRangeHigh"),
-            "comparables":   d.get("comparables", [])[:5],
-            "source":        "direct",
-        }
-
-    # Fallback 1 — 1-bedroom query with propertyType, scale to per-room co-living rate (65%)
-    d1 = _query(1, 1)
-    if d1 and d1.get("rent"):
-        base       = d1["rent"]
-        per_room   = round(base * 0.65)
-        total_est  = per_room * beds
-        return {
-            "rent_estimate":    total_est,
-            "rent_low":         round((d1.get("rentRangeLow") or base) * 0.60) * beds,
-            "rent_high":        round((d1.get("rentRangeHigh") or base) * 0.70) * beds,
-            "per_room_estimate": per_room,
-            "one_br_base":      base,
-            "comparables":      d1.get("comparables", [])[:5],
-            "source":           "1BR_scaled",
-        }
-
-    # Fallback 2 — 1-bedroom without propertyType filter (broader match)
-    d2 = _query(1, 1, property_type=None)
-    if d2 and d2.get("rent"):
-        base       = d2["rent"]
-        per_room   = round(base * 0.65)
-        total_est  = per_room * beds
-        return {
-            "rent_estimate":    total_est,
-            "rent_low":         round((d2.get("rentRangeLow") or base) * 0.60) * beds,
-            "rent_high":        round((d2.get("rentRangeHigh") or base) * 0.70) * beds,
-            "per_room_estimate": per_room,
-            "one_br_base":      base,
-            "comparables":      d2.get("comparables", [])[:5],
-            "source":           "1BR_scaled_broad",
-        }
-
-    return {"error": "No rental data available for this address"}
 
 
 def _fetch_walkscore(address, lat, lng):
@@ -469,13 +409,6 @@ def _fetch_demographics(zip_code):
     }
 
 
-@app.route("/api/rentcast", methods=["POST"])
-def api_rentcast():
-    try:
-        data = request.get_json(force=True)
-        return jsonify(_fetch_rentcast(data.get("address", ""), data.get("beds", 3), data.get("baths", 2)))
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
 
 
 @app.route("/api/walkscore", methods=["POST"])
@@ -596,7 +529,6 @@ def _build_market_analysis_prompt(data):
     tenant_label = TENANT_LABELS.get(tenant_key, "General Workforce")
 
     # Gathered API data provided as context
-    rc  = data.get("rentcast", {})
     ws  = data.get("walkscore", {})
     dm  = data.get("demographics", {})
     nb  = data.get("nearby", {})
@@ -609,10 +541,6 @@ def _build_market_analysis_prompt(data):
     med_income  = dm.get("median_income", "unknown")
     med_rent    = dm.get("median_rent",   "unknown")
 
-    rc_estimate  = rc.get("rent_estimate") or rc.get("scaled_estimate")
-    rc_source    = rc.get("source", "direct")
-    rc_per_room  = rc.get("per_room_estimate")
-
     transit_info = nb.get("transit") or {}
     hospital_info = nb.get("hospital") or {}
     amenities    = nb.get("amenities", [])
@@ -624,10 +552,6 @@ def _build_market_analysis_prompt(data):
     amenity_lines = "\n".join(
         f"  - {a['name']} ({a['distance_miles']} mi)" for a in amenities[:6]
     ) if amenities else "  - Not available"
-
-    rc_line = (f"${rc_estimate:,}/month (source: {rc_source}"
-               + (f", per-room estimate: ${rc_per_room:,}" if rc_per_room else "") + ")"
-               if rc_estimate else "No data returned")
 
     mgmt_labels = {
         "self": "Self-managed", "specialist": "Co-living property manager",
@@ -658,7 +582,6 @@ def _build_market_analysis_prompt(data):
 - Nearest hospital: {hospital_str}
 - Nearby amenities:
 {amenity_lines}
-- RentCast estimate: {rc_line}
 
 ## RESPONSE FORMAT
 Return your analysis using EXACTLY these section headers in this order. Be concise but specific — 3-6 sentences or bullet points per section. Write in direct, investor-friendly language — specific numbers, real names, straight talk. No corporate fluff. IMPORTANT: Do not use markdown tables — use plain bullet points instead.
@@ -679,7 +602,7 @@ Return your analysis using EXACTLY these section headers in this order. Be conci
 [PadSplit listing count and rate range found. Private room listings count on Craigslist/Facebook. Low-cost apartment availability assessment. Extended stay hotel count and rates within 3 miles. Overall competitive density: sparse / moderate / saturated.]
 
 ## RENT_PRICING
-[Per-room rates found on Furnished Finder, Craigslist, Facebook Marketplace — list actual ranges found. Weekly vs. monthly rate comparison. Utilities-included pricing vs. not. Extended stay hotel rate comparison. Recommended per-room rate for this property and why. Total estimated gross monthly income = recommended rate × {beds} rooms.]
+[Use your training data to provide per-room co-living rent analysis for {city}, {state}. If room-specific rates are available (Furnished Finder, Craigslist, Facebook Marketplace), list actual ranges. If room-rate data is unavailable for this market, state the local 1-bedroom rental rate and calculate 65% of that as the estimated per-room co-living rate — explain this methodology clearly. Include: utilities-included vs. excluded pricing difference, weekly vs. monthly rate comparison if relevant, how {tenant_label} rent tolerance compares to market rates, recommended per-room rate for this property and why. End with: Total estimated gross monthly income = recommended rate × {beds} rooms.]
 
 ## REGULATORY
 [Local rules on room rentals in {city} / {state}. Occupancy limits (unrelated persons per unit). Any known permit requirements or enforcement actions for shared housing. Risk level: Low / Moderate / High. What to verify before purchasing.]
@@ -878,7 +801,7 @@ def api_competitive():
 
 @app.route("/api/pro-data-fast", methods=["POST"])
 def api_pro_data_fast():
-    """RentCast + WalkScore + Nearby + Demographics only. Returns in ~5-10s."""
+    """WalkScore + Nearby + Demographics only. Returns in ~5-10s."""
     try:
         data       = request.get_json(force=True)
         address    = data.get("address", "")
@@ -890,7 +813,6 @@ def api_pro_data_fast():
         tenant_key = data.get("tenant_key", "workforce")
 
         tasks = {
-            "rentcast":     lambda: _fetch_rentcast(address, beds, baths),
             "walkscore":    lambda: _fetch_walkscore(address, lat, lng),
             "nearby":       lambda: _fetch_nearby(lat, lng, tenant_key),
             "demographics": lambda: _fetch_demographics(zip_code),
@@ -957,7 +879,6 @@ def api_pro_data():
             return {"analysis": analysis, "tenant_key": tenant_key, "city": city}
 
         tasks = {
-            "rentcast":     lambda: _fetch_rentcast(address, beds, baths),
             "walkscore":    lambda: _fetch_walkscore(address, lat, lng),
             "nearby":       lambda: _fetch_nearby(lat, lng, tenant_key),
             "demographics": lambda: _fetch_demographics(zip_code),
