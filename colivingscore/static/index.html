@@ -599,7 +599,7 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
       <div class="section-divider"><div class="section-divider-line"></div><div class="section-divider-label">Fixed Expenses</div><div class="section-divider-line"></div></div>
       <div class="field-grid">
         <div class="field">
-          <label>Monthly mortgage (PITI)</label>
+          <label>Monthly mortgage (P&amp;I only) <span class="tip" data-tip="Enter principal &amp; interest only. Taxes and insurance are entered in the fields below.">?</span></label>
           <input type="number" id="p-mortgage" value="2850">
         </div>
         <div class="field">
@@ -736,9 +736,16 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
       <button style="height:28px;font-size:12px;padding:0 12px;background:transparent;color:var(--white);border:1px solid rgba(255,255,255,0.4);border-radius:var(--radius);cursor:pointer;font-family:var(--font);font-weight:500" onclick="showScreen('s-pro-form')">← Edit Inputs</button>
     </div>
 
+    <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:var(--radius);padding:14px 18px;margin-bottom:4px;display:flex;align-items:flex-start;gap:12px">
+      <span style="font-size:22px;line-height:1.2">📋</span>
+      <div>
+        <div style="font-size:14px;font-weight:700;color:#92400e;margin-bottom:3px">Review your inputs before paying</div>
+        <div style="font-size:13px;color:#78350f;line-height:1.5">Confirm the details below are correct. When ready, click <strong>Looks Good — Pay $29</strong> at the bottom of this page to unlock your full Pro Analysis report.</div>
+      </div>
+    </div>
+
     <div class="card">
       <div class="card-title">Property Details</div>
-      <div class="card-sub">Confirm these are correct before unlocking your Pro Analysis.</div>
       <div id="rv-property" style="margin-top:4px"></div>
     </div>
 
@@ -2064,10 +2071,28 @@ function renderPagedReport(md, ai){
   const bike    = ws.bike_score    ??'—';
   const amenities = nb.amenities||[];
   const A_ICONS = {pharmacy:'💊',grocery_or_supermarket:'🛒',supermarket:'🛒',cafe:'☕',gym:'🏋️',park:'🌳',restaurant:'🍽️',hardware_store:'🔧',gas_station:'⛽',convenience_store:'🏪',university:'🎓'};
-  function pill(icon,name,dist,bnd){
-    return `<div class="location-pill"><div class="location-pill-icon">${icon}</div><div class="location-pill-info"><div class="location-pill-name">${name||'Not found'}</div><div class="location-pill-dist">${dist?dist+' miles away':'—'}</div></div>${bnd?`<span class="location-pill-band band-${bnd}">${bnd.charAt(0).toUpperCase()+bnd.slice(1)}</span>`:''}</div>`;
+  const A_COLORS = {
+    transit:                {bg:'#dbeafe',border:'#93c5fd'},
+    hospital:               {bg:'#fee2e2',border:'#fca5a5'},
+    pharmacy:               {bg:'#fce7f3',border:'#f9a8d4'},
+    grocery_or_supermarket: {bg:'#dcfce7',border:'#86efac'},
+    supermarket:            {bg:'#dcfce7',border:'#86efac'},
+    cafe:                   {bg:'#fef3c7',border:'#fcd34d'},
+    gym:                    {bg:'#ffedd5',border:'#fdba74'},
+    park:                   {bg:'#d1fae5',border:'#6ee7b7'},
+    restaurant:             {bg:'#f3e8ff',border:'#d8b4fe'},
+    hardware_store:         {bg:'#f1f5f9',border:'#cbd5e1'},
+    gas_station:            {bg:'#fef9c3',border:'#fde047'},
+    convenience_store:      {bg:'#ccfbf1',border:'#5eead4'},
+    university:             {bg:'#e0e7ff',border:'#a5b4fc'},
+  };
+  function pill(icon,name,dist,bnd,type){
+    const c=A_COLORS[type]||{};
+    const bg=c.bg||'var(--gray-50)';
+    const bc=c.border||'#e5e7eb';
+    return `<div class="location-pill" style="background:${bg};border-color:${bc}"><div class="location-pill-icon">${icon}</div><div class="location-pill-info"><div class="location-pill-name">${name||'Not found'}</div><div class="location-pill-dist">${dist?dist+' miles away':'—'}</div></div>${bnd?`<span class="location-pill-band band-${bnd}">${bnd.charAt(0).toUpperCase()+bnd.slice(1)}</span>`:''}</div>`;
   }
-  const amenityPills = amenities.map(a=>pill(A_ICONS[a.type]||'📍',a.name,a.distance_miles,null)).join('');
+  const amenityPills = amenities.map(a=>pill(A_ICONS[a.type]||'📍',a.name,a.distance_miles,null,a.type)).join('');
   const allP=[];
   if(tr.name&&tr.distance_miles<=3) allP.push({name:tr.name,dist:tr.distance_miles});
   if(ho.name&&ho.distance_miles<=5) allP.push({name:ho.name,dist:ho.distance_miles});
@@ -2077,14 +2102,15 @@ function renderPagedReport(md, ai){
   const openers={nurses:'Perfect for travel nurses — steps from your shift and everything in between.',tech:'Ideal for remote workers — great coffee, fitness, and daily essentials all nearby.',trades:'Built for working professionals — fuel up, gear up, and get moving fast.',students:'Student-friendly location with campus resources and daily needs close by.',seniors:'Convenient, comfortable, and close to medical care and everyday needs.',sober:'A quiet, supportive neighborhood with everything you need for daily life nearby.',workforce:'Well-located with all the everyday essentials within easy reach.'};
   const listingCopy = top4.length ? (openers[inp.tenant||'workforce']+' Nearby: '+top4.map(p=>`${p.name} (${p.dist} mi)`).join(', ')+'.') : null;
   set('rpt-pg-7',`
-    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px">
       <span class="score-badge walk">🚶 Walkability ${walk}</span>
       <span class="score-badge transit">🚌 Public Transportation ${transit}</span>
       <span class="score-badge bike">🚲 Bike Score ${bike}</span>
       ${ws.walk_desc?`<span style="font-size:12px;color:var(--gray-500);align-self:center">${ws.walk_desc}</span>`:''}
     </div>
-    ${pill('🚌',tr.name,tr.distance_miles,nb.transit_band)}
-    ${pill('🏥',ho.name,ho.distance_miles,nb.hospital_band)}
+    <div style="font-size:12.5px;color:var(--gray-500);margin-bottom:14px;line-height:1.5">These nearby amenities and transportation options directly influence which tenant types this property attracts and what rent it can command.</div>
+    ${pill('🚌',tr.name,tr.distance_miles,nb.transit_band,'transit')}
+    ${pill('🏥',ho.name,ho.distance_miles,nb.hospital_band,'hospital')}
     ${amenityPills}
     ${listingCopy?`<div style="margin-top:16px;padding:14px;background:var(--green-light);border:1px solid rgba(29,158,117,0.2);border-radius:var(--radius)"><div style="font-size:11px;font-weight:700;color:var(--green-dark);letter-spacing:0.5px;margin-bottom:6px">USE THIS IN YOUR LISTING</div><div style="font-size:13px;color:var(--gray-700);line-height:1.6">${listingCopy}</div></div>`:''}`);
 
