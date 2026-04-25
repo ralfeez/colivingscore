@@ -623,7 +623,7 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
       <div class="card-title" style="margin-bottom:16px">Property Audit</div>
       <div id="r-flags"></div>
       <div style="margin-top:14px;padding:10px 12px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius);font-size:11.5px;color:var(--gray-500);line-height:1.5">
-        <strong style="color:var(--gray-700)">Estimate assumptions:</strong> This score and monthly net use hardcoded defaults — reserves $350/mo and management rate 10%. These may affect your score and Est. Monthly Net dramatically. Adjust to exact figures in the Pro Analysis.
+        <strong style="color:var(--gray-700)">Estimate assumptions:</strong> This score uses default expense values (reserves $350/mo, management rate 10%). The next step lets you enter your actual figures — the more accurate your inputs, the more reliable your Pro Analysis will be.
       </div>
     </div>
 
@@ -645,7 +645,7 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
     <div id="r-pro-gate"></div>
 
     <div class="btn-row" style="justify-content:flex-start">
-      <button style="height:36px;padding:0 16px;background:var(--gray-100);color:var(--gray-900);border:1.5px solid var(--gray-400);border-radius:var(--radius);font-size:12.5px;font-weight:500;font-family:var(--font);cursor:pointer" onclick="resetForm()">← Score another property</button>
+      <button style="height:36px;padding:0 16px;background:var(--gray-100);color:var(--gray-900);border:1.5px solid var(--gray-400);border-radius:var(--radius);font-size:12.5px;font-weight:500;font-family:var(--font);cursor:pointer" onclick="window.open(window.location.origin+'/','_blank')">← Score another property</button>
     </div>
 
   </div>
@@ -655,12 +655,12 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
 
     <div class="addr-strip">
       <div class="addr-text">Pro Analysis — Financial Inputs &nbsp;·&nbsp; <span id="addr-pro-form" style="color:#4DBF8F"></span></div>
-      <button style="height:28px;font-size:12px;padding:0 12px;background:transparent;color:var(--white);border:1px solid rgba(255,255,255,0.4);border-radius:var(--radius);cursor:pointer;font-family:var(--font);font-weight:500" onclick="showScreen('s-result')">← Property Details</button>
+      <button style="height:28px;font-size:12px;padding:0 12px;background:transparent;color:var(--white);border:1px solid rgba(255,255,255,0.4);border-radius:var(--radius);cursor:pointer;font-family:var(--font);font-weight:500" onclick="showScreen('s-result')">← Back</button>
     </div>
 
     <div class="card">
       <div class="card-title">Income & Expense Inputs</div>
-      <div class="card-sub">These inputs drive your Year 1 P&L, financial ratios, and the PDF report.</div>
+      <div class="card-sub">These inputs drive your Year 1 P&amp;L, financial ratios, and the PDF report. Default values are placeholders based on typical co-living operations — the closer your actual numbers are, the more accurate your analysis will be.</div>
 
       <div class="section-divider"><div class="section-divider-line"></div><div class="section-divider-label">Income</div><div class="section-divider-line"></div></div>
       <div style="padding:10px 0 14px;font-size:13px;color:var(--gray-600)">
@@ -842,7 +842,7 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
     <div class="card" style="text-align:center;padding:28px;background:linear-gradient(135deg,#0D2818 0%,#0D6B52 100%)">
       <div style="font-size:13px;color:rgba(255,255,255,0.75);margin-bottom:6px">One-time payment</div>
       <div style="font-size:36px;font-weight:700;color:var(--white);margin-bottom:6px">$29</div>
-      <div style="font-size:13px;color:rgba(255,255,255,0.75);margin-bottom:20px">Full 15-Page Pro Analysis + Lender-Ready PDF</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.75);margin-bottom:20px">Full 16-Page Pro Analysis + Downloadable PDF</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px;text-align:left;max-width:420px;margin-left:auto;margin-right:auto">
         <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--green-mid)">✓</span>Executive Summary & Market Overview</div>
         <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--green-mid)">✓</span>Rent Pricing Analysis</div>
@@ -851,11 +851,12 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
         <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--green-mid)">✓</span>SWOT & Risk Analysis</div>
         <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--green-mid)">✓</span>Capital Improvement ROI</div>
         <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--green-mid)">✓</span>Platform vs. Self-Managed</div>
-        <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--green-mid)">✓</span>Lender-Ready PDF Download</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--green-mid)">✓</span>Downloadable PDF Report</div>
       </div>
       <button class="btn-pro" style="height:50px;font-size:16px;padding:0 40px" id="btn-pay">
         Looks Good — Pay $29 →
       </button>
+      <div style="font-size:12px;color:rgba(255,255,255,0.55);margin-top:8px">Report takes 2–4 minutes to build after payment</div>
       <div style="margin-top:12px">
         <a href="/static/sample-pro-report.pdf" target="_blank" style="color:rgba(255,255,255,0.75);font-size:13px;text-decoration:underline;text-underline-offset:3px">👁 View a sample report before you buy</a>
       </div>
@@ -872,7 +873,6 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
 
     <div class="addr-strip">
       <div class="addr-text">Pro Analysis — <span id="pr-addr" style="color:#4DBF8F"></span></div>
-      <button style="height:28px;font-size:12px;padding:0 12px;background:transparent;color:var(--white);border:1px solid rgba(255,255,255,0.4);border-radius:var(--radius);cursor:pointer;font-family:var(--font);font-weight:500" onclick="showScreen('s-result')">← Free Score</button>
     </div>
 
     <!-- P&L Summary -->
@@ -902,8 +902,8 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
 
     <!-- PDF download -->
     <div class="card" style="text-align:center;padding:28px">
-      <div style="font-size:15px;font-weight:600;margin-bottom:6px">Download Lender-Ready PDF Report</div>
-      <div style="font-size:13px;color:var(--gray-500);margin-bottom:16px">7-page report with charts, P&L, ratios, and Go/No-Go verdict — ready to attach to a loan application.</div>
+      <div style="font-size:15px;font-weight:600;margin-bottom:6px">Download PDF Report</div>
+      <div style="font-size:13px;color:var(--gray-500);margin-bottom:16px">Full report with charts, P&amp;L, ratios, and Go/No-Go verdict.</div>
       <button class="btn-primary" style="height:46px;font-size:15px;padding:0 32px" id="btn-pdf">
         Download PDF Report
       </button>
@@ -911,7 +911,7 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
     </div>
 
     <div class="btn-row" style="justify-content:flex-start">
-      <button style="height:36px;padding:0 16px;background:var(--gray-100);color:var(--gray-900);border:1.5px solid var(--gray-400);border-radius:var(--radius);font-size:12.5px;font-weight:500;font-family:var(--font);cursor:pointer" onclick="resetForm()">← Score another property</button>
+      <button style="height:36px;padding:0 16px;background:var(--gray-100);color:var(--gray-900);border:1.5px solid var(--gray-400);border-radius:var(--radius);font-size:12.5px;font-weight:500;font-family:var(--font);cursor:pointer" onclick="window.open(window.location.origin+'/','_blank')">← Score another property</button>
     </div>
 
   </div>
@@ -939,7 +939,6 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
       <div class="addr-text">Pro Analysis — <span id="rpt-addr" style="color:#4DBF8F"></span></div>
       <div style="display:flex;gap:8px;align-items:center">
         <button id="btn-pdf-hdr" style="height:28px;font-size:12px;padding:0 12px;background:transparent;color:var(--white);border:1px solid rgba(255,255,255,0.4);border-radius:var(--radius);cursor:pointer;font-family:var(--font);font-weight:500">↓ Download PDF</button>
-        <button style="height:28px;font-size:12px;padding:0 12px;background:transparent;color:var(--white);border:1px solid rgba(255,255,255,0.4);border-radius:var(--radius);cursor:pointer;font-family:var(--font);font-weight:500" onclick="showScreen('s-result')">← Free Score</button>
       </div>
     </div>
     <!-- Print-only cover page -->
@@ -963,7 +962,7 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
     <!-- Page containers — built by JS -->
     <div id="rpt-pages"></div>
     <div class="btn-row" style="justify-content:flex-start;margin-top:8px">
-      <button style="height:36px;padding:0 16px;background:var(--gray-100);color:var(--gray-900);border:1.5px solid var(--gray-400);border-radius:var(--radius);font-size:12.5px;font-weight:500;font-family:var(--font);cursor:pointer" onclick="resetForm()">← Score another property</button>
+      <button style="height:36px;padding:0 16px;background:var(--gray-100);color:var(--gray-900);border:1.5px solid var(--gray-400);border-radius:var(--radius);font-size:12.5px;font-weight:500;font-family:var(--font);cursor:pointer" onclick="window.open(window.location.origin+'/','_blank')">← Score another property</button>
     </div>
   </div>
 
@@ -1260,10 +1259,10 @@ function buildReferral(score, inp){
 function buildProGate(score, inp){
   const headline = score < 50
     ? 'Pro Analysis — Understand Why & What It Would Take to Fix It'
-    : 'Pro Analysis — Full 15-Page Financial Report';
+    : 'Pro Analysis — Full 16-Page Financial Report';
   const html = `<div class="pro-gate">
     <h3>${headline}</h3>
-    <p>Get the complete picture: 16-page market analysis, itemized P&L, financial ratios, location intelligence, SWOT, risk analysis, and a lender-ready PDF.</p>
+    <p>Get the complete picture: 16-page market analysis, itemized P&amp;L, financial ratios, location intelligence, SWOT, risk analysis, and a downloadable PDF.</p>
     <div class="pro-features">
       <div class="pro-feature">Executive Summary & Market Overview</div>
       <div class="pro-feature">Rent Pricing Analysis</div>
@@ -1272,10 +1271,9 @@ function buildProGate(score, inp){
       <div class="pro-feature">SWOT & Risk Analysis</div>
       <div class="pro-feature">Capital Improvement ROI</div>
       <div class="pro-feature">Platform vs. Self-Managed</div>
-      <div class="pro-feature">Lender-Ready PDF Download</div>
+      <div class="pro-feature">Downloadable PDF Report</div>
     </div>
-    <div class="pro-price">$29 <span>one-time · no subscription</span></div>
-    <button class="btn-pro" onclick="startProAnalysis()">Unlock Pro Analysis →</button>
+    <button class="btn-pro" onclick="startProAnalysis()">Get My Pro Analysis →</button>
     <div style="margin-top:14px">
       <a href="/static/sample-pro-report.pdf" target="_blank" style="color:rgba(255,255,255,0.75);font-size:13px;text-decoration:underline;text-underline-offset:3px">👁 View a sample report before you buy</a>
     </div>
@@ -2009,22 +2007,22 @@ function stopLoadingScreen(){
 
 // ── PAGINATED REPORT — PAGE DEFINITIONS ──────────────────────────────────────
 const RPT_PAGES = [
-  [1,  'Home',      'Home — Score & Performance'],
-  [2,  'Summary',   'Executive Summary'],
-  [3,  'Market',    'Local Housing Market'],
-  [4,  'Tenants',   'Target Tenant Profile & Demand Drivers'],
-  [5,  'Supply',    'Supply Analysis'],
-  [6,  'Pricing',   'Rent-by-Room Pricing Analysis'],
-  [7,  'Location',  'Location Intelligence'],
-  [8,  'Zoning',    'Regulatory & Zoning Environment'],
-  [9,  'P&L',       'Monthly Profit & Loss'],
-  [10, 'Ratios',    'Key Financial Ratios & Occupancy Sensitivity'],
-  [11, 'Turnover',  'Occupancy & Turnover'],
-  [12, 'Suitability','Tenant Suitability + Capital Improvements'],
-  [13, 'SWOT',      'SWOT + Risk Analysis'],
-  [14, 'Employers', 'Employer Mapping & Amenity Optimization'],
-  [15, 'Platform',  'Platform vs. Independent Strategy'],
-  [16, 'Verdict',   'Exit Strategy + Investment Verdict'],
+  [1,  'Home',      'Home — Score & Performance',              'Your co-living score (0–100) and key performance metrics at a glance.'],
+  [2,  'Summary',   'Executive Summary',                       'A high-level overview of the investment opportunity, key strengths, and primary risks.'],
+  [3,  'Market',    'Local Housing Market',                    'Current rental market conditions, vacancy rates, and demand trends in your area.'],
+  [4,  'Tenants',   'Target Tenant Profile & Demand Drivers',  'Who your ideal tenants are and what drives demand for co-living in this market.'],
+  [5,  'Supply',    'Supply Analysis',                         'How many co-living and rental units compete with this property in the local market.'],
+  [6,  'Pricing',   'Rent-by-Room Pricing Analysis',           'Per-room rent benchmarks and pricing strategy based on local market data.'],
+  [7,  'Location',  'Location Intelligence',                   'Walkability, transit access, nearby employers, and amenity quality scores.'],
+  [8,  'Zoning',    'Regulatory & Zoning Environment',         'Local zoning rules, permitting requirements, and regulatory considerations for co-living.'],
+  [9,  'P&L',       'Monthly Profit & Loss',                   'Full itemized income and expense waterfall showing your projected monthly cash flow.'],
+  [10, 'Ratios',    'Key Financial Ratios & Occupancy Sensitivity', 'DSCR, cap rate, cash-on-cash return, and how cash flow shifts at different occupancy levels.'],
+  [11, 'Turnover',  'Occupancy & Turnover',                    'Expected occupancy rates, tenant turnover costs, and lease-up timeline projections.'],
+  [12, 'Suitability','Tenant Suitability + Capital Improvements', 'Tenant compatibility assessment and ROI analysis on capital improvement investments.'],
+  [13, 'SWOT',      'SWOT + Risk Analysis',                    'Strengths, weaknesses, opportunities, and threats — plus a detailed risk breakdown.'],
+  [14, 'Employers', 'Employer Mapping & Amenity Optimization', 'Proximity to major employers and recommended amenity investments to attract target tenants.'],
+  [15, 'Platform',  'Platform vs. Independent Strategy',       'Cost-benefit analysis of using a co-living platform vs. self-managing the property.'],
+  [16, 'Verdict',   'Exit Strategy + Investment Verdict',      'Long-term exit options, projected appreciation, and the overall Go/No-Go investment verdict.'],
 ];
 let _rptPage = 1;
 
@@ -2037,11 +2035,11 @@ function buildReportShell(){
   // Page containers
   const pages = document.getElementById('rpt-pages');
   if(!pages) return;
-  pages.innerHTML = RPT_PAGES.map(([n,,title])=>`
+  pages.innerHTML = RPT_PAGES.map(([n,,title,tip])=>`
     <div class="rpt-page${n===1?' active':''}" id="rpt-page-${n}">
       <div class="rpt-page-hdr">
         <div class="rpt-page-hdr-brand"><span style="color:#4DBF8F">CoLiving</span><span style="color:white">Score</span></div>
-        <div class="rpt-page-hdr-title">${title}</div>
+        <div class="rpt-page-hdr-title">${title} <span class="tip" style="background:rgba(255,255,255,0.2);color:white;flex-shrink:0" data-tip="${tip}">?</span></div>
         <div class="rpt-page-hdr-pg">${n} / 16</div>
       </div>
       <div class="rpt-page-body" id="rpt-pg-${n}">
