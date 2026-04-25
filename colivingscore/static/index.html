@@ -941,7 +941,8 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
     <div class="addr-strip">
       <div class="addr-text">Pro Analysis — <span id="rpt-addr" style="color:#4DBF8F"></span></div>
       <div style="display:flex;gap:8px;align-items:center">
-        <button id="btn-pdf-hdr" style="height:28px;font-size:12px;padding:0 12px;background:transparent;color:var(--white);border:1px solid rgba(255,255,255,0.4);border-radius:var(--radius);cursor:pointer;font-family:var(--font);font-weight:500">↓ Download PDF</button>
+        <button id="btn-pdf-hdr" style="height:28px;font-size:12px;padding:0 12px;background:transparent;color:var(--white);border:1px solid rgba(255,255,255,0.4);border-radius:var(--radius);cursor:pointer;font-family:var(--font);font-weight:500">🖨 Print PDF</button>
+        <button onclick="openEmailModal()" style="height:28px;font-size:12px;padding:0 12px;background:transparent;color:var(--white);border:1px solid rgba(255,255,255,0.4);border-radius:var(--radius);cursor:pointer;font-family:var(--font);font-weight:500">📧 Email Report</button>
       </div>
     </div>
     <!-- Print-only cover page -->
@@ -970,6 +971,20 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
   </div>
 
 </div><!-- /container -->
+
+<!-- ══ EMAIL REPORT MODAL ══ -->
+<div id="email-report-modal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.6);align-items:center;justify-content:center">
+  <div style="background:white;border-radius:12px;padding:28px;width:100%;max-width:420px;margin:16px;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+    <div style="font-size:18px;font-weight:700;color:var(--gray-900);margin-bottom:6px">Email Completed Report</div>
+    <div style="font-size:13px;color:var(--gray-500);margin-bottom:20px;line-height:1.5">Enter the email address where you'd like to receive the Pro Analysis PDF. You can send it to yourself or a co-investor.</div>
+    <input type="email" id="report-email-input" placeholder="your@email.com" style="width:100%;height:42px;border:1.5px solid var(--gray-300);border-radius:var(--radius);padding:0 14px;font-size:14px;font-family:var(--font);outline:none;box-sizing:border-box;margin-bottom:4px">
+    <div id="report-email-status" style="font-size:12px;min-height:18px;margin-bottom:12px"></div>
+    <div style="display:flex;gap:10px">
+      <button onclick="closeEmailModal()" style="flex:1;height:40px;background:var(--gray-100);border:1.5px solid var(--gray-300);border-radius:var(--radius);font-size:13px;font-weight:500;font-family:var(--font);cursor:pointer;color:var(--gray-700)">Cancel</button>
+      <button id="btn-send-report" onclick="submitEmailReport()" style="flex:2;height:40px;background:var(--green);color:white;border:none;border-radius:var(--radius);font-size:13px;font-weight:600;font-family:var(--font);cursor:pointer">Send Report →</button>
+    </div>
+  </div>
+</div>
 
 <script>
 // ── SCORING ENGINE ────────────────────────────────────────────────────────────
@@ -2166,6 +2181,7 @@ async function runFullProAnalysis(overrideInputs){
     });
     clearTimeout(t2);
     aiData = await res2.json();
+    window._aiData = aiData;
   } catch(e){ console.warn('market-analysis failed:',e); }
 
   stopLoadingScreen();
@@ -2583,6 +2599,68 @@ function renderPagedReport(md, ai){
 }
 
 function set(id, html){ const el=document.getElementById(id); if(el) el.innerHTML=html; }
+
+// ── EMAIL REPORT MODAL ────────────────────────────────────────────────────────
+function openEmailModal(){
+  const modal = document.getElementById('email-report-modal');
+  modal.style.display = 'flex';
+  document.getElementById('report-email-input').focus();
+}
+
+function closeEmailModal(){
+  document.getElementById('email-report-modal').style.display = 'none';
+  document.getElementById('report-email-status').textContent = '';
+  document.getElementById('report-email-status').style.color = 'var(--red)';
+  document.getElementById('report-email-input').value = '';
+  const btn = document.getElementById('btn-send-report');
+  btn.textContent = 'Send Report →';
+  btn.disabled = false;
+}
+
+async function submitEmailReport(){
+  const emailEl = document.getElementById('report-email-input');
+  const status  = document.getElementById('report-email-status');
+  const btn     = document.getElementById('btn-send-report');
+  const email   = emailEl.value.trim();
+
+  status.style.color = 'var(--red)';
+  if(!email || !email.includes('@')){
+    status.textContent = 'Please enter a valid email address.';
+    return;
+  }
+
+  btn.textContent = 'Sending…';
+  btn.disabled    = true;
+  status.textContent = '';
+
+  try {
+    const resp = await fetch('/api/email-report', {
+      method:  'POST',
+      headers: {'Content-Type':'application/json'},
+      body:    JSON.stringify({
+        email,
+        address:  window._address || '',
+        proData:  window._proData  || {},
+        fin:      window._proFin   || {},
+        aiData:   window._aiData   || {},
+      }),
+    });
+    if(resp.ok){
+      status.style.color  = '#15803d';
+      status.textContent  = '✓ Report sent — check your inbox (may take a minute).';
+      btn.textContent     = 'Sent ✓';
+      setTimeout(closeEmailModal, 3000);
+    } else {
+      status.textContent = 'Send failed. Please try again.';
+      btn.textContent    = 'Send Report →';
+      btn.disabled       = false;
+    }
+  } catch(e){
+    status.textContent = 'Network error. Please try again.';
+    btn.textContent    = 'Send Report →';
+    btn.disabled       = false;
+  }
+}
 </script>
 </body>
 </html>

@@ -246,6 +246,7 @@ def save_email():
             data.get("gross", ""),
             data.get("net", ""),
             data.get("dscr", ""),
+            "score-gate",
         ])
 
         # Send score report email via Resend
@@ -259,6 +260,74 @@ def save_email():
         return jsonify({"status": "ok"}), 200
     except Exception as e:
         print(f"save-email error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+# ── Email Pro Report (PDF attachment via Resend) ──────────────────────────────
+
+@app.route("/api/email-report", methods=["POST"])
+def email_report():
+    try:
+        data      = request.get_json(force=True)
+        email     = data.get("email", "").strip()
+        address   = data.get("address", "").strip()
+        pro_data  = data.get("proData", {})
+        fin       = data.get("fin", {})
+
+        if not email or "@" not in email:
+            return jsonify({"error": "invalid email"}), 400
+
+        # Log to same Google Sheet with source column
+        try:
+            sheet = _get_sheet()
+            sheet.append_row([
+                datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC"),
+                email,
+                address,
+                pro_data.get("beds", ""),
+                pro_data.get("baths", ""),
+                "",
+                pro_data.get("sqft", ""),
+                pro_data.get("target_tenant", ""),
+                pro_data.get("rent_per_room", ""),
+                fin.get("mortgage", pro_data.get("mortgage", "")),
+                pro_data.get("score", ""),
+                "",
+                pro_data.get("gross_monthly", ""),
+                pro_data.get("cash_flow_monthly", ""),
+                pro_data.get("dscr", ""),
+                "pro-report-email",
+            ])
+        except Exception as sheet_err:
+            print(f"email-report sheet error: {sheet_err}")
+
+        # Generate PDF using existing ReportLab generator
+        buffer = io.BytesIO()
+        build_pdf_from_data(pro_data, buffer)
+        buffer.seek(0)
+        pdf_bytes = buffer.read()
+
+        addr_slug = address.split(",")[0].strip().replace(" ", "_")[:30]
+        filename  = f"CoLivingScore_ProAnalysis_{addr_slug}.pdf"
+
+        resend.Emails.send({
+            "from": "CoLivingScore <hello@colivingscore.com>",
+            "to":   [email],
+            "subject": f"Your CoLivingScore Pro Analysis — {address or 'Property Report'}",
+            "html": (
+                f"<p style='font-family:Arial,sans-serif;font-size:15px;color:#333'>"
+                f"Your CoLivingScore Pro Analysis for <strong>{address}</strong> "
+                f"is attached as a PDF.</p>"
+                f"<p style='font-family:Arial,sans-serif;font-size:13px;color:#666'>"
+                f"For informational purposes only. Not financial or investment advice.</p>"
+            ),
+            "attachments": [{"filename": filename, "content": list(pdf_bytes)}],
+        })
+
+        return jsonify({"status": "ok"}), 200
+
+    except Exception as e:
+        print(f"email-report error: {e}")
         return jsonify({"error": str(e)}), 500
 
 
