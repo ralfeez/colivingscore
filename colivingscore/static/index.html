@@ -363,18 +363,18 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
   h3,h4{break-after:avoid}
   a{color:inherit!important;text-decoration:none!important}
   .assumption-notice{background:#fffbeb!important;border-color:#fcd34d!important}
-  #rpt-page-4 .rpt-page-body,#rpt-page-11 .rpt-page-body,#rpt-page-14 .rpt-page-body{padding:10px 18px!important}
-  #rpt-page-4 .ai-content,#rpt-page-11 .ai-content,#rpt-page-14 .ai-content{font-size:9pt!important;line-height:1.55!important}
-  #rpt-page-4 .ai-content h3,#rpt-page-11 .ai-content h3,#rpt-page-14 .ai-content h3{margin:9px 0 4px!important;font-size:10pt!important}
-  #rpt-page-4 .ai-content h4,#rpt-page-11 .ai-content h4,#rpt-page-14 .ai-content h4{margin:6px 0 3px!important;font-size:9.5pt!important}
-  #rpt-page-4 .ai-content p,#rpt-page-11 .ai-content p,#rpt-page-14 .ai-content p{margin-bottom:5px!important}
-  #rpt-page-11 .rpt-page-body{padding:8px 16px!important}
-  #rpt-page-11 .divider{margin:6px 0!important}
+  #rpt-page-4 .rpt-page-body,#rpt-page-12 .rpt-page-body,#rpt-page-15 .rpt-page-body{padding:10px 18px!important}
+  #rpt-page-4 .ai-content,#rpt-page-12 .ai-content,#rpt-page-15 .ai-content{font-size:9pt!important;line-height:1.55!important}
+  #rpt-page-4 .ai-content h3,#rpt-page-12 .ai-content h3,#rpt-page-15 .ai-content h3{margin:9px 0 4px!important;font-size:10pt!important}
+  #rpt-page-4 .ai-content h4,#rpt-page-12 .ai-content h4,#rpt-page-15 .ai-content h4{margin:6px 0 3px!important;font-size:9.5pt!important}
+  #rpt-page-4 .ai-content p,#rpt-page-12 .ai-content p,#rpt-page-15 .ai-content p{margin-bottom:5px!important}
+  #rpt-page-12 .rpt-page-body{padding:8px 16px!important}
+  #rpt-page-12 .divider{margin:6px 0!important}
   .pdf-break{display:block!important;page-break-before:always!important;break-before:page!important;height:0;margin:0;padding:0}
-  #rpt-page-12 .rpt-page-body{padding:10px 18px!important}
-  #rpt-page-12 .ai-content{font-size:9.5pt!important;line-height:1.6!important}
-  #rpt-page-12 .ai-content h3{margin:10px 0 5px!important;font-size:10.5pt!important}
-  #rpt-page-12 .ai-content p{margin-bottom:6px!important}
+  #rpt-page-13 .rpt-page-body{padding:10px 18px!important}
+  #rpt-page-13 .ai-content{font-size:9.5pt!important;line-height:1.6!important}
+  #rpt-page-13 .ai-content h3{margin:10px 0 5px!important;font-size:10.5pt!important}
+  #rpt-page-13 .ai-content p{margin-bottom:6px!important}
 }
 </style>
 </head>
@@ -1259,7 +1259,7 @@ function buildProGate(score, inp){
     : 'Pro Analysis — Full 15-Page Financial Report';
   const html = `<div class="pro-gate">
     <h3>${headline}</h3>
-    <p>Get the complete picture: 15-page market analysis, itemized P&L, financial ratios, location intelligence, SWOT, risk analysis, and a lender-ready PDF.</p>
+    <p>Get the complete picture: 16-page market analysis, itemized P&L, financial ratios, location intelligence, SWOT, risk analysis, and a lender-ready PDF.</p>
     <div class="pro-features">
       <div class="pro-feature">Executive Summary & Market Overview</div>
       <div class="pro-feature">Rent Pricing Analysis</div>
@@ -2007,13 +2007,14 @@ const RPT_PAGES = [
   [6,  'Pricing',   'Rent-by-Room Pricing Analysis'],
   [7,  'Location',  'Location Intelligence'],
   [8,  'Zoning',    'Regulatory & Zoning Environment'],
-  [9,  'P&L',       'Monthly Profit & Loss + Key Financial Ratios'],
-  [10, 'Turnover',  'Occupancy & Turnover'],
-  [11, 'Suitability','Tenant Suitability + Capital Improvements'],
-  [12, 'SWOT',      'SWOT + Risk Analysis'],
-  [13, 'Employers', 'Employer Mapping & Amenity Optimization'],
-  [14, 'Platform',  'Platform vs. Independent Strategy'],
-  [15, 'Verdict',   'Exit Strategy + Investment Verdict'],
+  [9,  'P&L',       'Monthly Profit & Loss'],
+  [10, 'Ratios',    'Key Financial Ratios & Occupancy Sensitivity'],
+  [11, 'Turnover',  'Occupancy & Turnover'],
+  [12, 'Suitability','Tenant Suitability + Capital Improvements'],
+  [13, 'SWOT',      'SWOT + Risk Analysis'],
+  [14, 'Employers', 'Employer Mapping & Amenity Optimization'],
+  [15, 'Platform',  'Platform vs. Independent Strategy'],
+  [16, 'Verdict',   'Exit Strategy + Investment Verdict'],
 ];
 let _rptPage = 1;
 
@@ -2031,7 +2032,7 @@ function buildReportShell(){
       <div class="rpt-page-hdr">
         <div class="rpt-page-hdr-brand"><span style="color:#4DBF8F">CoLiving</span><span style="color:white">Score</span></div>
         <div class="rpt-page-hdr-title">${title}</div>
-        <div class="rpt-page-hdr-pg">${n} / 15</div>
+        <div class="rpt-page-hdr-pg">${n} / 16</div>
       </div>
       <div class="rpt-page-body" id="rpt-pg-${n}">
         <div class="rpt-loading"><div style="width:16px;height:16px;border:2px solid var(--green);border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite;flex-shrink:0"></div>&nbsp;Loading...</div>
@@ -2040,8 +2041,8 @@ function buildReportShell(){
         <div class="rpt-page-foot-note">CoLivingScore.com — For informational purposes only. Not financial advice.</div>
         <div style="display:flex;gap:8px;align-items:center">
           ${n>1  ? `<button class="rpt-nav-arrow" onclick="prevReportPage()">← Prev</button>` : ''}
-          <span style="font-size:11px;color:var(--gray-400)">Page ${n} of 15</span>
-          ${n<15 ? `<button class="rpt-nav-arrow" onclick="nextReportPage()">Next →</button>` : ''}
+          <span style="font-size:11px;color:var(--gray-400)">Page ${n} of 16</span>
+          ${n<16 ? `<button class="rpt-nav-arrow" onclick="nextReportPage()">Next →</button>` : ''}
         </div>
       </div>
     </div>`
@@ -2060,7 +2061,7 @@ function showReportPage(n){
   if(rpt) window.scrollTo({top: rpt.offsetTop - 60, behavior:'smooth'});
 }
 function prevReportPage(){ if(_rptPage>1)  showReportPage(_rptPage-1); }
-function nextReportPage(){ if(_rptPage<15) showReportPage(_rptPage+1); }
+function nextReportPage(){ if(_rptPage<16) showReportPage(_rptPage+1); }
 
 // ── AI CONTENT RENDERER ───────────────────────────────────────────────────────
 function renderAIContent(text){
@@ -2457,23 +2458,25 @@ function renderPagedReport(md, ai){
       + tot('Net Operating Income (NOI)', p9.noi, p9.noi>=0?'#15803d':'#b91c1c')
       + sec('Debt Service')
       + row('Mortgage (P&amp;I)', p9.mortgage, true)
-      + tot('Monthly Cash Flow', p9.cashFlow, p9.cashFlow>=0?'#15803d':'#b91c1c')
-      + '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:20px">' + kpiHtml + '</div>'
-      + '<div style="margin-top:24px">'
+      + tot('Monthly Cash Flow', p9.cashFlow, p9.cashFlow>=0?'#15803d':'#b91c1c');
+
+    set('rpt-pg-9', html9);
+
+    var html10 = '<div style="font-size:11px;font-weight:700;color:var(--gray-500);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:14px">Key Financial Ratios</div>'
+      + '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px">' + kpiHtml + '</div>'
       + '<div style="font-size:10px;font-weight:700;color:var(--gray-500);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:10px">Occupancy Sensitivity</div>'
       + '<table class="ai-table" style="width:100%"><thead><tr>'
       + '<th>Occupancy</th><th style="text-align:right">Gross Income</th><th style="text-align:right">NOI</th><th style="text-align:right">Cash Flow</th><th style="text-align:right">DSCR</th>'
       + '</tr></thead><tbody>' + sensRows + '</tbody></table>'
-      + '<div style="font-size:11px;color:var(--gray-400);margin-top:6px">\u25c4 = your occupancy assumption. Op. expenses fixed at ' + fm(p9.opEx) + '/mo across all scenarios.</div>'
-      + '</div>';
+      + '<div style="font-size:11px;color:var(--gray-400);margin-top:6px">\u25c4 = your occupancy assumption. Op. expenses fixed at ' + fm(p9.opEx) + '/mo across all scenarios.</div>';
 
-    set('rpt-pg-9', html9);
+    set('rpt-pg-10', html10);
   }
 
-  // ── PAGE 10: Occupancy & Turnover ─────────────────────────────────────
-  set('rpt-pg-10', renderAIContent(ai.occupancy_turnover));
+  // ── PAGE 11: Occupancy & Turnover ─────────────────────────────────────
+  set('rpt-pg-11', renderAIContent(ai.occupancy_turnover));
 
-  // ── PAGE 11: Tenant Comparison + Capital Improvements ────────────────
+  // ── PAGE 12: Tenant Comparison + Capital Improvements ────────────────
   const tenComp = document.getElementById('pr-tenant-comparison');
   const improv  = document.getElementById('pr-improvements');
   const suggestions = (fin.allSortedFlags||fin.topFlags||[]).slice(0,5);
@@ -2485,7 +2488,7 @@ function renderPagedReport(md, ai){
       </div>
       <div style="font-size:12.5px;color:var(--gray-600);line-height:1.5">${f.message}</div>
     </div>`).join('') : '';
-  set('rpt-pg-11',`
+  set('rpt-pg-12',`
     <div style="font-size:11px;font-weight:700;color:var(--gray-500);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px">Tenant Suitability Analysis</div>
     <div style="font-size:11.5px;color:var(--gray-500);margin-bottom:12px">Signals assessed: hospital proximity · transit · parking · stories · walkability · campus proximity</div>
     ${tenComp?tenComp.innerHTML:''}
@@ -2494,18 +2497,18 @@ function renderPagedReport(md, ai){
     ${improv?improv.innerHTML:''}
     ${suggHtml?`<div class="pdf-break"></div><div style="font-size:11px;font-weight:700;color:var(--gray-500);letter-spacing:0.5px;text-transform:uppercase;margin:16px 0 12px">Score Improvement Opportunities</div>${suggHtml}`:''}`);
 
-  // ── PAGE 12: SWOT + Risk Analysis ─────────────────────────────────────
-  set('rpt-pg-12', renderAIContent(ai.swot||'') + '<div class="pdf-break"></div>' + renderAIContent(ai.risk_analysis||''));
+  // ── PAGE 13: SWOT + Risk Analysis ─────────────────────────────────────
+  set('rpt-pg-13', renderAIContent(ai.swot||'') + '<div class="pdf-break"></div>' + renderAIContent(ai.risk_analysis||''));
 
-  // ── PAGE 13: Employer Mapping + Amenity Optimization ─────────────────
-  set('rpt-pg-13', renderAIContent(ai.employer_mapping));
+  // ── PAGE 14: Employer Mapping + Amenity Optimization ─────────────────
+  set('rpt-pg-14', renderAIContent(ai.employer_mapping));
 
-  // ── PAGE 14: Platform vs. Independent Strategy ────────────────────────
-  set('rpt-pg-14', renderAIContent(ai.platform_strategy));
+  // ── PAGE 15: Platform vs. Independent Strategy ────────────────────────
+  set('rpt-pg-15', renderAIContent(ai.platform_strategy));
 
-  // ── PAGE 15: Exit Strategy + Investment Verdict ───────────────────────
+  // ── PAGE 16: Exit Strategy + Investment Verdict ───────────────────────
   const verdict = document.getElementById('pr-verdict');
-  set('rpt-pg-15',`
+  set('rpt-pg-16',`
     ${renderAIContent(ai.exit_strategy)}
     ${verdict?`<div class="divider"></div>${verdict.innerHTML}`:''}`);
 
