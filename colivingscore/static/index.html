@@ -417,6 +417,7 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
       </div>
       <div style="font-size:11px;color:rgba(255,255,255,0.55);margin-top:10px">Example: 123 Main St, Phoenix AZ 85001</div>
     </div>
+    <div id="restore-banner" style="display:none;align-items:center;flex-wrap:wrap;gap:8px;margin-top:12px;padding:10px 14px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:var(--radius)"></div>
   </div>
 
   <!-- ══ SCREEN 1: PROPERTY FORM ══ -->
@@ -941,8 +942,7 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
     <div class="addr-strip">
       <div class="addr-text">Pro Analysis — <span id="rpt-addr" style="color:#4DBF8F"></span></div>
       <div style="display:flex;gap:8px;align-items:center">
-        <button id="btn-pdf-hdr" style="height:28px;font-size:12px;padding:0 12px;background:transparent;color:var(--white);border:1px solid rgba(255,255,255,0.4);border-radius:var(--radius);cursor:pointer;font-family:var(--font);font-weight:500">🖨 Print PDF</button>
-        <button onclick="openEmailModal()" style="height:28px;font-size:12px;padding:0 12px;background:transparent;color:var(--white);border:1px solid rgba(255,255,255,0.4);border-radius:var(--radius);cursor:pointer;font-family:var(--font);font-weight:500">📧 Email Report</button>
+        <button id="btn-pdf-hdr" style="height:28px;font-size:12px;padding:0 12px;background:transparent;color:var(--white);border:1px solid rgba(255,255,255,0.4);border-radius:var(--radius);cursor:pointer;font-family:var(--font);font-weight:500">🖨 Print Report</button>
       </div>
     </div>
     <!-- Print-only cover page -->
@@ -972,19 +972,6 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
 
 </div><!-- /container -->
 
-<!-- ══ EMAIL REPORT MODAL ══ -->
-<div id="email-report-modal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.6);align-items:center;justify-content:center">
-  <div style="background:white;border-radius:12px;padding:28px;width:100%;max-width:420px;margin:16px;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
-    <div style="font-size:18px;font-weight:700;color:var(--gray-900);margin-bottom:6px">Email Completed Report</div>
-    <div style="font-size:13px;color:var(--gray-500);margin-bottom:20px;line-height:1.5">Enter the email address where you'd like to receive the Pro Analysis PDF. You can send it to yourself or a co-investor.</div>
-    <input type="email" id="report-email-input" placeholder="your@email.com" style="width:100%;height:42px;border:1.5px solid var(--gray-300);border-radius:var(--radius);padding:0 14px;font-size:14px;font-family:var(--font);outline:none;box-sizing:border-box;margin-bottom:4px">
-    <div id="report-email-status" style="font-size:12px;min-height:18px;margin-bottom:12px"></div>
-    <div style="display:flex;gap:10px">
-      <button onclick="closeEmailModal()" style="flex:1;height:40px;background:var(--gray-100);border:1.5px solid var(--gray-300);border-radius:var(--radius);font-size:13px;font-weight:500;font-family:var(--font);cursor:pointer;color:var(--gray-700)">Cancel</button>
-      <button id="btn-send-report" onclick="submitEmailReport()" style="flex:2;height:40px;background:var(--green);color:white;border:none;border-radius:var(--radius);font-size:13px;font-weight:600;font-family:var(--font);cursor:pointer">Send Report →</button>
-    </div>
-  </div>
-</div>
 
 <script>
 // ── SCORING ENGINE ────────────────────────────────────────────────────────────
@@ -1390,7 +1377,23 @@ async function initiatePayment(){
     const res = await fetch('/create-checkout-session', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
-      body: JSON.stringify(window._pendingProInputs || {})
+      body: JSON.stringify({
+        ...(window._pendingProInputs || {}),
+        _addr:     window._address || '',
+        _city:     (window._place || {}).city    || '',
+        _state:    (window._place || {}).state   || '',
+        _zip:      (window._place || {}).zip     || '',
+        _lat:      (window._place || {}).lat     || 0,
+        _lng:      (window._place || {}).lng     || 0,
+        _beds:     (window._inputs || {}).beds     || 4,
+        _baths:    (window._inputs || {}).baths    || 2,
+        _sqft:     (window._inputs || {}).sqft     || 0,
+        _tenant:   (window._inputs || {}).tenant   || 'workforce',
+        _floors:   (window._inputs || {}).floors   || 1,
+        _garage:   (window._inputs || {}).garage   || 0,
+        _transit:  (window._inputs || {}).transit  || 'walkable',
+        _hospital: (window._inputs || {}).hospital || 'close',
+      })
     });
     const data = await res.json();
     if(data.url){
@@ -1942,6 +1945,23 @@ document.addEventListener('DOMContentLoaded', function(){
     runFullProAnalysis(window._proInputs);
     history.replaceState({}, '', '/');
   }
+
+  // Handle paid redirect from any browser (localStorage handoff set by /success)
+  const sessionData = localStorage.getItem('cls_session_data');
+  if(params.get('paid') === 'true' && sessionData && !pendingData){
+    localStorage.removeItem('cls_session_data');
+    const sd = JSON.parse(sessionData);
+    window._proInputs = sd;
+    if(sd._addr){
+      window._address = sd._addr;
+      window._place   = { formatted_address:sd._addr, city:sd._city||'', state:sd._state||'', zip:sd._zip||'', lat:sd._lat||0, lng:sd._lng||0 };
+      window._inputs  = { beds:sd._beds||4, baths:sd._baths||2, halfbaths:0, sqft:sd._sqft||0, tenant:sd._tenant||'workforce', floors:sd._floors||1, garage:sd._garage||0, transit:sd._transit||'walkable', hospital:sd._hospital||'close', rent:sd.rent||0 };
+    }
+    runFullProAnalysis(window._proInputs);
+    history.replaceState({}, '', '/');
+  }
+
+  checkForSavedReport();
 });
 
 // ── LOADING SCREEN ────────────────────────────────────────────────────────────
@@ -2152,6 +2172,7 @@ async function runFullProAnalysis(overrideInputs){
     });
     clearTimeout(t);
     fastData = await res.json();
+    window._fastData = fastData;
   } catch(e){ console.warn('pro-data-fast failed:',e); }
 
   // Step 2 — Full AI market analysis (Claude + 20 web searches, up to 3 min)
@@ -2189,6 +2210,7 @@ async function runFullProAnalysis(overrideInputs){
   renderPagedReport(fastData, aiData);
   showScreen('s-pro-report');
   showReportPage(1);
+  saveReportToLocalStorage();
 }
 
 // ── PAGE-BY-PAGE RENDERER ─────────────────────────────────────────────────────
@@ -2600,67 +2622,66 @@ function renderPagedReport(md, ai){
 
 function set(id, html){ const el=document.getElementById(id); if(el) el.innerHTML=html; }
 
-// ── EMAIL REPORT MODAL ────────────────────────────────────────────────────────
-function openEmailModal(){
-  const modal = document.getElementById('email-report-modal');
-  modal.style.display = 'flex';
-  document.getElementById('report-email-input').focus();
-}
-
-function closeEmailModal(){
-  document.getElementById('email-report-modal').style.display = 'none';
-  document.getElementById('report-email-status').textContent = '';
-  document.getElementById('report-email-status').style.color = 'var(--red)';
-  document.getElementById('report-email-input').value = '';
-  const btn = document.getElementById('btn-send-report');
-  btn.textContent = 'Send Report →';
-  btn.disabled = false;
-}
-
-async function submitEmailReport(){
-  const emailEl = document.getElementById('report-email-input');
-  const status  = document.getElementById('report-email-status');
-  const btn     = document.getElementById('btn-send-report');
-  const email   = emailEl.value.trim();
-
-  status.style.color = 'var(--red)';
-  if(!email || !email.includes('@')){
-    status.textContent = 'Please enter a valid email address.';
-    return;
-  }
-
-  btn.textContent = 'Sending…';
-  btn.disabled    = true;
-  status.textContent = '';
-
+// ── REPORT PERSISTENCE ────────────────────────────────────────────────────────
+function saveReportToLocalStorage(){
   try {
-    const resp = await fetch('/api/email-report', {
-      method:  'POST',
-      headers: {'Content-Type':'application/json'},
-      body:    JSON.stringify({
-        email,
-        address:  window._address || '',
-        proData:  window._proData  || {},
-        fin:      window._proFin   || {},
-        aiData:   window._aiData   || {},
-      }),
-    });
-    if(resp.ok){
-      status.style.color  = '#15803d';
-      status.textContent  = '✓ Report sent — check your inbox (may take a minute).';
-      btn.textContent     = 'Sent ✓';
-      setTimeout(closeEmailModal, 3000);
-    } else {
-      status.textContent = 'Send failed. Please try again.';
-      btn.textContent    = 'Send Report →';
-      btn.disabled       = false;
-    }
-  } catch(e){
-    status.textContent = 'Network error. Please try again.';
-    btn.textContent    = 'Send Report →';
-    btn.disabled       = false;
-  }
+    localStorage.setItem('cls_report', JSON.stringify({
+      ts:        Date.now(),
+      address:   window._address   || '',
+      place:     window._place     || {},
+      inputs:    window._inputs    || {},
+      proInputs: window._proInputs || {},
+      proData:   window._proData   || {},
+      proFin:    window._proFin    || {},
+      fastData:  window._fastData  || {},
+      aiData:    window._aiData    || {},
+      score:     window._score     || 0,
+      fin:       window._fin       || {},
+    }));
+  } catch(e){ console.warn('localStorage save failed:', e); }
 }
+
+function checkForSavedReport(){
+  try {
+    const raw = localStorage.getItem('cls_report');
+    if(!raw) return;
+    const data = JSON.parse(raw);
+    const age  = Date.now() - (data.ts || 0);
+    if(age > 30 * 24 * 60 * 60 * 1000){ localStorage.removeItem('cls_report'); return; }
+    const addr   = data.address || 'your property';
+    const days   = Math.floor(age / (24*60*60*1000));
+    const ageStr = days === 0 ? 'earlier today' : days === 1 ? 'yesterday' : `${days} days ago`;
+    const banner = document.getElementById('restore-banner');
+    if(banner){
+      banner.innerHTML =
+        `<span style="font-size:13px;color:var(--gray-600)">Last report: <strong style="color:var(--gray-900)">${addr}</strong> <span style="color:var(--gray-400)">(${ageStr})</span></span>` +
+        `<button onclick="restoreReport()" style="margin-left:12px;height:28px;padding:0 14px;background:var(--green);color:white;border:none;border-radius:var(--radius);font-size:12px;font-weight:600;font-family:var(--font);cursor:pointer">Restore Report →</button>`;
+      banner.style.display = 'flex';
+    }
+  } catch(e){}
+}
+
+function restoreReport(){
+  try {
+    const data = JSON.parse(localStorage.getItem('cls_report'));
+    window._address   = data.address;
+    window._place     = data.place;
+    window._inputs    = data.inputs;
+    window._proInputs = data.proInputs;
+    window._proData   = data.proData;
+    window._proFin    = data.proFin;
+    window._fastData  = data.fastData;
+    window._aiData    = data.aiData;
+    window._score     = data.score;
+    window._fin       = data.fin;
+    buildReportShell();
+    generateProAnalysis(data.proInputs);
+    renderPagedReport(data.fastData || {}, data.aiData || {});
+    showScreen('s-pro-report');
+    showReportPage(1);
+  } catch(e){ alert('Could not restore report. Please try re-running the analysis.'); }
+}
+
 </script>
 </body>
 </html>

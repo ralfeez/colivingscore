@@ -978,14 +978,23 @@ def api_pro_data():
 def create_checkout_session():
     try:
         data = request.get_json(force=True)
-        # Store property data in Stripe metadata so we can retrieve it after payment
-        # Stripe metadata values must be strings and total <500 chars per key
+
+        # Persist inputs in Stripe metadata (survives Render redeploys)
+        # Values capped at 490 chars; split into two keys if needed
+        inputs_str = json.dumps(data)
+        meta = {}
+        if len(inputs_str) <= 490:
+            meta["cls"] = inputs_str
+        else:
+            meta["cls"]  = inputs_str[:490]
+            meta["cls2"] = inputs_str[490:980]
+
         session = stripe.checkout.Session.create(
             payment_method_types=["card"],
             line_items=[{
                 "price_data": {
                     "currency": "usd",
-                    "unit_amount": 2900,  # $29.00 in cents
+                    "unit_amount": 2900,
                     "product_data": {
                         "name": "CoLivingScore Pro Analysis",
                         "description": "CoLivingScore Pro Analysis — Full P&L, DSCR, 5-Year Projection & PDF Report",
@@ -994,11 +1003,12 @@ def create_checkout_session():
                 "quantity": 1,
             }],
             mode="payment",
+            metadata=meta,
             success_url=BASE_URL + "/success?session_id={CHECKOUT_SESSION_ID}",
             cancel_url=BASE_URL + "/?cancelled=true",
         )
-        # Store the pro form data in server-side session cache keyed by checkout session ID
-        # We use a simple file-based temp store since Render has ephemeral disk
+
+        # Also write to tmp file for fast same-session retrieval
         tmp_path = f"/tmp/cls_{session.id}.json"
         with open(tmp_path, "w") as f:
             json.dump(data, f)
@@ -1011,6 +1021,33 @@ def create_checkout_session():
 
 # ── Success page — retrieve session and pass data back to frontend ─────────────
 
+def _build_report_access_email(email, address, session_url):
+    return f"""
+<div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;margin:0 auto;color:#333">
+  <div style="background:#0D2818;padding:28px 32px;border-radius:8px 8px 0 0">
+    <span style="font-size:20px;font-weight:700;color:white">CoLiving<span style="color:#4DBF8F">Score</span></span>
+  </div>
+  <div style="background:#f9fafb;padding:32px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 8px 8px">
+    <h2 style="margin:0 0 12px;font-size:18px;color:#0D2818">Your Pro Analysis is ready</h2>
+    <p style="margin:0 0 8px;font-size:14px;color:#555;line-height:1.6">
+      Property: <strong>{address}</strong>
+    </p>
+    <p style="margin:0 0 24px;font-size:14px;color:#555;line-height:1.6">
+      If you need to access your report again from any device, use the link below.
+      It will re-run your full analysis (takes 2–4 minutes).
+    </p>
+    <a href="{session_url}"
+       style="display:inline-block;background:#1D9E75;color:white;font-size:14px;font-weight:600;
+              padding:12px 28px;border-radius:6px;text-decoration:none">
+      Re-access My Report →
+    </a>
+    <p style="margin:28px 0 0;font-size:11px;color:#999;line-height:1.5">
+      For informational purposes only. Not financial or investment advice.
+    </p>
+  </div>
+</div>"""
+
+
 @app.route("/success")
 def success():
     session_id = request.args.get("session_id")
@@ -1020,24 +1057,45 @@ def success():
         session = stripe.checkout.Session.retrieve(session_id)
         if session.payment_status != "paid":
             return redirect("/?payment_failed=true")
-        # Load the stored form data
+
+        # 1. Try fast tmp file first
         tmp_path = f"/tmp/cls_{session_id}.json"
         if os.path.exists(tmp_path):
             with open(tmp_path, "r") as f:
                 pro_data = json.load(f)
         else:
-            pro_data = {}
-        # Serve success page — embed the pro data as JSON for the frontend to pick up
+            # 2. Fall back to Stripe metadata (survives redeploys)
+            m = session.metadata or {}
+            inputs_str = m.get("cls", "") + m.get("cls2", "")
+            pro_data = json.loads(inputs_str) if inputs_str else {}
+
+        # 3. Send re-access email (once per session, best-effort)
+        customer_email = session.customer_email or ""
+        if customer_email:
+            try:
+                session_url  = f"{BASE_URL}/success?session_id={session_id}"
+                address_str  = pro_data.get("_addr", pro_data.get("address", "your property"))
+                resend.Emails.send({
+                    "from":    "CoLivingScore <hello@colivingscore.com>",
+                    "to":      [customer_email],
+                    "subject": f"Your CoLivingScore Pro Analysis — {address_str}",
+                    "html":    _build_report_access_email(customer_email, address_str, session_url),
+                })
+            except Exception as mail_err:
+                print(f"report-access email error: {mail_err}")
+
+        # 4. Pass data to frontend via localStorage (works from any browser/device)
         pro_data_json = json.dumps(pro_data).replace("</", "<\\/")
         html = f"""<!DOCTYPE html>
 <html><head><meta charset="UTF-8">
 <script>
-  window._paidProData = {pro_data_json};
+  try {{ localStorage.setItem('cls_session_data', JSON.stringify({pro_data_json})); }} catch(e) {{}}
   window.location.href = "/?paid=true";
 </script>
 </head><body>Payment confirmed. Redirecting...</body></html>"""
         return html
     except Exception as e:
+        print(f"success error: {e}")
         return redirect("/?payment_failed=true")
 
 
