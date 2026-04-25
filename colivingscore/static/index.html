@@ -583,7 +583,10 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
 
     <div class="addr-strip">
       <div class="addr-text" id="r-addr-text">Property Analysis</div>
-      <div class="addr-reg clear" id="r-reg-badge">Regulatory: Clear</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button style="height:28px;font-size:12px;padding:0 12px;background:transparent;color:var(--white);border:1px solid rgba(255,255,255,0.4);border-radius:var(--radius);cursor:pointer;font-family:var(--font);font-weight:500" onclick="showScreen('s-form')">← Edit Inputs</button>
+        <div class="addr-reg clear" id="r-reg-badge">Regulatory: Clear</div>
+      </div>
     </div>
 
     <!-- Score hero -->
@@ -2365,7 +2368,12 @@ function renderPagedReport(md, ai){
       <span class="score-badge bike">🚲 Bike Score ${bike}</span>
       ${ws.walk_desc?`<span style="font-size:12px;color:var(--gray-500);align-self:center">${ws.walk_desc}</span>`:''}
     </div>
-    <div style="font-size:12.5px;color:var(--gray-500);margin-bottom:14px;line-height:1.5">These nearby amenities and transportation options directly influence which tenant types this property attracts and what rent it can command.</div>
+    <div style="font-size:12.5px;color:var(--gray-500);margin-bottom:10px;line-height:1.5">These nearby amenities and transportation options directly influence which tenant types this property attracts and what rent it can command.</div>
+    <div style="margin-bottom:14px;padding:10px 12px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius);font-size:11.5px;color:var(--gray-600);line-height:1.8">
+      <strong>Walk Score</strong> — How easily you can walk to daily needs (groceries, restaurants, schools). 70+ means the car mostly stays parked.<br>
+      <strong>Transit Score</strong> — How well-served an address is by public transit, weighted by frequency, route type, and proximity to stops.<br>
+      <strong>Bike Score</strong> — How practical biking is as transportation, based on bike lanes, hills, and local cycling infrastructure.
+    </div>
     ${pill('🚌',tr.name,tr.distance_miles,nb.transit_band,'transit')}
     ${pill('🏥',ho.name,ho.distance_miles,nb.hospital_band,'hospital')}
     ${amenityPills}
@@ -2541,7 +2549,16 @@ function renderPagedReport(md, ai){
   set('rpt-pg-14', renderAIContent(ai.employer_mapping));
 
   // ── PAGE 15: Platform vs. Independent Strategy ────────────────────────
-  set('rpt-pg-15', renderAIContent(ai.platform_strategy));
+  set('rpt-pg-15', renderAIContent(ai.platform_strategy).replace(
+    /Realistic fit:(<\/strong>)?\s*([\s\S]*?)(<\/li>)/g,
+    (m, maybeClose, content, close) => {
+      const txt = content.replace(/<[^>]+>/g,'').toLowerCase().trim();
+      const color = /best match|ideal|highly|strong fit|excellent/.test(txt) ? '#15803d' :
+                    /not recommended|poor|avoid|not a fit/.test(txt) ? '#dc2626' : '#b45309';
+      const label = maybeClose ? 'Realistic fit:</strong>' : 'Realistic fit:';
+      return `${label} <span style="color:${color};font-weight:600">${content.trim()}</span>${close}`;
+    }
+  ));
 
   // ── PAGE 16: Exit Strategy + Investment Verdict ───────────────────────
   const verdict = document.getElementById('pr-verdict');
