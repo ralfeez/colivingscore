@@ -684,8 +684,8 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
       <div class="section-divider"><div class="section-divider-line"></div><div class="section-divider-label">Fixed Expenses</div><div class="section-divider-line"></div></div>
       <div class="field-grid">
         <div class="field">
-          <label>Monthly mortgage (P&amp;I only) <span class="tip" data-tip="Enter principal &amp; interest only. Taxes and insurance are entered in the fields below.">?</span></label>
-          <input type="number" id="p-mortgage" value="2850">
+          <label>Monthly mortgage (P&amp;I only) <span class="req">*</span><span class="tip" data-tip="Enter principal &amp; interest only. Taxes and insurance are entered in the fields below.">?</span></label>
+          <input type="number" id="p-mortgage" placeholder="e.g. 1800">
         </div>
         <div class="field">
           <label>Annual property taxes</label>
@@ -1291,7 +1291,15 @@ function showReviewScreen(){
   // Collect all pro form values
   const rent     = parseInt(document.getElementById('f-rent').value)||0;
   const occ      = parseFloat(document.getElementById('p-occ').value)||0.85;
-  const mortgage = parseInt(document.getElementById('p-mortgage').value)||0;
+  const mortgageEl = document.getElementById('p-mortgage');
+  if(!mortgageEl.value.trim()){
+    mortgageEl.style.borderColor='var(--red)';
+    mortgageEl.focus();
+    mortgageEl.scrollIntoView({behavior:'smooth',block:'center'});
+    return;
+  }
+  mortgageEl.style.borderColor='';
+  const mortgage = parseInt(mortgageEl.value)||0;
   const taxes    = parseInt(document.getElementById('p-taxes').value)||0;
   const ins      = parseInt(document.getElementById('p-insurance').value)||0;
   const hoa      = parseInt(document.getElementById('p-hoa').value)||0;
@@ -1519,9 +1527,7 @@ function renderSuitabilityTable(results, currentTenant){
 
 // ── PRO ANALYSIS ─────────────────────────────────────────────────────────────
 function startProAnalysis(){
-  // Pre-fill mortgage from free form
   const inp = window._inputs || {};
-  if(inp.mortgage) document.getElementById('p-mortgage').value = inp.mortgage;
   if(inp.beds){
     const beds = inp.beds;
     // Scale internet by rooms
@@ -1544,7 +1550,7 @@ function generateProAnalysis(overrideInputs){
   const src = overrideInputs || {};
   const rent     = src.rent     || parseInt(document.getElementById('f-rent').value)||1100;
   const occ      = src.occ      || parseFloat(document.getElementById('p-occ').value)||0.92;
-  const mortgage = src.mortgage || parseInt(document.getElementById('p-mortgage').value)||2850;
+  const mortgage = src.mortgage || parseInt(document.getElementById('p-mortgage').value)||0;
   const taxes    = src.taxes    || parseInt(document.getElementById('p-taxes').value)||4800;
   const ins      = src.ins      || parseInt(document.getElementById('p-insurance').value)||2400;
   const hoa      = src.hoa      !== undefined ? src.hoa : (parseInt(document.getElementById('p-hoa').value)||0);
