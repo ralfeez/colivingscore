@@ -370,6 +370,9 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
   #rpt-page-4 .ai-content p,#rpt-page-12 .ai-content p,#rpt-page-15 .ai-content p{margin-bottom:5px!important}
   #rpt-page-12 .rpt-page-body{padding:8px 16px!important}
   #rpt-page-12 .divider{margin:6px 0!important}
+  #rpt-page-12 .suit-card{padding:7px 10px!important;margin-bottom:5px!important}
+  #rpt-page-12 .impr-row{padding:5px 0!important;font-size:11px!important}
+  #rpt-page-12 .pg12-hdr{margin:8px 0 6px!important}
   .pdf-break{display:block!important;page-break-before:always!important;break-before:page!important;height:0;margin:0;padding:0}
   #rpt-page-13 .rpt-page-body{padding:10px 18px!important}
   #rpt-page-13 .ai-content{font-size:9.5pt!important;line-height:1.6!important}
@@ -410,8 +413,7 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
         <input type="text" id="f-address" placeholder="123 Main St, City, State ZIP" autocomplete="off">
         <button class="btn-addr" id="btn-address-next">Analyze →</button>
       </div>
-      <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:10px">Example: 123 Main St, Phoenix AZ 85001</div>
-      <div class="addr-note">Zoning &amp; regulatory lookup · coming in Phase 2</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.55);margin-top:10px">Example: 123 Main St, Phoenix AZ 85001</div>
     </div>
   </div>
 
@@ -1502,7 +1504,7 @@ function renderSuitabilityTable(results, currentTenant){
     const isCurrent = r.key === currentTenant;
     const fl = FIT_LABELS[r.fit] || FIT_LABELS.marginal;
     const shownSignals = isCurrent ? r.signals : r.signals.filter(s=>s.type!=='note').slice(0,2);
-    html += `<div style="padding:12px 14px;border-radius:var(--radius);margin-bottom:8px;border:1px solid ${isCurrent?'#86efac':'var(--gray-200)'};background:${isCurrent?'#f0fdf4':'var(--white)'}">
+    html += `<div class="suit-card" style="padding:12px 14px;border-radius:var(--radius);margin-bottom:8px;border:1px solid ${isCurrent?'#86efac':'var(--gray-200)'};background:${isCurrent?'#f0fdf4':'var(--white)'}">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:${shownSignals.length?'8px':'0'}">
         <div style="font-size:13px;font-weight:${isCurrent?'700':'600'};color:var(--dark)">${r.label}${isCurrent?` <span style="font-size:11px;font-weight:500;color:var(--green-dark)">(your selection)</span>`:''}</div>
         <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;background:${fl.bg};color:${fl.color}">${fl.text}</span>
@@ -1644,7 +1646,7 @@ function generateProAnalysis(overrideInputs){
     <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:0;font-size:11px;font-weight:700;color:var(--gray-500);letter-spacing:0.5px;padding:8px 0;border-bottom:1px solid var(--gray-200)">
       <div>IMPROVEMENT</div><div style="text-align:right">COST</div><div style="text-align:right">LIFT/RM</div><div style="text-align:right">PAYBACK</div><div style="text-align:right">PRIORITY</div>
     </div>` +
-    imps.map(i=>`<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:0;font-size:13px;padding:10px 0;border-bottom:1px solid var(--gray-100);align-items:center">
+    imps.map(i=>`<div class="impr-row" style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:0;font-size:13px;padding:10px 0;border-bottom:1px solid var(--gray-100);align-items:center">
       <div style="font-weight:500">${i.item}</div>
       <div style="text-align:right;color:var(--gray-700)">$${i.cost.toLocaleString()}</div>
       <div style="text-align:right;color:var(--green-dark);font-weight:600">+$${i.lift}/mo</div>
@@ -2493,7 +2495,7 @@ function renderPagedReport(md, ai){
     <div style="font-size:11.5px;color:var(--gray-500);margin-bottom:12px">Signals assessed: hospital proximity · transit · parking · stories · walkability · campus proximity</div>
     ${tenComp?tenComp.innerHTML:''}
     <div class="divider"></div>
-    <div style="font-size:11px;font-weight:700;color:var(--gray-500);letter-spacing:0.5px;text-transform:uppercase;margin:16px 0 12px">Capital Improvements — Return on Investment Analysis</div>
+    <div class="pg12-hdr" style="font-size:11px;font-weight:700;color:var(--gray-500);letter-spacing:0.5px;text-transform:uppercase;margin:16px 0 12px">Capital Improvements — Return on Investment Analysis</div>
     ${improv?improv.innerHTML:''}
     ${suggHtml?`<div class="pdf-break"></div><div style="font-size:11px;font-weight:700;color:var(--gray-500);letter-spacing:0.5px;text-transform:uppercase;margin:16px 0 12px">Score Improvement Opportunities</div>${suggHtml}`:''}`);
 
