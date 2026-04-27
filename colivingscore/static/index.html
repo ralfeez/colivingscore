@@ -1392,7 +1392,7 @@ async function initiatePayment(){
   try {
     const res = await fetch('/create-checkout-session', {
       method: 'POST',
-      headers: {'Content-Type':'application/json'},
+      headers: {'Content-Type':'application/json', 'X-API-Key': window._apiKey||''},
       body: JSON.stringify({
         ...(window._pendingProInputs || {}),
         _email:    emailVal,
@@ -1783,7 +1783,7 @@ function submitEmail(){
 
   fetch('/save-email', {
     method: 'POST',
-    headers: {'Content-Type':'application/json'},
+    headers: {'Content-Type':'application/json', 'X-API-Key': window._apiKey||''},
     body: JSON.stringify({
       email,
       address:     window._address || '',
@@ -1918,8 +1918,8 @@ document.addEventListener('DOMContentLoaded', function(){
       s.async = true; s.defer = true;
       document.head.appendChild(s);
     }
-    // Stripe key
     if(cfg.publishable_key) window._stripePK = cfg.publishable_key;
+    if(cfg.api_key) window._apiKey = cfg.api_key;
   });
 
   wire('btn-address-next', goToPropertyForm);
@@ -2210,7 +2210,7 @@ async function runFullProAnalysis(overrideInputs){
     const ctrl = new AbortController();
     const t = setTimeout(()=>ctrl.abort(), 30000);
     const res = await fetch('/api/pro-data-fast', {
-      method:'POST', headers:{'Content-Type':'application/json'},
+      method:'POST', headers:{'Content-Type':'application/json', 'X-API-Key': window._apiKey||''},
       signal: ctrl.signal,
       body: JSON.stringify({
         address:    window._address || '',
@@ -2233,7 +2233,7 @@ async function runFullProAnalysis(overrideInputs){
     const mgmtKey = (overrideInputs&&(overrideInputs.mgmtSel||overrideInputs.mgmt_model_key)) ||
                     (document.getElementById('p-mgmt')&&document.getElementById('p-mgmt').value) || 'self';
     const res2 = await fetch('/api/market-analysis', {
-      method:'POST', headers:{'Content-Type':'application/json'},
+      method:'POST', headers:{'Content-Type':'application/json', 'X-API-Key': window._apiKey||''},
       signal: ctrl2.signal,
       body: JSON.stringify({
         address:      window._address || '',
@@ -2267,7 +2267,7 @@ async function runFullProAnalysis(overrideInputs){
   if(window._sessionId && _aiSections.length > 3){
     fetch('/api/cache-report', {
       method: 'POST',
-      headers: {'Content-Type':'application/json'},
+      headers: {'Content-Type':'application/json', 'X-API-Key': window._apiKey||''},
       body: JSON.stringify({
         session_id: window._sessionId,
         fastData:   window._fastData || {},

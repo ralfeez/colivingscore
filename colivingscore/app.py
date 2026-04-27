@@ -1,18 +1,22 @@
 import os
 import io
+import re
 import json
 import math
+import time
 import resend
 import stripe
 import gspread
 import requests
 import anthropic
+from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from flask import Flask, send_from_directory, request, send_file, jsonify, redirect
 from pdf.generate_report import build_pdf_from_data
 
 app = Flask(__name__, static_folder="static")
+app.config['MAX_CONTENT_LENGTH'] = 1 * 1024 * 1024  # 1 MB max request body
 
 stripe.api_key = os.environ.get("STRIPE_SECRET_KEY")
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET")
@@ -26,6 +30,34 @@ ANTHROPIC_API_KEY        = os.environ.get("ANTHROPIC_API_KEY", "")
 WALKSCORE_API_KEY        = os.environ.get("WALKSCORE_API_KEY", "")
 UPSTASH_REDIS_REST_URL   = os.environ.get("UPSTASH_REDIS_REST_URL", "")
 UPSTASH_REDIS_REST_TOKEN = os.environ.get("UPSTASH_REDIS_REST_TOKEN", "")
+INTERNAL_API_KEY         = os.environ.get("INTERNAL_API_KEY", "")
+
+# ── Security helpers ──────────────────────────────────────────────────────────
+
+_STRIPE_SESSION_RE = re.compile(r'^cs_[a-zA-Z0-9_]{20,}$')
+
+_rate_store: dict = defaultdict(list)
+_RATE_WINDOW = 3600  # seconds
+
+
+def _check_api_key():
+    """Return True if the request carries a valid internal API key.
+    Skipped (always passes) when INTERNAL_API_KEY is not configured."""
+    if not INTERNAL_API_KEY:
+        return True
+    return request.headers.get("X-API-Key") == INTERNAL_API_KEY
+
+
+def _check_rate_limit(ip: str, limit: int = 10) -> bool:
+    """Sliding-window rate limiter. Returns True if the request is allowed."""
+    now = time.time()
+    calls = [t for t in _rate_store[ip] if now - t < _RATE_WINDOW]
+    if len(calls) >= limit:
+        _rate_store[ip] = calls
+        return False
+    calls.append(now)
+    _rate_store[ip] = calls
+    return True
 
 
 def _cache_set(key, data, ttl=2592000):
@@ -81,10 +113,8 @@ def index():
 
 @app.route("/generate-pdf", methods=["POST"])
 def generate_pdf():
-    """
-    Accepts JSON body with all Pro Analysis inputs.
-    Returns a PDF file download.
-    """
+    if not _check_api_key():
+        return jsonify({"error": "Forbidden"}), 403
     try:
         data = request.get_json(force=True)
 
@@ -108,7 +138,8 @@ def generate_pdf():
         )
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(f"generate-pdf error: {e}")
+        return jsonify({"error": "Internal error"}), 500
 
 
 # ── Email capture → Google Sheets + Resend ───────────────────────────────────
@@ -253,6 +284,11 @@ def _build_score_email(email, data):
 
 @app.route("/save-email", methods=["POST"])
 def save_email():
+    if not _check_api_key():
+        return jsonify({"error": "Forbidden"}), 403
+    ip = request.headers.get("X-Forwarded-For", request.remote_addr or "").split(",")[0].strip()
+    if not _check_rate_limit(ip, limit=10):
+        return jsonify({"error": "Too many requests"}), 429
     try:
         data = request.get_json(force=True)
         email   = data.get("email", "").strip()
@@ -292,13 +328,15 @@ def save_email():
         return jsonify({"status": "ok"}), 200
     except Exception as e:
         print(f"save-email error: {e}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "Internal error"}), 500
 
 
 # ── Email Pro Report (PDF attachment via Resend) ──────────────────────────────
 
 @app.route("/api/email-report", methods=["POST"])
 def email_report():
+    if not _check_api_key():
+        return jsonify({"error": "Forbidden"}), 403
     try:
         data      = request.get_json(force=True)
         email     = data.get("email", "").strip()
@@ -360,7 +398,7 @@ def email_report():
 
     except Exception as e:
         print(f"email-report error: {e}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "Internal error"}), 500
 
 
 # ── Health check (Render uses this) ──────────────────────────────────────────
@@ -377,6 +415,7 @@ def get_config():
     return jsonify({
         "publishable_key": STRIPE_PUBLISHABLE_KEY,
         "google_places_key": GOOGLE_PLACES_API_KEY,
+        "api_key": INTERNAL_API_KEY,
     })
 
 
@@ -514,11 +553,14 @@ def _fetch_demographics(zip_code):
 
 @app.route("/api/walkscore", methods=["POST"])
 def api_walkscore():
+    if not _check_api_key():
+        return jsonify({"error": "Forbidden"}), 403
     try:
         data = request.get_json(force=True)
         return jsonify(_fetch_walkscore(data.get("address", ""), data.get("lat"), data.get("lng")))
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(f"walkscore error: {e}")
+        return jsonify({"error": "Internal error"}), 500
 
 
 def _haversine_miles(lat1, lng1, lat2, lng2):
@@ -542,20 +584,26 @@ TENANT_AMENITY_TYPES = {
 
 @app.route("/api/nearby", methods=["POST"])
 def api_nearby():
+    if not _check_api_key():
+        return jsonify({"error": "Forbidden"}), 403
     try:
         data = request.get_json(force=True)
         return jsonify(_fetch_nearby(data.get("lat"), data.get("lng"), data.get("tenant_key", "workforce")))
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(f"nearby error: {e}")
+        return jsonify({"error": "Internal error"}), 500
 
 
 @app.route("/api/demographics", methods=["POST"])
 def api_demographics():
+    if not _check_api_key():
+        return jsonify({"error": "Forbidden"}), 403
     try:
         data = request.get_json(force=True)
         return jsonify(_fetch_demographics(data.get("zip", "")))
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(f"demographics error: {e}")
+        return jsonify({"error": "Internal error"}), 500
 
 
 # ── Full market analysis — Claude AI + web search (15-page report) ───────────
@@ -739,6 +787,8 @@ Threats:
 @app.route("/api/market-analysis", methods=["POST"])
 def api_market_analysis():
     """13-section market analysis powered by Claude training data + provided property/market context."""
+    if not _check_api_key():
+        return jsonify({"error": "Forbidden"}), 403
     try:
         data       = request.get_json(force=True)
         tenant_key = data.get("tenant_key", "workforce")
@@ -766,7 +816,7 @@ def api_market_analysis():
         return jsonify(sections)
     except Exception as e:
         print(f"market-analysis error: {e}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "Internal error"}), 500
 
 
 # ── Competitive intelligence — Claude AI + web search ────────────────────────
@@ -858,6 +908,8 @@ Be specific. Name actual businesses and places where possible. If you cannot fin
 
 @app.route("/api/competitive", methods=["POST"])
 def api_competitive():
+    if not _check_api_key():
+        return jsonify({"error": "Forbidden"}), 403
     try:
         data       = request.get_json(force=True)
         address    = data.get("address", "")
@@ -897,7 +949,7 @@ def api_competitive():
         return jsonify({"analysis": analysis, "tenant_key": tenant_key, "city": city})
     except Exception as e:
         print(f"competitive error: {e}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "Internal error"}), 500
 
 
 # ── Pro data orchestrator — fast (no competitive) ────────────────────────────
@@ -905,6 +957,8 @@ def api_competitive():
 @app.route("/api/pro-data-fast", methods=["POST"])
 def api_pro_data_fast():
     """WalkScore + Nearby + Demographics only. Returns in ~5-10s."""
+    if not _check_api_key():
+        return jsonify({"error": "Forbidden"}), 403
     try:
         data       = request.get_json(force=True)
         address    = data.get("address", "")
@@ -934,7 +988,7 @@ def api_pro_data_fast():
         return jsonify(results)
     except Exception as e:
         print(f"pro-data-fast error: {e}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "Internal error"}), 500
 
 
 # ── Pro data orchestrator — full (includes competitive) ───────────────────────
@@ -946,6 +1000,8 @@ def api_pro_data():
     Census ACS, and Claude competitive analysis concurrently.
     Returns all results merged into one JSON object.
     """
+    if not _check_api_key():
+        return jsonify({"error": "Forbidden"}), 403
     try:
         data       = request.get_json(force=True)
         address    = data.get("address", "")
@@ -1001,18 +1057,20 @@ def api_pro_data():
         return jsonify(results)
     except Exception as e:
         print(f"pro-data error: {e}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "Internal error"}), 500
 
 
 # ── Report cache (Upstash Redis) ─────────────────────────────────────────────
 
 @app.route("/api/cache-report", methods=["POST"])
 def cache_report():
+    if not _check_api_key():
+        return jsonify({"error": "Forbidden"}), 403
     try:
         data       = request.get_json(force=True)
         session_id = data.get("session_id", "")
-        if not session_id:
-            return jsonify({"error": "missing session_id"}), 400
+        if not session_id or not _STRIPE_SESSION_RE.match(session_id):
+            return jsonify({"error": "invalid session_id"}), 400
         payload = {
             "fastData": data.get("fastData", {}),
             "aiData":   data.get("aiData",   {}),
@@ -1024,7 +1082,7 @@ def cache_report():
         return jsonify({"ok": True})
     except Exception as e:
         print(f"cache-report error: {e}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "Internal error"}), 500
 
 
 # ── Create Stripe Checkout session ────────────────────────────────────────────
@@ -1075,7 +1133,8 @@ def create_checkout_session():
         return jsonify({"url": session.url})
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(f"checkout error: {e}")
+        return jsonify({"error": "Internal error"}), 500
 
 
 # ── Success page — retrieve session and pass data back to frontend ─────────────
