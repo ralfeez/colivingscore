@@ -87,6 +87,8 @@ select,input[type=number],input[type=text],input[type=email]{
   width:100%;transition:border-color 0.15s;outline:none;color-scheme:light
 }
 select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,158,117,0.08)}
+.input-required{background:#fff5f5!important;border-color:#e53e3e!important}
+.input-required:focus{box-shadow:0 0 0 3px rgba(229,62,62,0.12)!important}
 .field-hint{font-size:11px;color:var(--gray-400);margin-top:2px}
 .util-payer-row{display:flex;gap:8px;margin:10px 0 16px}
 .util-pill{flex:1;padding:9px 0;border:1.5px solid var(--gray-200);border-radius:var(--radius);background:var(--gray-50);color:var(--gray-500);font-size:13px;font-weight:500;cursor:pointer;transition:border-color .15s,background .15s,color .15s}
@@ -847,7 +849,7 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
     <div class="card" style="padding:20px">
       <div class="card-title">Where should we send your report?</div>
       <div style="margin-top:10px">
-        <input type="email" id="rv-email" placeholder="your@email.com" style="width:100%;box-sizing:border-box">
+        <input type="email" id="rv-email" placeholder="your@email.com" class="input-required" style="width:100%;box-sizing:border-box">
         <div style="font-size:11.5px;color:var(--gray-500);margin-top:6px">We'll email you a link to re-access your report from any device.</div>
       </div>
     </div>
@@ -1934,6 +1936,7 @@ document.addEventListener('DOMContentLoaded', function(){
   wire('btn-pay',         initiatePayment);
   document.getElementById('rv-email').addEventListener('input', function(){
     const valid = this.value.trim().includes('@') && this.value.trim().length > 3;
+    this.classList.toggle('input-required', !valid);
     document.getElementById('btn-pay').disabled = !valid;
   });
 
