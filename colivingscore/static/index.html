@@ -2001,6 +2001,14 @@ document.addEventListener('DOMContentLoaded', function(){
       window._proFin   = c.proFin   || {};
       if(c.score) window._score = c.score;
       buildReportShell();
+      // Populate pr-verdict so renderPagedReport can include it on page 16
+      (function(){
+        const pf = window._proFin || {};
+        const goScore = window._score || 0;
+        const isGo = goScore >= 65 && (pf.noi || 0) > 0 && (pf.dscr || 0) >= 1.0;
+        const vEl = document.getElementById('pr-verdict');
+        if(vEl) vEl.innerHTML = `<div style="background:${isGo?'var(--green-light)':'var(--red-light)'};border:1px solid ${isGo?'#97C459':'#F09595'};border-radius:var(--radius-lg);padding:24px;margin-bottom:16px"><div style="font-size:18px;font-weight:700;color:${isGo?'var(--green-dark)':'var(--red)'};margin-bottom:10px">${isGo?'✓ GO — Strong Co-Living Candidate':'✕ NO-GO — Does Not Meet Thresholds'}</div><div style="font-size:13px;color:var(--gray-700);line-height:1.7">${isGo?`DSCR of ${pf.dscr}x ${pf.dscr>=1.25?'exceeds':'is approaching'} the 1.25x lender benchmark. Break-even occupancy of ${Math.round((pf.be||0)*100)}% provides a ${(pf.be||0)<=0.75?'comfortable':'tight'} cushion. Monthly cash flow of $${Math.abs(Math.round(pf.cashFlow||0)).toLocaleString()} supports a viable co-living operation at this rent level.`:'This property does not meet minimum thresholds for co-living investment at current inputs. Review the improvement recommendations above and re-run the analysis with adjusted rent or expense assumptions.'}</div></div>`;
+      })();
       renderPagedReport(window._fastData, window._aiData);
       showScreen('s-pro-report');
       showReportPage(1);
