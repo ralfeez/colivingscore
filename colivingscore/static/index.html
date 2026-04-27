@@ -1390,7 +1390,7 @@ async function initiatePayment(){
   if(window._fin   != null) sessionStorage.setItem('cls_fin',        JSON.stringify(window._fin));
 
   try {
-    const res = await fetch('/create-checkout-session', {
+    const res = await fetch(_apiUrl('/create-checkout-session'), {
       method: 'POST',
       headers: {'Content-Type':'application/json', 'X-API-Key': window._apiKey||''},
       body: JSON.stringify({
@@ -1781,7 +1781,7 @@ function submitEmail(){
   const btn = document.getElementById('btn-save-email');
   if(btn){ btn.disabled = true; btn.textContent = 'Sending…'; }
 
-  fetch('/save-email', {
+  fetch(_apiUrl('/save-email'), {
     method: 'POST',
     headers: {'Content-Type':'application/json', 'X-API-Key': window._apiKey||''},
     body: JSON.stringify({
@@ -1921,6 +1921,8 @@ document.addEventListener('DOMContentLoaded', function(){
     if(cfg.publishable_key) window._stripePK = cfg.publishable_key;
     if(cfg.api_key) window._apiKey = cfg.api_key;
   });
+
+  function _apiUrl(path){ return window._apiKey ? path+'?_k='+encodeURIComponent(window._apiKey) : path; }
 
   wire('btn-address-next', goToPropertyForm);
   wire('btn-calculate',   calculateScore);
@@ -2209,7 +2211,7 @@ async function runFullProAnalysis(overrideInputs){
   try {
     const ctrl = new AbortController();
     const t = setTimeout(()=>ctrl.abort(), 30000);
-    const res = await fetch('/api/pro-data-fast', {
+    const res = await fetch(_apiUrl('/api/pro-data-fast'), {
       method:'POST', headers:{'Content-Type':'application/json', 'X-API-Key': window._apiKey||''},
       signal: ctrl.signal,
       body: JSON.stringify({
@@ -2232,7 +2234,7 @@ async function runFullProAnalysis(overrideInputs){
     const t2 = setTimeout(()=>ctrl2.abort(), 180000);
     const mgmtKey = (overrideInputs&&(overrideInputs.mgmtSel||overrideInputs.mgmt_model_key)) ||
                     (document.getElementById('p-mgmt')&&document.getElementById('p-mgmt').value) || 'self';
-    const res2 = await fetch('/api/market-analysis', {
+    const res2 = await fetch(_apiUrl('/api/market-analysis'), {
       method:'POST', headers:{'Content-Type':'application/json', 'X-API-Key': window._apiKey||''},
       signal: ctrl2.signal,
       body: JSON.stringify({
@@ -2265,7 +2267,7 @@ async function runFullProAnalysis(overrideInputs){
   // Cache report server-side (Upstash) — only if aiData has real content
   const _aiSections = Object.keys(window._aiData || {}).filter(k => k !== 'raw' && (window._aiData||{})[k]);
   if(window._sessionId && _aiSections.length > 3){
-    fetch('/api/cache-report', {
+    fetch(_apiUrl('/api/cache-report'), {
       method: 'POST',
       headers: {'Content-Type':'application/json', 'X-API-Key': window._apiKey||''},
       body: JSON.stringify({

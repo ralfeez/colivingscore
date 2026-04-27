@@ -42,10 +42,14 @@ _RATE_WINDOW = 3600  # seconds
 
 def _check_api_key():
     """Return True if the request carries a valid internal API key.
-    Skipped (always passes) when INTERNAL_API_KEY is not configured."""
+    Skipped (always passes) when INTERNAL_API_KEY is not configured.
+    Accepts the key from the X-API-Key header OR the _k query parameter."""
     if not INTERNAL_API_KEY:
         return True
-    return request.headers.get("X-API-Key") == INTERNAL_API_KEY
+    expected = INTERNAL_API_KEY.strip()
+    incoming = (request.headers.get("X-API-Key", "") or
+                request.args.get("_k", "")).strip()
+    return incoming == expected
 
 
 def _check_rate_limit(ip: str, limit: int = 10) -> bool:
@@ -412,11 +416,13 @@ def health():
 
 @app.route("/config")
 def get_config():
-    return jsonify({
+    resp = jsonify({
         "publishable_key": STRIPE_PUBLISHABLE_KEY,
         "google_places_key": GOOGLE_PLACES_API_KEY,
         "api_key": INTERNAL_API_KEY,
     })
+    resp.headers["Cache-Control"] = "no-store"
+    return resp
 
 
 # ── Pro Analysis data routes ──────────────────────────────────────────────────
