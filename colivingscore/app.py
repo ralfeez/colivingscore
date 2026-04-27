@@ -33,10 +33,9 @@ def _cache_set(key, data, ttl=2592000):
         return
     try:
         requests.post(
-            f"{UPSTASH_REDIS_REST_URL}/set/{key}",
+            f"{UPSTASH_REDIS_REST_URL}/pipeline",
             headers={"Authorization": f"Bearer {UPSTASH_REDIS_REST_TOKEN}"},
-            json=json.dumps(data),
-            params={"ex": ttl},
+            json=[["SET", key, json.dumps(data), "EX", ttl]],
             timeout=5,
         )
     except Exception as e:

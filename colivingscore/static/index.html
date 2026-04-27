@@ -1993,14 +1993,14 @@ document.addEventListener('DOMContentLoaded', function(){
     }
     if(sd._cached){
       // Serve identical cached report — no API calls needed
-      const c = sd._cached;
+      const raw = sd._cached;
+      const c = typeof raw === 'string' ? JSON.parse(raw) : raw;
       window._fastData = c.fastData || {};
       window._aiData   = c.aiData   || {};
       window._fin      = c.fin      || {};
       window._proFin   = c.proFin   || {};
       if(c.score) window._score = c.score;
       buildReportShell();
-      generateProAnalysis(window._proInputs);
       renderPagedReport(window._fastData, window._aiData);
       showScreen('s-pro-report');
       showReportPage(1);
