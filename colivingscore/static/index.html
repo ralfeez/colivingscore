@@ -1769,6 +1769,8 @@ function getUtilityValues(){
   return {electric,gas,water,garbage,utilTotal:electric+gas+water+garbage,utilPayer:'landlord'};
 }
 
+function _apiUrl(path){ return window._apiKey ? path+'?_k='+encodeURIComponent(window._apiKey) : path; }
+
 function submitEmail(){
   const email = document.getElementById('r-email').value.trim();
   if(!email || !email.includes('@')){ alert('Please enter a valid email address.'); return; }
@@ -1921,8 +1923,6 @@ document.addEventListener('DOMContentLoaded', function(){
     if(cfg.publishable_key) window._stripePK = cfg.publishable_key;
     if(cfg.api_key) window._apiKey = cfg.api_key;
   });
-
-  function _apiUrl(path){ return window._apiKey ? path+'?_k='+encodeURIComponent(window._apiKey) : path; }
 
   wire('btn-address-next', goToPropertyForm);
   wire('btn-calculate',   calculateScore);
