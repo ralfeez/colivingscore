@@ -1073,10 +1073,11 @@ def success():
             inputs_str = m.get("cls", "") + m.get("cls2", "")
             pro_data = json.loads(inputs_str) if inputs_str else {}
 
-        # 3. Send re-access email (once per session, best-effort)
+        # 3. Send re-access email — once per session only
         customer_email = session.customer_email or m.get("_email", "") or ""
         print(f"[success] customer_email={repr(customer_email)}")
-        if customer_email:
+        emailed_flag = f"/tmp/cls_emailed_{session_id}"
+        if customer_email and not os.path.exists(emailed_flag):
             try:
                 session_url  = f"{BASE_URL}/success?session_id={session_id}"
                 address_str  = pro_data.get("_addr", pro_data.get("address", "your property"))
@@ -1086,6 +1087,8 @@ def success():
                     "subject": f"Your CoLivingScore Pro Analysis — {address_str}",
                     "html":    _build_report_access_email(customer_email, address_str, session_url),
                 })
+                open(emailed_flag, "w").close()
+                print(f"[success] email sent to {customer_email}")
             except Exception as mail_err:
                 print(f"report-access email error: {mail_err}")
 

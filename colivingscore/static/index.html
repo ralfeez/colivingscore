@@ -1394,6 +1394,7 @@ async function initiatePayment(){
       body: JSON.stringify({
         ...(window._pendingProInputs || {}),
         _email:    emailVal,
+        _score:    window._score || 0,
         _addr:     window._address || '',
         _city:     (window._place || {}).city    || '',
         _state:    (window._place || {}).state   || '',
@@ -1975,6 +1976,7 @@ document.addEventListener('DOMContentLoaded', function(){
       window._address = sd._addr;
       window._place   = { formatted_address:sd._addr, city:sd._city||'', state:sd._state||'', zip:sd._zip||'', lat:sd._lat||0, lng:sd._lng||0 };
       window._inputs  = { beds:sd._beds||4, baths:sd._baths||2, halfbaths:0, sqft:sd._sqft||0, tenant:sd._tenant||'workforce', floors:sd._floors||1, garage:sd._garage||0, transit:sd._transit||'walkable', hospital:sd._hospital||'close', rent:sd.rent||0 };
+      if(sd._score) window._score = sd._score;
     }
     runFullProAnalysis(window._proInputs);
     history.replaceState({}, '', '/');
