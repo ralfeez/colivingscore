@@ -1951,6 +1951,12 @@ document.addEventListener('DOMContentLoaded', function(){
   if(params.get('paid') === 'true' && pendingData){
     sessionStorage.removeItem('cls_pending_pro');
     window._proInputs = JSON.parse(pendingData);
+    // Extract session_id from /success localStorage handoff then clean up
+    try {
+      const _sd = JSON.parse(localStorage.getItem('cls_session_data') || '{}');
+      window._sessionId = _sd._session_id || '';
+      localStorage.removeItem('cls_session_data');
+    } catch(e){}
     const fi = sessionStorage.getItem('cls_free_inputs');
     const fs = sessionStorage.getItem('cls_free_score');
     const ff = sessionStorage.getItem('cls_fin');
