@@ -2261,8 +2261,9 @@ async function runFullProAnalysis(overrideInputs){
   showReportPage(1);
   saveReportToLocalStorage();
 
-  // Cache report server-side (Upstash) so any device can get identical data on re-access
-  if(window._sessionId){
+  // Cache report server-side (Upstash) — only if aiData has real content
+  const _aiSections = Object.keys(window._aiData || {}).filter(k => k !== 'raw' && (window._aiData||{})[k]);
+  if(window._sessionId && _aiSections.length > 3){
     fetch('/api/cache-report', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
