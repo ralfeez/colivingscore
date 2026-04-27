@@ -692,7 +692,7 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
       <div class="field-grid">
         <div class="field">
           <label>Monthly mortgage (P&amp;I only) <span class="req">*</span><span class="tip" data-tip="Enter principal &amp; interest only. Taxes and insurance are entered in the fields below.">?</span></label>
-          <input type="number" id="p-mortgage" placeholder="e.g. 1800">
+          <input type="number" id="p-mortgage" placeholder="e.g. 1800" class="input-required">
         </div>
         <div class="field">
           <label>Annual property taxes</label>
@@ -1938,6 +1938,9 @@ document.addEventListener('DOMContentLoaded', function(){
     const valid = this.value.trim().includes('@') && this.value.trim().length > 3;
     this.classList.toggle('input-required', !valid);
     document.getElementById('btn-pay').disabled = !valid;
+  });
+  document.getElementById('p-mortgage').addEventListener('input', function(){
+    this.classList.toggle('input-required', !this.value.trim());
   });
 
   // If returning from Stripe payment success, auto-run Pro Analysis
