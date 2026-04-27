@@ -981,15 +981,16 @@ def create_checkout_session():
 
         # Persist inputs in Stripe metadata (survives Render redeploys)
         # Values capped at 490 chars; split into two keys if needed
+        customer_email = data.get("_email", "").strip()
         inputs_str = json.dumps(data)
-        meta = {}
+        meta = {"_email": customer_email}
         if len(inputs_str) <= 490:
             meta["cls"] = inputs_str
         else:
             meta["cls"]  = inputs_str[:490]
             meta["cls2"] = inputs_str[490:980]
 
-        session = stripe.checkout.Session.create(
+        session_kwargs = dict(
             payment_method_types=["card"],
             line_items=[{
                 "price_data": {
@@ -1007,6 +1008,9 @@ def create_checkout_session():
             success_url=BASE_URL + "/success?session_id={CHECKOUT_SESSION_ID}",
             cancel_url=BASE_URL + "/?cancelled=true",
         )
+        if customer_email:
+            session_kwargs["customer_email"] = customer_email
+        session = stripe.checkout.Session.create(**session_kwargs)
 
         # Also write to tmp file for fast same-session retrieval
         tmp_path = f"/tmp/cls_{session.id}.json"
@@ -1059,18 +1063,19 @@ def success():
             return redirect("/?payment_failed=true")
 
         # 1. Try fast tmp file first
+        m = session.metadata or {}
         tmp_path = f"/tmp/cls_{session_id}.json"
         if os.path.exists(tmp_path):
             with open(tmp_path, "r") as f:
                 pro_data = json.load(f)
         else:
             # 2. Fall back to Stripe metadata (survives redeploys)
-            m = session.metadata or {}
             inputs_str = m.get("cls", "") + m.get("cls2", "")
             pro_data = json.loads(inputs_str) if inputs_str else {}
 
         # 3. Send re-access email (once per session, best-effort)
-        customer_email = session.customer_email or ""
+        customer_email = session.customer_email or m.get("_email", "") or ""
+        print(f"[success] customer_email={repr(customer_email)}")
         if customer_email:
             try:
                 session_url  = f"{BASE_URL}/success?session_id={session_id}"

@@ -633,11 +633,11 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
 
     <!-- Email gate -->
     <div class="email-gate" id="r-email-gate">
-      <h4>Save your score & get the full report</h4>
-      <p>Enter your email to save this analysis and receive co-living tips for your market.</p>
+      <h4>Download your free score report</h4>
+      <p>Enter your email to receive a copy of your CoLivingScore analysis.</p>
       <div class="email-row">
         <input type="email" id="r-email" placeholder="your@email.com">
-        <button class="btn-primary" id="btn-save-email">Save Score</button>
+        <button class="btn-primary" id="btn-save-email">Send My Score</button>
       </div>
       <div class="text-xs text-muted mt-4">No spam. Unsubscribe anytime.</div>
     </div>
@@ -841,6 +841,14 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
     <div class="card">
       <div class="card-title">Income & Expense Inputs</div>
       <div id="rv-financials" style="margin-top:4px"></div>
+    </div>
+
+    <div class="card" style="padding:20px">
+      <div class="card-title">Where should we send your report?</div>
+      <div style="margin-top:10px">
+        <input type="email" id="rv-email" placeholder="your@email.com" style="width:100%;box-sizing:border-box">
+        <div style="font-size:11.5px;color:var(--gray-500);margin-top:6px">We'll email you a link to re-access your report from any device.</div>
+      </div>
     </div>
 
     <div class="card" style="text-align:center;padding:28px;background:linear-gradient(135deg,#0D2818 0%,#0D6B52 100%)">
@@ -1359,6 +1367,11 @@ function showReviewScreen(){
 async function initiatePayment(){
   const statusEl = document.getElementById('pay-status');
   const btn = document.getElementById('btn-pay');
+  const emailVal = (document.getElementById('rv-email').value || '').trim();
+  if(!emailVal || !emailVal.includes('@')){
+    statusEl.textContent = 'Please enter a valid email address above.';
+    return;
+  }
   btn.disabled = true;
   btn.textContent = 'Connecting to payment...';
   statusEl.textContent = '';
@@ -1379,6 +1392,7 @@ async function initiatePayment(){
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({
         ...(window._pendingProInputs || {}),
+        _email:    emailVal,
         _addr:     window._address || '',
         _city:     (window._place || {}).city    || '',
         _state:    (window._place || {}).state   || '',
