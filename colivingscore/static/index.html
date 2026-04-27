@@ -1974,14 +1974,30 @@ document.addEventListener('DOMContentLoaded', function(){
   if(params.get('paid') === 'true' && sessionData && !pendingData){
     localStorage.removeItem('cls_session_data');
     const sd = JSON.parse(sessionData);
-    window._proInputs = sd;
+    window._proInputs  = sd;
+    window._sessionId  = sd._session_id || '';
     if(sd._addr){
       window._address = sd._addr;
       window._place   = { formatted_address:sd._addr, city:sd._city||'', state:sd._state||'', zip:sd._zip||'', lat:sd._lat||0, lng:sd._lng||0 };
       window._inputs  = { beds:sd._beds||4, baths:sd._baths||2, halfbaths:0, sqft:sd._sqft||0, tenant:sd._tenant||'workforce', floors:sd._floors||1, garage:sd._garage||0, transit:sd._transit||'walkable', hospital:sd._hospital||'close', rent:sd.rent||0 };
       if(sd._score) window._score = sd._score;
     }
-    runFullProAnalysis(window._proInputs);
+    if(sd._cached){
+      // Serve identical cached report — no API calls needed
+      const c = sd._cached;
+      window._fastData = c.fastData || {};
+      window._aiData   = c.aiData   || {};
+      window._fin      = c.fin      || {};
+      window._proFin   = c.proFin   || {};
+      if(c.score) window._score = c.score;
+      buildReportShell();
+      generateProAnalysis(window._proInputs);
+      renderPagedReport(window._fastData, window._aiData);
+      showScreen('s-pro-report');
+      showReportPage(1);
+    } else {
+      runFullProAnalysis(window._proInputs);
+    }
     history.replaceState({}, '', '/');
   }
 
@@ -2235,6 +2251,22 @@ async function runFullProAnalysis(overrideInputs){
   showScreen('s-pro-report');
   showReportPage(1);
   saveReportToLocalStorage();
+
+  // Cache report server-side (Upstash) so any device can get identical data on re-access
+  if(window._sessionId){
+    fetch('/api/cache-report', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        session_id: window._sessionId,
+        fastData:   window._fastData || {},
+        aiData:     window._aiData   || {},
+        fin:        window._fin      || {},
+        proFin:     window._proFin   || {},
+        score:      window._score    || 0,
+      })
+    }).catch(()=>{});
+  }
 }
 
 // ── PAGE-BY-PAGE RENDERER ─────────────────────────────────────────────────────

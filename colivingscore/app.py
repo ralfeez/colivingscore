@@ -21,9 +21,42 @@ BASE_URL = os.environ.get("BASE_URL", "https://colivingscore.onrender.com")
 SHEET_ID = "14JS4z9w5S1Ar0oNhusxegVMz-jdf1e55dbGh1UqBXyc"
 resend.api_key = os.environ.get("RESEND_API_KEY", "")
 GOOGLE_PLACES_API_KEY = os.environ.get("GOOGLE_PLACES_API_KEY", "")
-RENTCAST_API_KEY      = os.environ.get("RENTCAST_API_KEY", "")
-ANTHROPIC_API_KEY     = os.environ.get("ANTHROPIC_API_KEY", "")
-WALKSCORE_API_KEY     = os.environ.get("WALKSCORE_API_KEY", "")
+RENTCAST_API_KEY         = os.environ.get("RENTCAST_API_KEY", "")
+ANTHROPIC_API_KEY        = os.environ.get("ANTHROPIC_API_KEY", "")
+WALKSCORE_API_KEY        = os.environ.get("WALKSCORE_API_KEY", "")
+UPSTASH_REDIS_REST_URL   = os.environ.get("UPSTASH_REDIS_REST_URL", "")
+UPSTASH_REDIS_REST_TOKEN = os.environ.get("UPSTASH_REDIS_REST_TOKEN", "")
+
+
+def _cache_set(key, data, ttl=2592000):
+    if not UPSTASH_REDIS_REST_URL:
+        return
+    try:
+        requests.post(
+            f"{UPSTASH_REDIS_REST_URL}/set/{key}",
+            headers={"Authorization": f"Bearer {UPSTASH_REDIS_REST_TOKEN}"},
+            json=json.dumps(data),
+            params={"ex": ttl},
+            timeout=5,
+        )
+    except Exception as e:
+        print(f"cache set error: {e}")
+
+
+def _cache_get(key):
+    if not UPSTASH_REDIS_REST_URL:
+        return None
+    try:
+        r = requests.get(
+            f"{UPSTASH_REDIS_REST_URL}/get/{key}",
+            headers={"Authorization": f"Bearer {UPSTASH_REDIS_REST_TOKEN}"},
+            timeout=5,
+        )
+        result = r.json().get("result")
+        return json.loads(result) if result else None
+    except Exception as e:
+        print(f"cache get error: {e}")
+        return None
 
 
 def _get_sheet():
@@ -718,7 +751,7 @@ def api_market_analysis():
 
         response = client.messages.create(
             model="claude-sonnet-4-6",
-            max_tokens=16000,
+            max_tokens=10000,
             messages=[{"role": "user", "content": prompt}],
         )
         full_text = ""
@@ -972,6 +1005,29 @@ def api_pro_data():
         return jsonify({"error": str(e)}), 500
 
 
+# ── Report cache (Upstash Redis) ─────────────────────────────────────────────
+
+@app.route("/api/cache-report", methods=["POST"])
+def cache_report():
+    try:
+        data       = request.get_json(force=True)
+        session_id = data.get("session_id", "")
+        if not session_id:
+            return jsonify({"error": "missing session_id"}), 400
+        payload = {
+            "fastData": data.get("fastData", {}),
+            "aiData":   data.get("aiData",   {}),
+            "fin":      data.get("fin",      {}),
+            "proFin":   data.get("proFin",   {}),
+            "score":    data.get("score",    0),
+        }
+        _cache_set(f"cls_{session_id}", payload)
+        return jsonify({"ok": True})
+    except Exception as e:
+        print(f"cache-report error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
 # ── Create Stripe Checkout session ────────────────────────────────────────────
 
 @app.route("/create-checkout-session", methods=["POST"])
@@ -1092,7 +1148,14 @@ def success():
             except Exception as mail_err:
                 print(f"report-access email error: {mail_err}")
 
-        # 4. Pass data to frontend via localStorage (works from any browser/device)
+        # 4. Attach session_id and any cached report data
+        pro_data["_session_id"] = session_id
+        cached = _cache_get(f"cls_{session_id}")
+        if cached:
+            pro_data["_cached"] = cached
+            print(f"[success] serving cached report for {session_id}")
+
+        # 5. Pass data to frontend via localStorage (works from any browser/device)
         pro_data_json = json.dumps(pro_data).replace("</", "<\\/")
         html = f"""<!DOCTYPE html>
 <html><head><meta charset="UTF-8">
