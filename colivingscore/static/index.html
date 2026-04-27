@@ -172,6 +172,7 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
 .pro-price span{font-size:13px;font-weight:400;opacity:0.65}
 .btn-pro{height:44px;padding:0 30px;background:var(--white);color:var(--green-dark);border:none;border-radius:var(--radius);font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer;transition:all 0.15s;letter-spacing:-0.1px}
 .btn-pro:hover{background:var(--green-light);transform:translateY(-1px)}
+.btn-pro:disabled{opacity:0.4;cursor:not-allowed;transform:none}
 
 /* ── EMAIL GATE ── */
 .email-gate{background:var(--gray-50);border:var(--border);border-radius:var(--radius-lg);padding:18px;text-align:center;margin-bottom:14px}
@@ -865,7 +866,7 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
         <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--green-mid)">✓</span>Platform vs. Self-Managed</div>
         <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--green-mid)">✓</span>Downloadable PDF Report</div>
       </div>
-      <button class="btn-pro" style="height:50px;font-size:16px;padding:0 40px" id="btn-pay">
+      <button class="btn-pro" style="height:50px;font-size:16px;padding:0 40px" id="btn-pay" disabled>
         Looks Good — Pay $29 →
       </button>
       <div style="font-size:12px;color:rgba(255,255,255,0.55);margin-top:8px">Report takes 2–4 minutes to build after payment</div>
@@ -1930,6 +1931,10 @@ document.addEventListener('DOMContentLoaded', function(){
   wire('btn-pdf-hdr',     downloadPDF);
   wire('btn-back-pro',    function(){ showScreen('s-result'); });
   wire('btn-pay',         initiatePayment);
+  document.getElementById('rv-email').addEventListener('input', function(){
+    const valid = this.value.trim().includes('@') && this.value.trim().length > 3;
+    document.getElementById('btn-pay').disabled = !valid;
+  });
 
   // If returning from Stripe payment success, auto-run Pro Analysis
   const params = new URLSearchParams(window.location.search);
