@@ -108,9 +108,22 @@ def _get_sheet():
 
 # ── Static tool ───────────────────────────────────────────────────────────────
 
+def _is_mobile():
+    """Return True if request should be served the mobile version.
+    ?mobile=1 forces mobile; ?mobile=0 forces desktop; otherwise uses User-Agent."""
+    override = request.args.get("mobile")
+    if override == "1":
+        return True
+    if override == "0":
+        return False
+    ua = request.headers.get("User-Agent", "")
+    return any(k in ua for k in ("Android", "iPhone", "iPad", "Mobile"))
+
+
 @app.route("/")
 def index():
-    return send_from_directory("static", "index.html")
+    filename = "index-mobile.html" if _is_mobile() else "index.html"
+    return send_from_directory("static", filename)
 
 
 # ── PDF generation endpoint ───────────────────────────────────────────────────
