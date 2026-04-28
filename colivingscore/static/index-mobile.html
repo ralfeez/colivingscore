@@ -402,6 +402,28 @@ input, select, button { font-size: 16px !important; } /* prevent iOS zoom on foc
 .addr-input-row input { width: 100%; box-sizing: border-box; font-size: 16px !important; padding: 14px 16px; }
 .btn-addr { width: 100%; padding: 14px; font-size: 15px; }
 #restore-banner { margin: 0 16px 16px; }
+
+/* ══ SCREEN 1: STEPPED FORM ══ */
+.step-indicator { display: flex; align-items: center; padding: 16px 20px 4px; gap: 0; }
+.step-dot { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+.step-dot.done { background: var(--green); color: #0a2416; }
+.step-dot.active { background: white; color: #0a2416; }
+.step-dot.future { background: #2a2f2c; color: #666; }
+.step-line { flex: 1; height: 2px; }
+.step-line.done { background: var(--green); }
+.step-line.future { background: #2a2f2c; }
+.step-panel { display: none; padding: 16px 20px; }
+.step-panel.active { display: block; }
+.step-heading { font-size: 17px; font-weight: 800; color: white; margin-bottom: 2px; }
+.step-sub { font-size: 12px; color: rgba(255,255,255,0.45); margin-bottom: 16px; }
+.step-field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.step-field { display: flex; flex-direction: column; gap: 4px; }
+.step-field.full { grid-column: 1 / -1; }
+.step-field label { font-size: 12px; color: rgba(255,255,255,0.65); font-weight: 600; }
+.step-field select, .step-field input { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; padding: 10px 12px; color: white; font-size: 16px !important; font-family: var(--font); width: 100%; box-sizing: border-box; }
+.step-continue { width: 100%; padding: 14px; background: var(--green); color: #0a2416; font-size: 15px; font-weight: 800; border: none; border-radius: 8px; cursor: pointer; font-family: var(--font); margin-top: 8px; }
+.step-back { display: block; text-align: center; font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 12px; cursor: pointer; background: none; border: none; width: 100%; font-family: var(--font); }
+.step-assumption { font-size: 11px; color: rgba(255,255,255,0.35); line-height: 1.5; padding: 10px 12px; background: rgba(255,255,255,0.04); border-radius: 6px; margin-bottom: 12px; }
 </style>
 </head>
 <body>
@@ -446,61 +468,49 @@ input, select, button { font-size: 16px !important; } /* prevent iOS zoom on foc
     <div class="addr-strip">
       <div class="addr-text" id="addr-form" style="color:rgba(255,255,255,0.75)"></div>
     </div>
-    <div class="card">
-      <div class="card-title">Score your property for co-living</div>
-      <div class="card-sub">Enter the property details to get your free suitability score.</div>
+    <div class="step-indicator" id="form-step-indicator">
+      <div class="step-dot active" id="sdot-1">1</div>
+      <div class="step-line future" id="sline-1"></div>
+      <div class="step-dot future" id="sdot-2">2</div>
+      <div class="step-line future" id="sline-2"></div>
+      <div class="step-dot future" id="sdot-3">3</div>
+    </div>
 
-      <div class="field-grid">
-        <div class="field">
-          <label>Bedrooms <span class="req">*</span><span class="tip" data-tip="Minimum recommended bedroom size: 70 sq ft with a 7 ft or higher ceiling and a legal egress window. Local regulations may also apply — verify requirements in your area before converting or adding bedrooms. This tool cannot verify individual room sizes from total square footage alone.">?</span></label>
+    <!-- Step 1: Property Basics -->
+    <div class="step-panel active" id="step-1">
+      <div class="step-heading">Property Basics</div>
+      <div class="step-sub">Rooms, size, and layout</div>
+      <div class="step-field-grid">
+        <div class="step-field">
+          <label>Bedrooms <span class="req">*</span></label>
           <select id="f-beds">
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5" selected>5</option>
-            <option value="6">6</option>
-            <option value="7">7</option>
-            <option value="8">8</option>
-            <option value="9">9</option>
-            <option value="10">10</option>
-            <option value="11">11</option>
-            <option value="12">12</option>
+            <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+            <option value="4">4</option><option value="5" selected>5</option><option value="6">6</option>
+            <option value="7">7</option><option value="8">8</option><option value="9">9</option>
+            <option value="10">10</option><option value="11">11</option><option value="12">12</option>
           </select>
         </div>
-        <div class="field">
+        <div class="step-field">
           <label>Bathrooms <span class="req">*</span></label>
           <select id="f-baths">
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3" selected>3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-            <option value="6">6</option>
-            <option value="7">7</option>
-            <option value="8">8</option>
-            <option value="9">9</option>
-            <option value="10">10</option>
-            <option value="11">11</option>
-            <option value="12">12</option>
+            <option value="1">1</option><option value="2">2</option><option value="3" selected>3</option>
+            <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+            <option value="7">7</option><option value="8">8</option><option value="9">9</option>
+            <option value="10">10</option><option value="11">11</option><option value="12">12</option>
           </select>
         </div>
-        <div class="field">
+        <div class="step-field">
           <label>Half Baths</label>
           <select id="f-halfbaths">
-            <option value="0" selected>None</option>
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
+            <option value="0" selected>None</option><option value="1">1</option>
+            <option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
           </select>
         </div>
-        <div class="field">
-          <label>Square footage <span class="req">*</span></label>
+        <div class="step-field">
+          <label>Sq Footage <span class="req">*</span></label>
           <input type="number" id="f-sqft" value="2480" min="500" max="10000">
         </div>
-        <div class="field">
+        <div class="step-field">
           <label>Stories</label>
           <select id="f-floors">
             <option value="1" selected>1 story</option>
@@ -508,43 +518,55 @@ input, select, button { font-size: 16px !important; } /* prevent iOS zoom on foc
             <option value="3">3 stories</option>
           </select>
         </div>
-        <div class="field">
-          <label>Garage spaces</label>
+        <div class="step-field">
+          <label>Laundry</label>
+          <select id="f-laundry">
+            <option value="provided" selected>In-home W/D</option>
+            <option value="pay">In-home coin-op</option>
+            <option value="none">None</option>
+          </select>
+        </div>
+      </div>
+      <button class="step-continue" onclick="goToStep(2)">Continue →</button>
+      <button class="step-back" onclick="showScreen('s-address')">← Back to address</button>
+    </div>
+
+    <!-- Step 2: Parking & Location -->
+    <div class="step-panel" id="step-2">
+      <div class="step-heading">Parking &amp; Location</div>
+      <div class="step-sub">Parking, HOA, and proximity</div>
+      <div class="step-field-grid">
+        <div class="step-field">
+          <label>Garage</label>
           <select id="f-garage">
-            <option value="0">None</option>
-            <option value="1">1 car</option>
-            <option value="2" selected>2 car</option>
-            <option value="3">3 car</option>
+            <option value="0">None</option><option value="1">1 car</option>
+            <option value="2" selected>2 car</option><option value="3">3 car</option>
           </select>
         </div>
-        <div class="field">
-          <label>Carport spaces</label>
+        <div class="step-field">
+          <label>Carport</label>
           <select id="f-carport">
-            <option value="0" selected>None</option>
-            <option value="1">1</option>
-            <option value="2">2</option>
+            <option value="0" selected>None</option><option value="1">1</option><option value="2">2</option>
           </select>
         </div>
-        <div class="field">
-          <label>Uncovered off street spaces</label>
+        <div class="step-field">
+          <label>Uncovered</label>
           <select id="f-uncovered">
-            <option value="0" selected>None</option>
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3+</option>
+            <option value="0" selected>None</option><option value="1">1</option>
+            <option value="2">2</option><option value="3">3+</option>
           </select>
         </div>
-        <div class="field">
-          <label>HOA status <span class="req">*</span></label>
+        <div class="step-field">
+          <label>HOA Status <span class="req">*</span></label>
           <select id="f-hoa">
             <option value="none" selected>No HOA</option>
-            <option value="permits">HOA — permits rentals</option>
-            <option value="unclear">HOA — rules unclear</option>
-            <option value="prohibits">HOA — prohibits rentals</option>
+            <option value="permits">HOA — permits</option>
+            <option value="unclear">HOA — unclear</option>
+            <option value="prohibits">HOA — prohibits</option>
           </select>
         </div>
-        <div class="field">
-          <label>Transit proximity</label>
+        <div class="step-field">
+          <label>Transit</label>
           <select id="f-transit">
             <option value="walkable" selected>Under 0.5 mi</option>
             <option value="close">0.5 – 1 mi</option>
@@ -552,28 +574,30 @@ input, select, button { font-size: 16px !important; } /* prevent iOS zoom on foc
             <option value="far">Over 3 mi</option>
           </select>
         </div>
-        <div class="field">
-          <label>Hospital proximity</label>
+        <div class="step-field">
+          <label>Hospital</label>
           <select id="f-hospital">
             <option value="close" selected>Under 2 mi</option>
             <option value="moderate">2 – 5 mi</option>
             <option value="far">Over 5 mi</option>
           </select>
         </div>
-        <div class="field">
-          <label>Monthly mortgage (PITI)</label>
+      </div>
+      <button class="step-continue" onclick="goToStep(3)">Continue →</button>
+      <button class="step-back" onclick="goToStep(1)">← Back</button>
+    </div>
+
+    <!-- Step 3: Financials & Tenant -->
+    <div class="step-panel" id="step-3">
+      <div class="step-heading">Financials &amp; Tenant</div>
+      <div class="step-sub">Mortgage and target market</div>
+      <div class="step-field-grid">
+        <div class="step-field full">
+          <label>Monthly Mortgage (PITI)</label>
           <input type="number" id="f-mortgage" value="2850" min="0">
         </div>
-        <div class="field">
-          <label>Laundry</label>
-          <select id="f-laundry">
-            <option value="provided" selected>In-home W/D provided</option>
-            <option value="pay">In-home pay / coin-op</option>
-            <option value="none">None</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>Target tenant type <span class="req">*</span></label>
+        <div class="step-field full">
+          <label>Target Tenant Type <span class="req">*</span></label>
           <select id="f-tenant" onchange="updateRentDefault()">
             <option value="nurses" selected>Travel Nurses</option>
             <option value="tech">Tech / Remote Workers</option>
@@ -584,19 +608,16 @@ input, select, button { font-size: 16px !important; } /* prevent iOS zoom on foc
             <option value="workforce">General Workforce</option>
           </select>
         </div>
-        <div class="field">
-          <label>Target rent per room / month <span class="req">*</span></label>
+        <div class="step-field full">
+          <label>Rent Per Room / Month <span class="req">*</span></label>
           <input type="number" id="f-rent" value="1100" min="0">
-          <div class="field-hint">Default based on tenant type — adjust for your market</div>
+          <div class="field-hint" style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:4px">Default based on tenant type — adjust for your market</div>
         </div>
-        <div class="field-full" id="f-tenant-note" style="display:none"></div>
+        <div class="step-field full" id="f-tenant-note" style="display:none"></div>
       </div>
-
-      <div class="assumption-notice"><strong>Note:</strong> Results assume you have already verified local zoning and occupancy requirements and that the home is in good to excellent condition. Any legal fees, permits, repairs, or seasonal occupancy shifts should be factored into your decision before proceeding.</div>
-
-      <div class="btn-row">
-        <button class="btn-primary" id="btn-calculate">Calculate Score →</button>
-      </div>
+      <div class="step-assumption">Results assume you have already verified local zoning and occupancy requirements and that the home is in good to excellent condition.</div>
+      <button class="step-continue" id="btn-calculate" onclick="calculateScore()">Calculate Score →</button>
+      <button class="step-back" onclick="goToStep(2)">← Back</button>
     </div>
   </div>
 
@@ -1926,6 +1947,31 @@ window.initAutocomplete = function(){
   });
 };
 
+// ── STEPPED FORM NAVIGATION ──────────────────────────────────────────────────
+function goToStep(n) {
+  // Hide all panels
+  document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+  // Show target panel
+  const panel = document.getElementById('step-' + n);
+  if (panel) panel.classList.add('active');
+
+  // Update step indicator dots and lines
+  for (let i = 1; i <= 3; i++) {
+    const dot  = document.getElementById('sdot-' + i);
+    const line = document.getElementById('sline-' + i);
+    if (!dot) continue;
+    dot.classList.remove('done', 'active', 'future');
+    if (i < n)       { dot.classList.add('done');   dot.textContent = '✓'; }
+    else if (i === n){ dot.classList.add('active');  dot.textContent = String(i); }
+    else             { dot.classList.add('future');  dot.textContent = String(i); }
+    if (line) {
+      line.classList.remove('done', 'future');
+      line.classList.add(i < n ? 'done' : 'future');
+    }
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 // ── WIRE BUTTONS ─────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function(){
   const wire = (id, fn) => { const el = document.getElementById(id); if(el) el.addEventListener('click', fn); };
@@ -1943,7 +1989,6 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 
   wire('btn-address-next', goToPropertyForm);
-  wire('btn-calculate',   calculateScore);
   wire('btn-pro-generate', showReviewScreen);
   wire('btn-pro-cancel',  function(){ showScreen('s-result'); });
   wire('btn-reset-1',     resetForm);
