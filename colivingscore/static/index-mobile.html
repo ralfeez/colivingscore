@@ -1862,13 +1862,6 @@ function showScreen(id){
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
-function goToStep(n){
-  const screens = {1:'s-address',2:'s-form',3:'s-result'};
-  const el = document.getElementById('step'+n);
-  if(!el || !el.classList.contains('done')) return;
-  showScreen(screens[n]);
-  setStep(n);
-}
 
 function setStep(n){
   ['step1','step2','step3','step4'].forEach((id,i)=>{
