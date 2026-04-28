@@ -2148,6 +2148,26 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   checkForSavedReport();
+
+  // Swipe gestures on Pro report
+  (function() {
+    let touchStartX = 0;
+    let touchStartY = 0;
+    const rpt = document.getElementById('s-pro-report');
+    if (!rpt) return;
+    rpt.addEventListener('touchstart', function(e) {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+    rpt.addEventListener('touchend', function(e) {
+      const dx = e.changedTouches[0].clientX - touchStartX;
+      const dy = e.changedTouches[0].clientY - touchStartY;
+      if (Math.abs(dx) < 50) return;          // too short
+      if (Math.abs(dy) > Math.abs(dx)) return; // vertical scroll, ignore
+      if (dx < 0) nextReportPage();
+      else        prevReportPage();
+    }, { passive: true });
+  })();
 });
 
 // ── LOADING SCREEN ────────────────────────────────────────────────────────────
