@@ -438,6 +438,28 @@ input, select, button { font-size: 16px !important; } /* prevent iOS zoom on foc
 /* Secondary actions as text links */
 .mobile-secondary-actions { display: flex; justify-content: center; gap: 24px; padding: 8px 16px 20px; }
 .mobile-secondary-actions a { font-size: 13px; color: rgba(255,255,255,0.5); cursor: pointer; text-decoration: none; }
+/* ══ SCREEN 3: PRO FORM ══ */
+.util-group { margin: 0 16px 12px; }
+.field-grid { grid-template-columns: 1fr; }
+#s-pro-form .card { padding: 20px 16px; }
+#s-pro-form .btn-row { padding: 0 16px 20px; }
+
+/* ══ SCREEN 4: REVIEW ══ */
+#s-review .card { padding: 20px 16px; }
+/* Make the yellow confirm banner larger and full-bleed on mobile */
+#s-review > div[style*="fef3c7"] {
+  margin: 0 0 8px;
+  border-left: none;
+  border-right: none;
+  border-radius: 0;
+  padding: 16px 20px;
+}
+#s-review > div[style*="fef3c7"] div[style*="font-size:14px"] {
+  font-size: 16px !important;
+  font-weight: 800 !important;
+}
+#s-review .btn-row { flex-direction: column; gap: 10px; padding: 0 16px 20px; }
+#s-review .btn-row button { width: 100%; }
 </style>
 </head>
 <body>
