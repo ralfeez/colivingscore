@@ -460,6 +460,35 @@ input, select, button { font-size: 16px !important; } /* prevent iOS zoom on foc
 }
 #s-review .btn-row { flex-direction: column; gap: 10px; padding: 0 16px 20px; }
 #s-review .btn-row button { width: 100%; }
+/* ══ SCREEN 6: PRO REPORT ══ */
+.rpt-nav { display: none !important; }
+.mobile-rpt-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px 6px;
+  background: white;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border-bottom: 1px solid var(--gray-100);
+}
+.mobile-rpt-nav-arrow {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--dark);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font);
+  padding: 6px 10px;
+}
+.mobile-rpt-nav-arrow:disabled { color: var(--gray-300); cursor: default; }
+.mobile-rpt-counter { text-align: center; flex: 1; }
+.mobile-rpt-counter-text { font-size: 13px; font-weight: 700; color: var(--gray-900); }
+.mobile-rpt-counter-name { font-size: 10px; color: var(--gray-400); margin-top: 1px; }
+.mobile-rpt-swipe-hint { text-align: center; font-size: 10px; color: var(--gray-300); padding-bottom: 4px; background: white; }
+.rpt-page-body { overflow-x: auto; }
 </style>
 </head>
 <body>
@@ -1029,6 +1058,15 @@ input, select, button { font-size: 16px !important; } /* prevent iOS zoom on foc
 
   <!-- ══ SCREEN 6: FULL PRO REPORT ══ -->
   <div class="screen" id="s-pro-report">
+    <div class="mobile-rpt-nav" id="mobile-rpt-nav">
+      <button class="mobile-rpt-nav-arrow" id="mobile-rpt-prev" onclick="prevReportPage()" disabled>← Prev</button>
+      <div class="mobile-rpt-counter">
+        <div class="mobile-rpt-counter-text" id="mobile-rpt-counter-text">Page 1 of 16</div>
+        <div class="mobile-rpt-counter-name" id="mobile-rpt-counter-name">Overview</div>
+      </div>
+      <button class="mobile-rpt-nav-arrow" id="mobile-rpt-next" onclick="nextReportPage()">Next →</button>
+    </div>
+    <div class="mobile-rpt-swipe-hint">swipe left or right to navigate</div>
     <div class="addr-strip">
       <div class="addr-text">Pro Analysis — <span id="rpt-addr" style="color:#4DBF8F"></span></div>
       <div style="display:flex;gap:8px;align-items:center">
@@ -2253,6 +2291,16 @@ function showReportPage(n){
   if(btn){ btn.classList.add('active'); btn.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'}); }
   const rpt = document.getElementById('s-pro-report');
   if(rpt) window.scrollTo({top: rpt.offsetTop - 60, behavior:'smooth'});
+  // Mobile counter sync
+  const counterText = document.getElementById('mobile-rpt-counter-text');
+  const counterName = document.getElementById('mobile-rpt-counter-name');
+  const prevBtn     = document.getElementById('mobile-rpt-prev');
+  const nextBtn     = document.getElementById('mobile-rpt-next');
+  const pageData    = RPT_PAGES.find(p => p[0] === n);
+  if (counterText) counterText.textContent = `Page ${n} of 16`;
+  if (counterName && pageData) counterName.textContent = pageData[2]; // full page title
+  if (prevBtn) prevBtn.disabled = (n === 1);
+  if (nextBtn) nextBtn.disabled = (n === 16);
 }
 function prevReportPage(){ if(_rptPage>1)  showReportPage(_rptPage-1); }
 function nextReportPage(){ if(_rptPage<16) showReportPage(_rptPage+1); }
