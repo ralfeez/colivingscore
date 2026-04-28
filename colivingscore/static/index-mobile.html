@@ -1,0 +1,2768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>CoLivingScore.com — Property Score & Analysis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --green:#1D9E75;--green-light:#EAF3DE;--green-dark:#0D6B52;--green-mid:#4DBF8F;
+  --navy:#1A3D5C;--red:#E24B4A;--red-light:#FCEBEB;--amber:#D97706;--amber-light:#FAEEDA;
+  --dark:#1C2B22;
+  --gray-900:#0F1A14;--gray-800:#1C2B22;--gray-700:#374151;--gray-600:#4B5563;
+  --gray-500:#6B7280;--gray-400:#9CA3AF;--gray-300:#D1D5DB;--gray-200:#E5E7EB;
+  --gray-100:#F3F4F6;--gray-50:#F9FAFB;--white:#ffffff;
+  --radius:6px;--radius-lg:10px;--radius-xl:16px;
+  --font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+  --shadow:0 1px 2px rgba(0,0,0,0.06);
+  --shadow-md:0 2px 8px rgba(0,0,0,0.08);
+  --shadow-lg:0 8px 24px rgba(0,0,0,0.10);
+  --border:1px solid var(--gray-200);
+}
+/* ── TOOLTIPS ── */
+.tip{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:var(--gray-300);color:var(--gray-600);font-size:9px;font-weight:700;cursor:help;position:relative;margin-left:4px;vertical-align:middle;flex-shrink:0}
+.tip:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--gray-900);color:#fff;font-size:11px;font-weight:400;line-height:1.5;padding:8px 10px;border-radius:6px;white-space:normal;width:230px;z-index:300;pointer-events:none;box-shadow:var(--shadow-md)}
+.tip:hover::before{content:'';position:absolute;bottom:calc(100% + 2px);left:50%;transform:translateX(-50%);border:4px solid transparent;border-top-color:var(--gray-900);z-index:300}
+/* ── ASSUMPTION NOTICE ── */
+.assumption-notice{margin-top:14px;padding:10px 12px;background:var(--amber-light);border:1px solid #E8C87A;border-radius:var(--radius);font-size:11.5px;color:var(--gray-700);line-height:1.5}
+body{font-family:var(--font);background:#EEF2EE;color:var(--gray-900);min-height:100vh;font-size:14px;line-height:1.6}
+
+/* ── HEADER ── */
+header{background:var(--gray-900);padding:0 28px;height:50px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.logo{font-size:16px;font-weight:500;color:var(--white);letter-spacing:-0.2px}
+.logo span{color:var(--green-mid)}
+.logo-sub{font-size:11px;color:var(--gray-500);margin-left:6px;font-weight:400}
+.header-badge{font-size:11px;background:rgba(77,191,143,0.12);color:var(--green-mid);padding:3px 10px;border-radius:20px;border:1px solid rgba(77,191,143,0.2);letter-spacing:0.2px}
+
+/* ── LAYOUT ── */
+.container{max-width:700px;margin:0 auto;padding:28px 20px 80px}
+
+/* ── STEPS ── */
+.steps{display:flex;align-items:center;margin-bottom:24px}
+.step{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--gray-400);font-weight:400;white-space:nowrap}
+.step.active{color:var(--gray-900);font-weight:500}
+.step.done{color:var(--green)}
+.step-dot{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--gray-300);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;background:var(--white);color:var(--gray-400);flex-shrink:0;transition:all 0.2s}
+.step.active .step-dot{border-color:var(--gray-900);background:var(--gray-900);color:var(--white)}
+.step.done .step-dot{border-color:var(--green);background:var(--green);color:var(--white)}
+.step.done{cursor:pointer}
+.step.done:hover .step-dot{opacity:0.8}
+.step-line{flex:1;height:1px;background:var(--gray-200);margin:0 10px}
+
+/* ── CARDS ── */
+.card{background:var(--white);border:var(--border);border-radius:var(--radius-lg);padding:22px;margin-bottom:14px;box-shadow:var(--shadow)}
+.card-title{font-size:15px;font-weight:600;color:var(--gray-900);margin-bottom:3px;letter-spacing:-0.2px}
+.card-sub{font-size:12.5px;color:var(--gray-500);margin-bottom:18px;line-height:1.5}
+
+/* ── ADDRESS SCREEN ── */
+.addr-hero{background:var(--gray-900);border-radius:var(--radius-xl);padding:36px 32px;margin-bottom:14px;position:relative;overflow:hidden}
+.addr-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 80% 20%,rgba(29,158,117,0.18) 0%,transparent 60%);pointer-events:none}
+.addr-hero-eyebrow{font-size:11px;font-weight:500;color:var(--green-mid);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px}
+.addr-hero-title{font-size:22px;font-weight:600;color:var(--white);line-height:1.3;margin-bottom:6px;letter-spacing:-0.4px}
+.addr-hero-sub{font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:24px;line-height:1.5}
+.addr-input-row{display:flex;gap:8px}
+.addr-input-row input{flex:1;height:44px;border:1px solid rgba(255,255,255,0.2);border-radius:var(--radius);padding:0 14px;font-size:14px;font-family:var(--font);color:#ffffff;background:rgba(255,255,255,0.08);outline:none;transition:border-color 0.15s,box-shadow 0.15s;caret-color:#4DBF8F;cursor:text;-webkit-text-fill-color:#ffffff;color-scheme:dark}
+.addr-input-row input::placeholder{color:rgba(255,255,255,0.35);-webkit-text-fill-color:rgba(255,255,255,0.35)}
+.addr-input-row input:focus{border-color:rgba(77,191,143,0.6);box-shadow:0 0 0 3px rgba(29,158,117,0.2)}
+.addr-input-row input:-webkit-autofill,.addr-input-row input:-webkit-autofill:focus{-webkit-text-fill-color:#ffffff!important;-webkit-box-shadow:0 0 0 1000px #1a2e20 inset!important;caret-color:#ffffff}
+.btn-addr{height:44px;padding:0 22px;background:var(--green);color:var(--white);border:none;border-radius:var(--radius);font-size:13px;font-weight:600;font-family:var(--font);cursor:pointer;transition:all 0.15s;white-space:nowrap;letter-spacing:0.1px}
+.btn-addr:hover{background:var(--green-dark);transform:translateY(-1px)}
+.addr-note{font-size:11px;color:rgba(255,255,255,0.25);margin-top:12px}
+
+/* ── FORM ELEMENTS ── */
+.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.field{display:flex;flex-direction:column;gap:4px}
+.field-full{grid-column:1/-1}
+label{font-size:11.5px;font-weight:500;color:var(--gray-600);letter-spacing:0.1px}
+label .req{color:var(--red);margin-left:2px}
+select,input[type=number],input[type=text],input[type=email]{
+  height:36px;border:var(--border);border-radius:var(--radius);
+  padding:0 11px;font-size:13px;font-family:var(--font);color:var(--gray-900);
+  -webkit-text-fill-color:var(--gray-900);background:var(--white);
+  width:100%;transition:border-color 0.15s;outline:none;color-scheme:light
+}
+select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,158,117,0.08)}
+.input-required{background:#fff5f5!important;border-color:#e53e3e!important}
+.input-required:focus{box-shadow:0 0 0 3px rgba(229,62,62,0.12)!important}
+.field-hint{font-size:11px;color:var(--gray-400);margin-top:2px}
+.util-payer-row{display:flex;gap:8px;margin:10px 0 16px}
+.util-pill{flex:1;padding:9px 0;border:1.5px solid var(--gray-200);border-radius:var(--radius);background:var(--gray-50);color:var(--gray-500);font-size:13px;font-weight:500;cursor:pointer;transition:border-color .15s,background .15s,color .15s}
+.util-pill.active{border-color:var(--green-mid);background:var(--green-mid);color:#fff}
+.util-group{margin-bottom:14px}
+.util-group-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:8px}
+.util-group-label{font-size:13px;font-weight:600;color:var(--gray-700)}
+.util-sub-toggle{display:flex;gap:4px}
+.util-sub-pill{padding:4px 10px;border:1.5px solid var(--gray-200);border-radius:20px;background:#fff;color:var(--gray-500);font-size:11.5px;font-weight:500;cursor:pointer;transition:border-color .15s,background .15s,color .15s}
+.util-sub-pill.active{border-color:var(--green-mid);color:var(--green-mid);background:var(--green-50,#f0faf5)}
+#util-fields.greyed{opacity:.4;pointer-events:none}
+
+/* ── BUTTONS ── */
+.btn-primary{height:40px;padding:0 22px;background:var(--green);color:var(--white);border:none;border-radius:var(--radius);font-size:13px;font-weight:600;font-family:var(--font);cursor:pointer;transition:all 0.15s;letter-spacing:0px}
+.btn-primary:hover{background:var(--green-dark);transform:translateY(-1px)}
+.btn-outline{height:36px;padding:0 16px;background:transparent;color:var(--gray-600);border:var(--border);border-radius:var(--radius);font-size:12.5px;font-weight:500;font-family:var(--font);cursor:pointer;transition:all 0.15s}
+.btn-outline:hover{border-color:var(--gray-400);color:var(--gray-900)}
+.btn-row{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;align-items:center}
+
+/* ── SCREENS ── */
+.screen{display:none}
+.screen.active{display:block}
+
+/* ── BANNERS ── */
+.banner{border-radius:var(--radius);padding:11px 14px;margin-bottom:10px;display:flex;align-items:flex-start;gap:9px;font-size:12.5px;line-height:1.5}
+.banner-icon{width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;font-size:9px;font-weight:700}
+.banner.success{background:var(--green-light);border:1px solid #97C459;color:#27500A}
+.banner.success .banner-icon{background:var(--green);color:var(--white)}
+.banner.caution{background:var(--amber-light);border:1px solid #F0B429;color:#78450A}
+.banner.caution .banner-icon{background:var(--amber);color:var(--white)}
+.banner.critical{background:var(--red-light);border:1px solid #F09595;color:#7A1F1F}
+.banner.critical .banner-icon{background:var(--red);color:var(--white)}
+.banner-text strong{display:block;font-weight:600;margin-bottom:1px}
+
+/* ── SCORE DISPLAY ── */
+.score-hero{display:flex;align-items:center;gap:22px;padding:20px 22px;background:var(--white);border:var(--border);border-radius:var(--radius-lg);margin-bottom:14px;box-shadow:var(--shadow)}
+.score-ring{width:84px;height:84px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;position:relative}
+.score-ring::before{content:'';position:absolute;inset:0;border-radius:50%;border:7px solid var(--gray-100)}
+.score-ring-fill{position:absolute;inset:0;border-radius:50%;border:7px solid var(--ring-color,var(--green))}
+.score-number{font-size:26px;font-weight:700;color:var(--gray-900);line-height:1;position:relative;z-index:1}
+.score-label{font-size:9px;color:var(--gray-500);position:relative;z-index:1;letter-spacing:0.3px}
+.score-info{flex:1}
+.score-tier{font-size:13px;font-weight:700;letter-spacing:0.5px;margin-bottom:3px}
+.score-tier.strong{color:var(--green-dark)}
+.score-tier.moderate{color:var(--amber)}
+.score-tier.weak{color:var(--red)}
+.score-meta{font-size:12.5px;color:var(--gray-600)}
+.score-meta span{font-weight:600}
+
+/* ── SPECTRUM BAR ── */
+.spectrum{margin:10px 0 18px}
+.spectrum-bar{height:8px;border-radius:4px;background:linear-gradient(to right,#FCEBEB 0%,#FAEEDA 45%,#EAF3DE 72%,#97C459 100%);position:relative;margin-bottom:5px}
+.spectrum-marker{width:13px;height:13px;background:var(--gray-900);border:2px solid var(--white);border-radius:50%;position:absolute;top:50%;transform:translate(-50%,-50%);box-shadow:0 1px 4px rgba(0,0,0,0.25)}
+.spectrum-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--gray-400)}
+
+/* ── AUDIT FLAGS ── */
+.audit-section{margin-bottom:18px}
+.audit-section-title{font-size:10.5px;font-weight:600;color:var(--gray-400);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:9px;padding-bottom:6px;border-bottom:1px solid var(--gray-100)}
+.flags-list{display:flex;flex-direction:column;gap:7px}
+
+/* ── FINANCIAL SNAPSHOT ── */
+.fin-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px}
+.fin-card{background:var(--gray-50);border:var(--border);border-radius:var(--radius);padding:13px}
+.fin-label{font-size:10.5px;color:var(--gray-500);margin-bottom:3px;font-weight:500}
+.fin-value{font-size:19px;font-weight:700;color:var(--gray-900);font-family:var(--mono)}
+.fin-value.green{color:var(--green-dark)}
+
+/* ── REFERRAL ── */
+.referral-card{border:var(--border);border-radius:var(--radius-lg);padding:18px;margin-bottom:10px;background:var(--white)}
+.referral-card.featured{border-color:var(--green);background:var(--green-light)}
+.ref-title{font-size:13.5px;font-weight:600;color:var(--gray-900);margin-bottom:3px}
+.ref-desc{font-size:12.5px;color:var(--gray-600);margin-bottom:11px;line-height:1.5}
+.ref-btns{display:flex;gap:7px;flex-wrap:wrap}
+
+/* ── PRO GATE ── */
+.pro-gate{background:linear-gradient(140deg,#0A1F11 0%,#0D6B52 100%);border-radius:var(--radius-lg);padding:26px;color:var(--white);margin-bottom:14px;text-align:center}
+.pro-gate h3{font-size:18px;font-weight:600;margin-bottom:7px;letter-spacing:-0.3px}
+.pro-gate p{font-size:13px;opacity:0.8;margin-bottom:18px;line-height:1.6}
+.pro-features{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:18px;text-align:left}
+.pro-feature{display:flex;align-items:center;gap:7px;font-size:12.5px;opacity:0.88}
+.pro-feature::before{content:'✓';color:var(--green-mid);font-weight:700;flex-shrink:0}
+.pro-price{font-size:26px;font-weight:700;margin-bottom:3px}
+.pro-price span{font-size:13px;font-weight:400;opacity:0.65}
+.btn-pro{height:44px;padding:0 30px;background:var(--white);color:var(--green-dark);border:none;border-radius:var(--radius);font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer;transition:all 0.15s;letter-spacing:-0.1px}
+.btn-pro:hover{background:var(--green-light);transform:translateY(-1px)}
+.btn-pro:disabled{opacity:0.4;cursor:not-allowed;transform:none}
+
+/* ── EMAIL GATE ── */
+.email-gate{background:var(--gray-50);border:var(--border);border-radius:var(--radius-lg);padding:18px;text-align:center;margin-bottom:14px}
+.email-gate h4{font-size:14px;font-weight:600;margin-bottom:5px}
+.email-gate p{font-size:12.5px;color:var(--gray-500);margin-bottom:13px}
+.email-row{display:flex;gap:7px;max-width:400px;margin:0 auto}
+.email-row input{flex:1}
+
+/* ── SECTION DIVIDER ── */
+.section-divider{display:flex;align-items:center;gap:10px;margin:22px 0 14px}
+.section-divider-label{font-size:10px;font-weight:700;letter-spacing:1px;color:var(--green);text-transform:uppercase;white-space:nowrap}
+.section-divider-line{flex:1;height:1px;background:var(--gray-200)}
+
+/* ── HOA WARNING ── */
+.hoa-block{background:#FEF9C3;border:1px solid #FDE047;border-radius:var(--radius);padding:12px 14px;margin-bottom:10px}
+
+/* ── LOADING ── */
+.loading{text-align:center;padding:48px 24px}
+.spinner{width:28px;height:28px;border:2.5px solid var(--gray-200);border-top-color:var(--green);border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto 14px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── ADDR STRIP ── */
+.addr-strip{background:var(--gray-900);border-radius:var(--radius);padding:9px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.addr-text{font-size:12.5px;color:var(--white);font-weight:500}
+.addr-reg{font-size:10.5px;padding:3px 9px;border-radius:20px;font-weight:600}
+.addr-reg.clear{background:rgba(29,158,117,0.2);color:#4DBF8F}
+.addr-reg.caution{background:rgba(217,119,6,0.2);color:#FCD34D}
+.addr-reg.blocked{background:rgba(226,75,74,0.2);color:#FCA5A5}
+
+/* ── RESPONSIVE ── */
+@media(max-width:600px){
+  .field-grid,.field-grid-3,.fin-grid,.pro-features{grid-template-columns:1fr}
+  .field-full{grid-column:1}
+  .score-hero{flex-direction:column;text-align:center}
+  .addr-input-row{flex-direction:column}
+  .addr-hero{padding:24px 20px}
+}
+
+/* ── UTILITY ── */
+.text-sm{font-size:12.5px}.text-xs{font-size:11px}.text-muted{color:var(--gray-500)}
+.mt-4{margin-top:14px}.mt-6{margin-top:22px}.mb-2{margin-bottom:7px}
+.hidden{display:none!important}
+.divider{height:1px;background:var(--gray-100);margin:18px 0}
+
+/* ── LOADING SCREEN ── */
+#s-loading{position:fixed!important;inset:0;z-index:9999;background:#0a0f0d;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;overflow:hidden}
+#s-loading.active{display:flex}
+.loading-bg-slide{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity 1.5s ease;z-index:0}
+.loading-bg-slide.active{opacity:1}
+.loading-bg-slide::after{content:'';position:absolute;inset:0;background:rgba(8,14,11,0.82)}
+.loading-content{position:relative;z-index:1;text-align:center;max-width:580px;width:100%}
+.loading-logo{font-size:22px;font-weight:700;color:#fff;letter-spacing:-0.5px;margin-bottom:32px}
+.loading-logo span{color:var(--green)}
+.loading-stage{font-size:15px;font-weight:500;color:rgba(255,255,255,0.85);margin-bottom:20px;min-height:24px;transition:opacity 0.3s}
+.loading-bar-wrap{width:100%;height:6px;background:rgba(255,255,255,0.12);border-radius:99px;overflow:hidden;margin-bottom:36px}
+.loading-bar{height:100%;background:var(--green);border-radius:99px;width:0%;transition:width 0.6s ease}
+.loading-quote-wrap{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:24px 28px;min-height:100px;display:flex;flex-direction:column;justify-content:center;transition:opacity 0.5s}
+.loading-quote{font-size:14px;color:rgba(255,255,255,0.75);line-height:1.7;font-style:italic;margin-bottom:10px}
+.loading-quote-author{font-size:12px;color:var(--green);font-weight:600;font-style:normal}
+
+/* ── MARKET DATA SECTIONS ── */
+.market-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px}
+.market-grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:16px}
+@media(max-width:600px){.market-grid{grid-template-columns:repeat(2,1fr)}.market-grid-2{grid-template-columns:1fr}}
+.market-stat{background:var(--gray-50);border:var(--border);border-radius:var(--radius);padding:14px 16px}
+.market-stat-label{font-size:11px;font-weight:700;color:var(--gray-500);letter-spacing:0.5px;margin-bottom:4px;text-transform:uppercase}
+.market-stat-value{font-size:22px;font-weight:700;color:var(--dark);line-height:1.1}
+.market-stat-sub{font-size:12px;color:var(--gray-500);margin-top:3px}
+.score-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:99px;font-size:12px;font-weight:700}
+.score-badge.walk{background:#e0f2fe;color:#0369a1}
+.score-badge.transit{background:#f0fdf4;color:#15803d}
+.score-badge.bike{background:#fefce8;color:#a16207}
+.comp-analysis{font-size:13.5px;color:var(--gray-700);line-height:1.75;white-space:pre-wrap}
+.comp-section-head{font-size:12px;font-weight:700;color:var(--gray-500);letter-spacing:0.5px;text-transform:uppercase;margin:18px 0 6px;padding-top:14px;border-top:1px solid var(--gray-100)}
+.comp-section-head:first-child{border-top:none;margin-top:0;padding-top:0}
+.rentcast-comp{display:grid;grid-template-columns:2fr 1fr 1fr;gap:0;font-size:12px;padding:8px 0;border-bottom:1px solid var(--gray-100)}
+.location-pill{display:inline-flex;align-items:center;gap:8px;background:var(--gray-50);border:var(--border);border-radius:var(--radius);padding:12px 16px;margin-top:8px;width:100%}
+.location-pill-icon{font-size:18px}
+.location-pill-info{flex:1}
+.location-pill-name{font-size:13px;font-weight:600;color:var(--dark)}
+.location-pill-dist{font-size:12px;color:var(--gray-500)}
+.location-pill-band{font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px}
+.band-walkable{background:#dcfce7;color:#15803d}
+.band-close{background:#fef9c3;color:#854d0e}
+.band-moderate{background:#ffedd5;color:#9a3412}
+.band-far{background:#fee2e2;color:#991b1b}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── PAGINATED REPORT ── */
+.rpt-nav{display:flex;gap:4px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:10px 0 8px;border-bottom:1px solid var(--gray-100);position:sticky;top:0;background:white;z-index:10}
+.rpt-nav::-webkit-scrollbar{height:3px}.rpt-nav::-webkit-scrollbar-thumb{background:var(--gray-200);border-radius:2px}
+.rpt-nav-btn{flex-shrink:0;height:30px;padding:0 10px;border:1.5px solid var(--gray-200);border-radius:var(--radius);background:white;color:var(--gray-600);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font);white-space:nowrap;transition:all 0.15s}
+.rpt-nav-btn:hover{background:var(--green-light);border-color:var(--green);color:var(--green-dark)}
+.rpt-nav-btn.active{background:var(--dark);border-color:var(--dark);color:white}
+.rpt-page{display:block;max-height:0;overflow:hidden;margin:0;padding:0}
+.rpt-page.active{max-height:none;overflow:visible}
+.rpt-page-hdr{background:var(--dark);border-radius:var(--radius) var(--radius) 0 0;padding:10px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px}
+.rpt-page-hdr-brand{font-size:13px;font-weight:700;color:white;white-space:nowrap}
+.rpt-page-hdr-title{font-size:12px;font-weight:600;color:#A8DCC9;flex:1;text-align:center}
+.rpt-page-hdr-pg{font-size:11px;color:rgba(255,255,255,0.6);white-space:nowrap}
+.rpt-page-body{background:white;border:1px solid var(--gray-100);border-top:none;padding:24px 28px;min-height:200px}
+.rpt-page-foot{display:flex;align-items:center;justify-content:space-between;padding:14px 0 6px;border-top:1px solid var(--gray-100);margin-top:20px}
+.rpt-page-foot-note{font-size:10.5px;color:var(--gray-400);flex:1}
+.rpt-nav-arrow{height:34px;padding:0 18px;background:var(--dark);color:white;border:none;border-radius:var(--radius);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);letter-spacing:0.2px;box-shadow:0 1px 3px rgba(0,0,0,0.2)}
+.rpt-nav-arrow:hover{background:var(--green)}
+.rpt-kpi-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:20px}
+@media(max-width:640px){.rpt-kpi-strip{grid-template-columns:repeat(2,1fr)}.rpt-page-hdr-title{display:none}}
+.rpt-kpi-cell{background:var(--green-light);border:1px solid rgba(29,158,117,0.2);border-radius:var(--radius);padding:14px;text-align:center}
+.rpt-kpi-label{font-size:10px;font-weight:700;color:var(--gray-500);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:8px}
+.rpt-kpi-value{font-size:24px;font-weight:800;color:var(--dark);line-height:1}
+.rpt-kpi-sub{font-size:10.5px;color:var(--green);margin-top:5px;line-height:1.3}
+.rpt-loading{display:flex;align-items:center;gap:10px;padding:36px 0;color:var(--gray-400);font-size:13px;justify-content:center}
+.ai-content{font-size:14.5px;color:var(--gray-800);line-height:1.85}
+.ai-content h3{font-size:14px;font-weight:700;color:var(--dark);margin:20px 0 8px;padding-bottom:5px;border-bottom:1px solid var(--gray-100)}
+.ai-content h4{font-size:13px;font-weight:700;color:var(--dark);margin:14px 0 6px}
+.ai-content ul{padding-left:20px;margin:8px 0 12px}
+.ai-content li{margin-bottom:5px}
+.ai-content p{margin-bottom:12px}
+.ai-content strong{color:var(--dark)}
+.ai-table{width:100%;border-collapse:collapse;font-size:12.5px;margin:12px 0 16px}
+.ai-table th{background:var(--gray-100);font-weight:700;color:var(--gray-600);text-transform:uppercase;font-size:10.5px;letter-spacing:0.4px;padding:8px 10px;text-align:left;border-bottom:2px solid var(--gray-200)}
+.ai-table td{padding:7px 10px;border-bottom:1px solid var(--gray-100);color:var(--gray-700);vertical-align:top}
+.ai-table tr:last-child td{border-bottom:none}
+#print-cover{display:none}
+.pdf-break{display:none}
+
+/* ── PRINT / PDF ── */
+@page{
+  size:letter;
+  margin:.7in .65in .9in;
+  @bottom-left{content:"CoLivingScore Pro Analysis";font-size:7.5pt;color:#718096;font-family:sans-serif}
+  @bottom-center{content:"colivingscore.com";font-size:7.5pt;color:#b0b8c4;font-family:sans-serif}
+  @bottom-right{content:"Page " counter(page);font-size:7.5pt;color:#718096;font-family:sans-serif}
+}
+@page:first{margin:0;@bottom-left{content:none}@bottom-center{content:none}@bottom-right{content:none}}
+@media print{
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  body{background:#fff!important;margin:0!important;padding:0!important}
+  header{display:none!important}
+  .container{max-width:none!important;padding:0!important;margin:0!important}
+  .screen{display:none!important}
+  #s-pro-report{display:block!important}
+  .addr-strip,#rpt-nav,.rpt-nav-arrow,.rpt-page-foot,.btn-row{display:none!important}
+  #print-cover{display:block!important;page-break-after:always;break-after:page}
+  .pcv-top{display:block!important;background:#1e3a5f!important;padding:3in 1in 2.5in}
+  .pcv-wordmark{font-size:13pt;font-weight:700;color:rgba(255,255,255,.5);letter-spacing:1px;text-transform:uppercase;margin-bottom:48px}
+  .pcv-wordmark span{color:#a8c4e0}
+  .pcv-report-type{font-size:10pt;font-weight:600;color:#a8c4e0;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px}
+  .pcv-address{font-size:24pt;font-weight:700;color:#fff;line-height:1.2;margin-bottom:6px}
+  .pcv-city{font-size:13pt;font-weight:400;color:rgba(255,255,255,.65);margin-bottom:36px}
+  .pcv-rule{width:48px;height:3px;background:#c8973a;margin-bottom:36px}
+  .pcv-tenant-label{font-size:9pt;color:rgba(255,255,255,.5);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px}
+  .pcv-tenant-value{font-size:12pt;font-weight:600;color:#fff}
+  .pcv-bottom{display:block!important;background:#f7f9fc!important;border-top:3px solid #c8973a;padding:0.4in 1in}
+  .pcv-date{font-size:9.5pt;color:#4a5568;margin-bottom:6px}
+  .pcv-disclaimer{font-size:8.5pt;color:#718096;max-width:300px;line-height:1.5}
+  .rpt-page{max-height:none!important;overflow:visible!important;page-break-before:always;break-before:page}
+  #rpt-page-2{page-break-before:auto!important;break-before:auto!important}
+  .rpt-page-hdr{background:#1e3a5f!important;border-radius:0!important;margin-top:0!important;padding:9px 20px!important}
+  .rpt-page-hdr-brand{font-size:11pt!important;font-weight:700!important;color:#fff!important}
+  .rpt-page-hdr-title{font-size:10pt!important;color:#a8c4e0!important}
+  .rpt-page-hdr-pg{font-size:9pt!important;color:rgba(255,255,255,.6)!important}
+  .rpt-page-body{border:none!important;padding:18px 24px!important}
+  .ai-content{font-size:10.5pt!important;line-height:1.75!important;color:#1a202c!important}
+  .ai-content h3{font-size:11.5pt!important;color:#1e3a5f!important;border-bottom-color:#e2e8f0!important;margin:16px 0 7px!important}
+  .ai-content h4{font-size:10.5pt!important;color:#2c5282!important;margin:11px 0 5px!important}
+  .ai-content p{margin-bottom:9px!important}
+  .ai-content strong{color:#1a202c!important}
+  .ai-table{font-size:9.5pt!important}
+  .ai-table th{background:#1e3a5f!important;color:#fff!important;padding:7px 10px!important}
+  .ai-table td{padding:6px 10px!important;border-bottom-color:#e2e8f0!important}
+  .ai-table tr:nth-child(even) td{background:#f7f9fc!important}
+  .rpt-kpi-strip{grid-template-columns:repeat(4,1fr)!important}
+  .rpt-kpi-cell{background:#f0f4f8!important;border-color:#cbd5e0!important}
+  .rpt-kpi-value{color:#1e3a5f!important;font-size:20px!important}
+  .rpt-kpi-label{color:#4a5568!important}
+  .rpt-kpi-sub{color:#4a5568!important}
+  .fin-grid{grid-template-columns:1fr 1fr 1fr!important}
+  .fin-card{background:#f7f9fc!important;border-color:#e2e8f0!important}
+  .fin-label{color:#4a5568!important}
+  .fin-value{color:#1e3a5f!important}
+  .fin-value.green{color:#276749!important}
+  .market-grid{grid-template-columns:repeat(3,1fr)!important}
+  .market-stat{background:#f7f9fc!important;border-color:#e2e8f0!important}
+  .market-stat-value{color:#1e3a5f!important}
+  .location-pill{break-inside:avoid}
+  .location-pill-name{color:#1e3a5f!important}
+  .fin-card,.market-stat,.rpt-kpi-cell,.location-pill{break-inside:avoid}
+  h3,h4{break-after:avoid}
+  a{color:inherit!important;text-decoration:none!important}
+  .assumption-notice{background:#fffbeb!important;border-color:#fcd34d!important}
+  #rpt-page-4 .rpt-page-body,#rpt-page-12 .rpt-page-body,#rpt-page-15 .rpt-page-body{padding:10px 18px!important}
+  #rpt-page-4 .ai-content,#rpt-page-12 .ai-content,#rpt-page-15 .ai-content{font-size:9pt!important;line-height:1.55!important}
+  #rpt-page-4 .ai-content h3,#rpt-page-12 .ai-content h3,#rpt-page-15 .ai-content h3{margin:9px 0 4px!important;font-size:10pt!important}
+  #rpt-page-4 .ai-content h4,#rpt-page-12 .ai-content h4,#rpt-page-15 .ai-content h4{margin:6px 0 3px!important;font-size:9.5pt!important}
+  #rpt-page-4 .ai-content p,#rpt-page-12 .ai-content p,#rpt-page-15 .ai-content p{margin-bottom:5px!important}
+  #rpt-page-12 .rpt-page-body{padding:8px 16px!important}
+  #rpt-page-12 .divider{margin:6px 0!important}
+  #rpt-page-12 .suit-card{padding:7px 10px!important;margin-bottom:5px!important}
+  #rpt-page-12 .impr-row{padding:5px 0!important;font-size:11px!important}
+  #rpt-page-12 .pg12-hdr{margin:8px 0 6px!important}
+  .be-aware-box{page-break-inside:avoid!important;break-inside:avoid!important}
+  .sugg-hdr{padding-top:20px!important;margin-top:0!important}
+  .pdf-break{display:block!important;page-break-before:always!important;break-before:page!important;height:0;margin:0;padding:0}
+  #rpt-page-13 .rpt-page-body{padding:10px 18px!important}
+  #rpt-page-13 .ai-content{font-size:9.5pt!important;line-height:1.6!important}
+  #rpt-page-13 .ai-content h3{margin:10px 0 5px!important;font-size:10.5pt!important}
+  #rpt-page-13 .ai-content p{margin-bottom:6px!important}
+}
+
+/* ══ MOBILE BASE — applied to all screens ══ */
+body { font-size: 15px; }
+header { padding: 0 16px; height: 44px; }
+.screen { padding: 0; }
+input, select, button { font-size: 16px !important; } /* prevent iOS zoom on focus */
+.btn-primary, .btn-outline { width: 100%; box-sizing: border-box; padding: 14px; font-size: 15px; }
+.card { border-radius: 0; border-left: none; border-right: none; margin: 0; }
+.addr-strip { padding: 10px 16px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div style="display:flex;align-items:center">
+    <div class="logo">CoLiving<span>Score</span><span class="logo-sub">.com</span></div>
+  </div>
+  <div class="header-badge">Property Score & Analysis</div>
+</header>
+
+<div class="container">
+
+  <!-- STEP INDICATOR -->
+  <div class="steps" id="step-indicator">
+    <div class="step active" id="step1" onclick="goToStep(1)"><div class="step-dot">1</div>Address</div>
+    <div class="step-line"></div>
+    <div class="step" id="step2" onclick="goToStep(2)"><div class="step-dot">2</div>Property Details</div>
+    <div class="step-line"></div>
+    <div class="step" id="step3" onclick="goToStep(3)"><div class="step-dot">3</div>Free Score</div>
+    <div class="step-line"></div>
+    <div class="step" id="step4"><div class="step-dot">4</div>Pro Analysis</div>
+  </div>
+
+  <!-- ══ SCREEN 0: ADDRESS ENTRY ══ -->
+  <div class="screen active" id="s-address">
+    <div class="addr-hero">
+      <div class="addr-hero-eyebrow">Co-Living Property Analysis</div>
+      <div class="addr-hero-title">Is this property a co-living candidate?</div>
+      <div class="addr-hero-sub">Enter an address to score the property, model the financials, and get a go/no-go recommendation.</div>
+      <div class="addr-input-row">
+        <input type="text" id="f-address" placeholder="123 Main St, City, State ZIP" autocomplete="off">
+        <button class="btn-addr" id="btn-address-next">Analyze →</button>
+      </div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.55);margin-top:10px">Example: 123 Main St, Phoenix AZ 85001</div>
+    </div>
+    <div id="restore-banner" style="display:none;align-items:center;flex-wrap:wrap;gap:8px;margin-top:12px;padding:10px 14px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:var(--radius)"></div>
+  </div>
+
+  <!-- ══ SCREEN 1: PROPERTY FORM ══ -->
+  <div class="screen" id="s-form">
+    <div class="addr-strip">
+      <div class="addr-text" id="addr-form" style="color:rgba(255,255,255,0.75)"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Score your property for co-living</div>
+      <div class="card-sub">Enter the property details to get your free suitability score.</div>
+
+      <div class="field-grid">
+        <div class="field">
+          <label>Bedrooms <span class="req">*</span><span class="tip" data-tip="Minimum recommended bedroom size: 70 sq ft with a 7 ft or higher ceiling and a legal egress window. Local regulations may also apply — verify requirements in your area before converting or adding bedrooms. This tool cannot verify individual room sizes from total square footage alone.">?</span></label>
+          <select id="f-beds">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5" selected>5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+            <option value="11">11</option>
+            <option value="12">12</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Bathrooms <span class="req">*</span></label>
+          <select id="f-baths">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3" selected>3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+            <option value="11">11</option>
+            <option value="12">12</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Half Baths</label>
+          <select id="f-halfbaths">
+            <option value="0" selected>None</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Square footage <span class="req">*</span></label>
+          <input type="number" id="f-sqft" value="2480" min="500" max="10000">
+        </div>
+        <div class="field">
+          <label>Stories</label>
+          <select id="f-floors">
+            <option value="1" selected>1 story</option>
+            <option value="2">2 stories</option>
+            <option value="3">3 stories</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Garage spaces</label>
+          <select id="f-garage">
+            <option value="0">None</option>
+            <option value="1">1 car</option>
+            <option value="2" selected>2 car</option>
+            <option value="3">3 car</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Carport spaces</label>
+          <select id="f-carport">
+            <option value="0" selected>None</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Uncovered off street spaces</label>
+          <select id="f-uncovered">
+            <option value="0" selected>None</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3+</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>HOA status <span class="req">*</span></label>
+          <select id="f-hoa">
+            <option value="none" selected>No HOA</option>
+            <option value="permits">HOA — permits rentals</option>
+            <option value="unclear">HOA — rules unclear</option>
+            <option value="prohibits">HOA — prohibits rentals</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Transit proximity</label>
+          <select id="f-transit">
+            <option value="walkable" selected>Under 0.5 mi</option>
+            <option value="close">0.5 – 1 mi</option>
+            <option value="moderate">1 – 3 mi</option>
+            <option value="far">Over 3 mi</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Hospital proximity</label>
+          <select id="f-hospital">
+            <option value="close" selected>Under 2 mi</option>
+            <option value="moderate">2 – 5 mi</option>
+            <option value="far">Over 5 mi</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Monthly mortgage (PITI)</label>
+          <input type="number" id="f-mortgage" value="2850" min="0">
+        </div>
+        <div class="field">
+          <label>Laundry</label>
+          <select id="f-laundry">
+            <option value="provided" selected>In-home W/D provided</option>
+            <option value="pay">In-home pay / coin-op</option>
+            <option value="none">None</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Target tenant type <span class="req">*</span></label>
+          <select id="f-tenant" onchange="updateRentDefault()">
+            <option value="nurses" selected>Travel Nurses</option>
+            <option value="tech">Tech / Remote Workers</option>
+            <option value="trades">Construction / Trades</option>
+            <option value="students">Students</option>
+            <option value="seniors">Seniors 55+</option>
+            <option value="sober">Sober Living</option>
+            <option value="workforce">General Workforce</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Target rent per room / month <span class="req">*</span></label>
+          <input type="number" id="f-rent" value="1100" min="0">
+          <div class="field-hint">Default based on tenant type — adjust for your market</div>
+        </div>
+        <div class="field-full" id="f-tenant-note" style="display:none"></div>
+      </div>
+
+      <div class="assumption-notice"><strong>Note:</strong> Results assume you have already verified local zoning and occupancy requirements and that the home is in good to excellent condition. Any legal fees, permits, repairs, or seasonal occupancy shifts should be factored into your decision before proceeding.</div>
+
+      <div class="btn-row">
+        <button class="btn-primary" id="btn-calculate">Calculate Score →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SCREEN 2: FREE SCORE RESULTS ══ -->
+  <div class="screen" id="s-result">
+
+    <div class="addr-strip">
+      <div class="addr-text" id="r-addr-text">Property Analysis</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button style="height:28px;font-size:12px;padding:0 12px;background:transparent;color:var(--white);border:1px solid rgba(255,255,255,0.4);border-radius:var(--radius);cursor:pointer;font-family:var(--font);font-weight:500" onclick="showScreen('s-form')">← Edit Inputs</button>
+        <div class="addr-reg clear" id="r-reg-badge">Regulatory: Clear</div>
+      </div>
+    </div>
+
+    <!-- Score hero -->
+    <div class="score-hero" id="r-score-hero">
+      <div class="score-ring" id="r-ring">
+        <div class="score-number" id="r-score-num">87</div>
+        <div class="score-label">out of 100</div>
+      </div>
+      <div class="score-info">
+        <div class="score-tier strong" id="r-tier">STRONG CANDIDATE</div>
+        <div class="score-meta">Target: <span id="r-tenant-label">Travel Nurses</span> &nbsp;·&nbsp; <span id="r-beds-baths">5 bed / 3 bath</span></div>
+        <div class="spectrum mt-4" style="max-width:320px">
+          <div class="spectrum-bar"><div class="spectrum-marker" id="r-marker" style="left:87%"></div></div>
+          <div class="spectrum-labels"><span>0</span><span>Weak</span><span>Moderate</span><span>Strong</span><span>100</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Financial snapshot -->
+    <div class="fin-grid" id="r-fin-grid">
+      <div class="fin-card">
+        <div class="fin-label">Est. Gross Monthly</div>
+        <div class="fin-value green" id="r-gross">$3,400</div>
+      </div>
+      <div class="fin-card">
+        <div class="fin-label">Est. Monthly Net</div>
+        <div class="fin-value green" id="r-noi">-$585</div>
+      </div>
+      <div class="fin-card">
+        <div class="fin-label">Break-Even Occupancy</div>
+        <div class="fin-value" id="r-be">68%</div>
+      </div>
+    </div>
+
+    <!-- Audit flags -->
+    <div class="card" id="r-audit">
+      <div class="card-title" style="margin-bottom:16px">Property Audit</div>
+      <div id="r-flags"></div>
+      <div style="margin-top:14px;padding:10px 12px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius);font-size:11.5px;color:var(--gray-500);line-height:1.5">
+        <strong style="color:var(--gray-700)">Estimate assumptions:</strong> This score uses default expense values (reserves $350/mo, management rate 10%). The next step lets you enter your actual figures — the more accurate your inputs, the more reliable your Pro Analysis will be.
+      </div>
+    </div>
+
+    <!-- Email gate -->
+    <div class="email-gate" id="r-email-gate">
+      <h4>Download your free score report</h4>
+      <p>Enter your email to receive a copy of your CoLivingScore analysis.</p>
+      <div class="email-row">
+        <input type="email" id="r-email" placeholder="your@email.com">
+        <button class="btn-primary" id="btn-save-email">Send My Score</button>
+      </div>
+      <div class="text-xs text-muted mt-4">No spam. Unsubscribe anytime.</div>
+    </div>
+
+    <!-- Referral / CTA -->
+    <div id="r-referral"></div>
+
+    <!-- Pro gate -->
+    <div id="r-pro-gate"></div>
+
+    <div class="btn-row" style="justify-content:flex-start">
+      <button style="height:36px;padding:0 16px;background:var(--gray-100);color:var(--gray-900);border:1.5px solid var(--gray-400);border-radius:var(--radius);font-size:12.5px;font-weight:500;font-family:var(--font);cursor:pointer" onclick="window.open(window.location.origin+'/','_blank')">← Score another property</button>
+    </div>
+
+  </div>
+
+  <!-- ══ SCREEN 3: PRO ANALYSIS FORM ══ -->
+  <div class="screen" id="s-pro-form">
+
+    <div class="addr-strip">
+      <div class="addr-text">Pro Analysis — Financial Inputs &nbsp;·&nbsp; <span id="addr-pro-form" style="color:#4DBF8F"></span></div>
+      <button style="height:28px;font-size:12px;padding:0 12px;background:transparent;color:var(--white);border:1px solid rgba(255,255,255,0.4);border-radius:var(--radius);cursor:pointer;font-family:var(--font);font-weight:500" onclick="showScreen('s-result')">← Back</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Income & Expense Inputs</div>
+      <div class="card-sub">These inputs drive your Year 1 P&amp;L, financial ratios, and the PDF report. Default values are placeholders based on typical co-living operations — the closer your actual numbers are, the more accurate your analysis will be.</div>
+
+      <div class="section-divider"><div class="section-divider-line"></div><div class="section-divider-label">Income</div><div class="section-divider-line"></div></div>
+      <div style="padding:10px 0 14px;font-size:13px;color:var(--gray-600)">
+        Target rent per room / month: <strong id="p-rent-display" style="color:var(--gray-900)">$1,100</strong>
+        <span style="color:var(--gray-400);margin-left:6px">— set on Property Details screen</span>
+      </div>
+      <div class="field-grid">
+        <div class="field">
+          <label>Expected occupancy rate</label>
+          <select id="p-occ">
+            <option value="0.80">80%</option>
+            <option value="0.85">85%</option>
+            <option value="0.90">90%</option>
+            <option value="0.92" selected>92%</option>
+            <option value="0.95">95%</option>
+            <option value="1.00">100%</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="section-divider"><div class="section-divider-line"></div><div class="section-divider-label">Fixed Expenses</div><div class="section-divider-line"></div></div>
+      <div class="field-grid">
+        <div class="field">
+          <label>Monthly mortgage (P&amp;I only) <span class="req">*</span><span class="tip" data-tip="Enter principal &amp; interest only. Taxes and insurance are entered in the fields below.">?</span></label>
+          <input type="number" id="p-mortgage" placeholder="e.g. 1800" class="input-required">
+        </div>
+        <div class="field">
+          <label>Annual property taxes</label>
+          <input type="number" id="p-taxes" value="4800">
+        </div>
+        <div class="field">
+          <label>Annual insurance <span class="tip" data-tip="Standard landlord insurance may not cover co-living operations. Check with your provider before starting.">?</span></label>
+          <input type="number" id="p-insurance" value="2400">
+        </div>
+        <div class="field">
+          <label>HOA monthly</label>
+          <input type="number" id="p-hoa" value="0">
+        </div>
+      </div>
+
+      <div class="section-divider"><div class="section-divider-line"></div><div class="section-divider-label">Utilities & Operations</div><div class="section-divider-line"></div></div>
+
+      <label style="font-size:13px;font-weight:600;color:var(--gray-700);margin-bottom:4px;display:block">Who pays utilities?</label>
+      <div class="util-payer-row">
+        <button class="util-pill active" id="util-landlord" onclick="setUtilPayer('landlord')">Landlord pays</button>
+        <button class="util-pill" id="util-tenant" onclick="setUtilPayer('tenant')">Tenant pays</button>
+      </div>
+
+      <div id="util-fields">
+        <div class="field-hint" style="margin-bottom:12px">An estimate is fine — these figures are used for simple analysis only.</div>
+
+        <div class="util-group">
+          <div class="util-group-header">
+            <span class="util-group-label">Electric / Gas</span>
+            <div class="util-sub-toggle">
+              <button class="util-sub-pill active" id="elec-combined-btn" onclick="setElecBilling('combined')">Combined bill</button>
+              <button class="util-sub-pill" id="elec-separate-btn" onclick="setElecBilling('separate')">Separate bills</button>
+            </div>
+          </div>
+          <div class="field-grid">
+            <div class="field" id="elec-combined-field">
+              <label>Electric + Gas / month</label>
+              <input type="number" id="p-elec-gas" value="180">
+            </div>
+            <div class="field" id="elec-electric-field" style="display:none">
+              <label>Electric / month</label>
+              <input type="number" id="p-electric" value="130">
+            </div>
+            <div class="field" id="elec-gas-field" style="display:none">
+              <label>Gas / month</label>
+              <input type="number" id="p-gas" value="60">
+            </div>
+          </div>
+        </div>
+
+        <div class="util-group">
+          <div class="util-group-header">
+            <span class="util-group-label">Water, Sewer & Garbage</span>
+            <div class="util-sub-toggle">
+              <button class="util-sub-pill active" id="water-combined-btn" onclick="setWaterBilling('combined')">Combined bill</button>
+              <button class="util-sub-pill" id="water-separate-btn" onclick="setWaterBilling('separate')">Separate bills</button>
+            </div>
+          </div>
+          <div class="field-grid">
+            <div class="field" id="water-combined-field">
+              <label>Water, Sewer & Garbage / month</label>
+              <input type="number" id="p-water-combined" value="150">
+            </div>
+            <div class="field" id="water-water-field" style="display:none">
+              <label>Water & Sewer / month</label>
+              <input type="number" id="p-water" value="220">
+            </div>
+            <div class="field" id="water-garbage-field" style="display:none">
+              <label>Garbage / month</label>
+              <input type="number" id="p-garbage" value="45">
+            </div>
+          </div>
+        </div>
+
+        <div class="field-grid" style="margin-top:4px">
+          <div class="field">
+            <label>Internet / month</label>
+            <input type="number" id="p-internet" value="100">
+            <div class="field-hint">Scaled by bedroom count</div>
+          </div>
+          <div class="field">
+            <label>Yard maintenance / month</label>
+            <input type="number" id="p-yard" value="100">
+          </div>
+          <div class="field">
+            <label>Pest control / month</label>
+            <input type="number" id="p-pest" value="40">
+          </div>
+        </div>
+      </div>
+
+      <div class="section-divider"><div class="section-divider-line"></div><div class="section-divider-label">Reserves & Management</div><div class="section-divider-line"></div></div>
+      <div class="field-grid">
+        <div class="field">
+          <label>Repairs reserve / month</label>
+          <input type="number" id="p-repairs" value="200">
+        </div>
+        <div class="field">
+          <label>CapEx reserve / month</label>
+          <input type="number" id="p-capex" value="150">
+          <div class="field-hint">Long-term capital expenditures</div>
+        </div>
+        <div class="field">
+          <label>Property management model</label>
+          <select id="p-mgmt">
+            <option value="self">Self-Managed</option>
+            <option value="specialist" selected>Co-Living Manager</option>
+            <option value="padsplit">PadSplit (8% and up)</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Management rate (%) <span class="tip" data-tip="Co-living typically runs 15–25% due to higher turnover and per-room lease management. Self-managed operators still incur time costs.">?</span></label>
+          <input type="number" id="p-mgmt-rate" value="15" min="0" max="100" step="0.5">
+          <div class="field-hint">Co-living typically runs 15–25%</div>
+        </div>
+      </div>
+
+      <div class="assumption-notice"><strong>Note:</strong> Results assume you have already verified local zoning and occupancy requirements and that the home is in good to excellent condition. Any legal fees, permits, repairs, or seasonal occupancy shifts should be factored into your decision before proceeding.</div>
+
+      <div class="btn-row">
+        <button class="btn-outline" onclick="showScreen('s-result')">Cancel</button>
+        <button class="btn-primary" id="btn-pro-generate">Generate Pro Analysis →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SCREEN 3.5: REVIEW & CONFIRM ══ -->
+  <div class="screen" id="s-review">
+
+    <div class="addr-strip">
+      <div class="addr-text">Review Your Inputs Before Payment &nbsp;·&nbsp; <span id="addr-review" style="color:#4DBF8F"></span></div>
+      <button style="height:28px;font-size:12px;padding:0 12px;background:transparent;color:var(--white);border:1px solid rgba(255,255,255,0.4);border-radius:var(--radius);cursor:pointer;font-family:var(--font);font-weight:500" onclick="showScreen('s-pro-form')">← Edit Inputs</button>
+    </div>
+
+    <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:var(--radius);padding:14px 18px;margin-bottom:4px;display:flex;align-items:flex-start;gap:12px">
+      <span style="font-size:22px;line-height:1.2">📋</span>
+      <div>
+        <div style="font-size:14px;font-weight:700;color:#92400e;margin-bottom:3px">Review your inputs before paying</div>
+        <div style="font-size:13px;color:#78350f;line-height:1.5">Confirm the details below are correct. When ready, click <strong>Looks Good — Pay $29</strong> at the bottom of this page to unlock your full Pro Analysis report.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Property Details</div>
+      <div id="rv-property" style="margin-top:4px"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Income & Expense Inputs</div>
+      <div id="rv-financials" style="margin-top:4px"></div>
+    </div>
+
+    <div class="card" style="padding:20px">
+      <div class="card-title">Where should we send your report?</div>
+      <div style="margin-top:10px">
+        <input type="email" id="rv-email" placeholder="your@email.com" class="input-required" style="width:100%;box-sizing:border-box">
+        <div style="font-size:11.5px;color:var(--gray-500);margin-top:6px">We'll email you a link to re-access your report from any device.</div>
+      </div>
+    </div>
+
+    <div class="card" style="text-align:center;padding:28px;background:linear-gradient(135deg,#0D2818 0%,#0D6B52 100%)">
+      <div style="font-size:13px;color:rgba(255,255,255,0.75);margin-bottom:6px">One-time payment</div>
+      <div style="font-size:36px;font-weight:700;color:var(--white);margin-bottom:6px">$29</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.75);margin-bottom:20px">Full 16-Page Pro Analysis + Downloadable PDF</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px;text-align:left;max-width:420px;margin-left:auto;margin-right:auto">
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--green-mid)">✓</span>Executive Summary & Market Overview</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--green-mid)">✓</span>Rent Pricing Analysis</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--green-mid)">✓</span>P&L, DSCR & Key Ratios</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--green-mid)">✓</span>Location Intelligence</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--green-mid)">✓</span>SWOT & Risk Analysis</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--green-mid)">✓</span>Capital Improvement ROI</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--green-mid)">✓</span>Platform vs. Self-Managed</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--green-mid)">✓</span>Downloadable PDF Report</div>
+      </div>
+      <button class="btn-pro" style="height:50px;font-size:16px;padding:0 40px" id="btn-pay" disabled>
+        Looks Good — Pay $29 →
+      </button>
+      <div style="font-size:12px;color:rgba(255,255,255,0.55);margin-top:8px">Report takes 2–4 minutes to build after payment</div>
+      <div style="margin-top:12px">
+        <a href="/static/sample-pro-report.pdf" target="_blank" style="color:rgba(255,255,255,0.75);font-size:13px;text-decoration:underline;text-underline-offset:3px">👁 View a sample report before you buy</a>
+      </div>
+      <div class="text-xs mt-4" style="color:rgba(255,255,255,0.5)" id="pay-status"></div>
+    </div>
+
+    <div class="btn-row" style="justify-content:flex-start">
+      <button class="btn-outline" onclick="showScreen('s-pro-form')">← Edit Inputs</button>
+    </div>
+
+  </div>
+
+  <!-- ══ SCREEN 4: PRO ANALYSIS RESULTS ══ -->  <div class="screen" id="s-pro-result">
+
+    <div class="addr-strip">
+      <div class="addr-text">Pro Analysis — <span id="pr-addr" style="color:#4DBF8F"></span></div>
+    </div>
+
+    <!-- P&L Summary -->
+    <div class="card">
+      <div class="card-title">Year 1 Financial Summary</div>
+      <div class="fin-grid" style="margin-top:16px" id="pr-fin-grid"></div>
+      <div class="divider"></div>
+      <div id="pr-ratios"></div>
+    </div>
+
+    <!-- Tenant comparison -->
+    <div class="card">
+      <div class="card-title">Tenant Type Comparison — Ranked by Monthly Cash Flow</div>
+      <div class="card-sub">Using your actual expense inputs. Best fit highlighted.</div>
+      <div id="pr-tenant-comparison"></div>
+    </div>
+
+    <!-- Improvements -->
+    <div class="card">
+      <div class="card-title">Capital Improvements — ROI Analysis</div>
+      <div class="card-sub">Payback periods calculated at your room count and target rent.</div>
+      <div id="pr-improvements"></div>
+    </div>
+
+    <!-- Verdict -->
+    <div id="pr-verdict"></div>
+
+    <!-- PDF download -->
+    <div class="card" style="text-align:center;padding:28px">
+      <div style="font-size:15px;font-weight:600;margin-bottom:6px">Download PDF Report</div>
+      <div style="font-size:13px;color:var(--gray-500);margin-bottom:16px">Full report with charts, P&amp;L, ratios, and Go/No-Go verdict.</div>
+      <button class="btn-primary" style="height:46px;font-size:15px;padding:0 32px" id="btn-pdf">
+        Download PDF Report
+      </button>
+      <div class="text-xs text-muted mt-4" id="pdf-status"></div>
+    </div>
+
+    <div class="btn-row" style="justify-content:flex-start">
+      <button style="height:36px;padding:0 16px;background:var(--gray-100);color:var(--gray-900);border:1.5px solid var(--gray-400);border-radius:var(--radius);font-size:12.5px;font-weight:500;font-family:var(--font);cursor:pointer" onclick="window.open(window.location.origin+'/','_blank')">← Score another property</button>
+    </div>
+
+  </div>
+
+  <!-- ══ SCREEN 5: LOADING ══ -->
+  <div class="screen" id="s-loading">
+    <div class="loading-bg-slide" id="lbg0" style="background-image:url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1400&auto=format&fit=crop')"></div>
+    <div class="loading-bg-slide" id="lbg1" style="background-image:url('https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=1400&auto=format&fit=crop')"></div>
+    <div class="loading-bg-slide" id="lbg2" style="background-image:url('https://images.unsplash.com/photo-1484154218962-a197022b5858?w=1400&auto=format&fit=crop')"></div>
+    <div class="loading-bg-slide" id="lbg3" style="background-image:url('https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=1400&auto=format&fit=crop')"></div>
+    <div class="loading-content">
+      <div class="loading-logo">CoLiving<span>Score</span></div>
+      <div class="loading-stage" id="loading-stage">Preparing your analysis...</div>
+      <div class="loading-bar-wrap"><div class="loading-bar" id="loading-bar"></div></div>
+      <div class="loading-quote-wrap">
+        <div class="loading-quote" id="loading-quote"></div>
+        <div class="loading-quote-author" id="loading-author"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SCREEN 6: FULL PRO REPORT ══ -->
+  <div class="screen" id="s-pro-report">
+    <div class="addr-strip">
+      <div class="addr-text">Pro Analysis — <span id="rpt-addr" style="color:#4DBF8F"></span></div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button id="btn-pdf-hdr" style="height:28px;font-size:12px;padding:0 12px;background:transparent;color:var(--white);border:1px solid rgba(255,255,255,0.4);border-radius:var(--radius);cursor:pointer;font-family:var(--font);font-weight:500">🖨 Print Report</button>
+      </div>
+    </div>
+    <!-- Print-only cover page -->
+    <div id="print-cover">
+      <div class="pcv-top">
+        <div class="pcv-wordmark">CoLiving<span>Score</span>.com</div>
+        <div class="pcv-report-type">Pro Analysis Report</div>
+        <div class="pcv-address" id="pc-address"></div>
+        <div class="pcv-city" id="pc-city"></div>
+        <div class="pcv-rule"></div>
+        <div class="pcv-tenant-label">Target Tenant Type</div>
+        <div class="pcv-tenant-value" id="pc-tenant"></div>
+      </div>
+      <div class="pcv-bottom">
+        <div class="pcv-date" id="pc-date"></div>
+        <div class="pcv-disclaimer">For informational purposes only. Not financial or investment advice.</div>
+      </div>
+    </div>
+    <!-- Navigation tabs — built by JS -->
+    <div class="rpt-nav" id="rpt-nav"></div>
+    <!-- Page containers — built by JS -->
+    <div id="rpt-pages"></div>
+    <div class="btn-row" style="justify-content:flex-start;margin-top:8px">
+      <button style="height:36px;padding:0 16px;background:var(--gray-100);color:var(--gray-900);border:1.5px solid var(--gray-400);border-radius:var(--radius);font-size:12.5px;font-weight:500;font-family:var(--font);cursor:pointer" onclick="window.open(window.location.origin+'/','_blank')">← Score another property</button>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+
+<script>
+// ── SCORING ENGINE ────────────────────────────────────────────────────────────
+
+const TENANT_PROFILES = {
+  nurses:    {label:'Travel Nurses',         bathW:25, sqftW:12, parkW:12, transitW:10, hospitalW:20, floorPenalty:4,  churnPenalty:8, rent:1100},
+  tech:      {label:'Tech / Remote Workers', bathW:18, sqftW:12, parkW:12, transitW:8,  hospitalW:4,  floorPenalty:4,  churnPenalty:4, rent:1000},
+  trades:    {label:'Construction / Trades', bathW:18, sqftW:12, parkW:12, transitW:8,  hospitalW:4,  floorPenalty:4,  churnPenalty:5, rent:950},
+  students:  {label:'Students',              bathW:18, sqftW:12, parkW:6,  transitW:25, hospitalW:4,  floorPenalty:4,  churnPenalty:3, rent:800},
+  seniors:   {label:'Seniors 55+',           bathW:25, sqftW:12, parkW:12, transitW:15, hospitalW:14, floorPenalty:15, churnPenalty:0, rent:900},
+  sober:     {label:'Sober Living',          bathW:18, sqftW:12, parkW:6,  transitW:8,  hospitalW:10, floorPenalty:8,  churnPenalty:2, rent:850},
+  workforce: {label:'General Workforce',     bathW:18, sqftW:12, parkW:12, transitW:8,  hospitalW:6,  floorPenalty:4,  churnPenalty:5, rent:875},
+};
+
+function defaultUtilities(sqft){
+  return sqft < 1500 ? 400 : sqft <= 2000 ? 550 : 700;
+}
+
+function parkingScore(inp){
+  const beds = inp.beds;
+  let rem = beds, q = 0;
+  const g = Math.min(inp.garage||0, rem);   q += g*100; rem -= g;
+  const c = Math.min(inp.carport||0, rem);  q += c*65;  rem -= c;
+  const u = Math.min(inp.uncovered||0, rem);q += u*40;  rem -= u;
+  return q / (beds * 100);
+}
+
+function getInputs(){
+  return {
+    beds:      parseInt(document.getElementById('f-beds').value),
+    baths:     parseInt(document.getElementById('f-baths').value),
+    halfbaths: parseInt(document.getElementById('f-halfbaths').value),
+    sqft:      parseInt(document.getElementById('f-sqft').value),
+    floors:    parseInt(document.getElementById('f-floors').value),
+    garage:    parseInt(document.getElementById('f-garage').value),
+    carport:   parseInt(document.getElementById('f-carport').value),
+    uncovered: parseInt(document.getElementById('f-uncovered').value),
+    hoa:       document.getElementById('f-hoa').value,
+    transit:   document.getElementById('f-transit').value,
+    hospital:  document.getElementById('f-hospital').value,
+    mortgage:  parseInt(document.getElementById('f-mortgage').value)||0,
+    tenant:    document.getElementById('f-tenant').value,
+    tenantLabel: document.getElementById('f-tenant').options[document.getElementById('f-tenant').selectedIndex].text,
+    rent:      parseInt(document.getElementById('f-rent').value)||0,
+    laundry:   document.getElementById('f-laundry').value,
+  };
+}
+
+function updateRentDefault(){
+  const key = document.getElementById('f-tenant').value;
+  const p = TENANT_PROFILES[key];
+  if(p) document.getElementById('f-rent').value = p.rent;
+  const noteEl = document.getElementById('f-tenant-note');
+  if(!noteEl) return;
+  const notes = {
+    sober:   'Operating a sober living home requires state licensing in most states. Verify certification requirements before proceeding.',
+    seniors: 'Age-restricted housing (55+) is subject to Fair Housing Act rules. Confirm your property and operating model qualifies before marketing to this tenant type.'
+  };
+  if(notes[key]){
+    noteEl.style.display = '';
+    noteEl.innerHTML = `<div class="banner caution"><div class="banner-icon">!</div><div class="banner-text">${notes[key]}</div></div>`;
+  } else {
+    noteEl.style.display = 'none';
+    noteEl.innerHTML = '';
+  }
+}
+
+function scoreProperty(inp, tenantKey){
+  const p = TENANT_PROFILES[tenantKey];
+
+  if(inp.hoa === 'prohibits'){
+    return {score:20, band:'No Go', hoaFlag:'prohibits',
+      topFlags:[{factor:'HOA prohibits rentals', deduction:80,
+        message:'This HOA does not allow rental activity. This is a legal barrier that prevents co-living use until formally resolved with the HOA board.'}],
+      gross:0, noi:0, total:0, be:0, dscr:0};
+  }
+
+  const factors = [];
+
+  // 1. Bathroom ratio
+  const fullBaths = inp.baths || 1;
+  const ratio = inp.beds / fullBaths;
+  const bathPct = ratio > 2.5 ? 1.0 : ratio > 2.0 ? 0.67 : ratio > 1.5 ? 0.33 : 0;
+  factors.push({factor:'Bathroom ratio', deduction:Math.round(p.bathW * bathPct),
+    message:'Additional bathrooms will improve the score, increase rent values, and make the home a better fit for this tenant type.'});
+
+  // 2. Sqft per bed
+  const sqpp = inp.sqft / inp.beds;
+  const sqftPct = sqpp < 180 ? 1.0 : sqpp < 250 ? 0.67 : sqpp < 350 ? 0.33 : 0;
+  factors.push({factor:'Space per bedroom', deduction:Math.round(p.sqftW * sqftPct),
+    message:'Low square footage per bedroom reduces tenant comfort and limits achievable rent. Larger rooms open opportunities to add bedrooms, bathrooms, or shared amenities.'});
+
+  // 3. Parking
+  const pQuality = parkingScore(inp);
+  factors.push({factor:'Parking availability', deduction:Math.round(p.parkW * (1 - pQuality)),
+    message:'Improving parking — particularly covered or enclosed spaces — increases your score and the rental appeal of this property. Each additional quality parking spot benefits a tenant.'});
+
+  // 4. Transit
+  const tPct = ({walkable:0, close:0.33, moderate:0.67, far:1.0})[inp.transit] ?? 0.67;
+  factors.push({factor:'Transit proximity', deduction:Math.round(p.transitW * tPct),
+    message:'Proximity to public transit is a significant factor for this tenant type. Properties closer to transit stops attract more applicants and support higher retention.'});
+
+  // 5. Hospital proximity
+  const hPct = ({close:0, moderate:0.50, far:1.0})[inp.hospital] ?? 0.50;
+  factors.push({factor:'Hospital proximity', deduction:Math.round(p.hospitalW * hPct),
+    message:'Distance to medical facilities is weighted heavily for this tenant type. Closer proximity to hospitals and medical centers improves both score and tenant appeal.'});
+
+  // 6. Laundry (flat penalty — not tenant-type dependent)
+  const laundryPenalty = ({provided:0, pay:3, none:10})[inp.laundry] ?? 0;
+  factors.push({factor:'Laundry', deduction:laundryPenalty,
+    message: laundryPenalty > 0
+      ? 'Installing an in-home washer and dryer can be a relatively low-cost improvement that recovers up to 10 points and broadens your tenant pool. If space does not exist, plumbing will not support it, or other factors are present, this might be an expensive addition.'
+      : 'In-home laundry is provided — a valued amenity that supports occupancy and tenant retention.'});
+
+  // 7. Tenant churn (by tenant type)
+  const churnPenalty = p.churnPenalty || 0;
+  if(churnPenalty > 0){
+    factors.push({factor:'Tenant turnover', deduction:churnPenalty,
+      message:'Consider a more stable tenant type — switching to Sober Living or Seniors can recover points and reduce management burden. Use the tenant type selector to see how the score changes.'});
+  }
+
+  // 8. Floor penalty
+  if(inp.floors > 1){
+    const floorDed = p.floorPenalty * (inp.floors - 1);
+    const floorMsg = tenantKey==='seniors'
+      ? 'Multi-story homes present significant accessibility challenges for Seniors 55+. Single-story properties are strongly preferred for this tenant type.'
+      : tenantKey==='sober'
+      ? 'Multi-story layouts add friction in sober living environments. Single-story properties are preferable, though this is not a disqualifying factor.'
+      : 'Multi-story homes may reduce appeal for some tenants. This is a minor factor for this tenant type but worth noting.';
+    factors.push({factor:'Multiple stories', deduction:floorDed, message:floorMsg});
+  }
+
+  // 8. HOA modifier
+  let hoaFlag = null, hoaCap = null;
+  if(inp.hoa === 'unclear'){
+    hoaFlag = 'unclear'; hoaCap = 40;
+  } else if(inp.hoa === 'permits'){
+    hoaFlag = 'permits';
+    factors.push({factor:'HOA oversight', deduction:5,
+      message:'This HOA permits co-living, but HOA involvement adds management complexity and potential restrictions. Factor HOA rules into your operating plan.'});
+  }
+
+  let score = 100 - factors.reduce((s,f) => s + f.deduction, 0);
+  if(hoaCap) score = Math.min(score, hoaCap);
+
+  // 9. Cash flow factor
+  const utils    = defaultUtilities(inp.sqft);
+  const rentUsed = inp.rent || p.rent;
+  const fullGross= inp.beds * rentUsed;
+  const effGross = Math.round(fullGross * 0.92);
+  const mgmt     = Math.round(effGross * 0.15);
+  const resv     = 350;
+  const opex     = utils + resv + mgmt;
+  const noi      = effGross - opex;
+  const net      = noi - inp.mortgage;
+  const dscr     = inp.mortgage ? +(noi/inp.mortgage).toFixed(2) : 99;
+  const be       = fullGross ? Math.round((opex + inp.mortgage)/fullGross*100) : 0;
+
+  if(inp.mortgage > 0 && dscr < 1.25){
+    const finDed = dscr >= 1.0  ? Math.round(10 * (1.25 - dscr) / 0.25)
+                 : dscr >= 0.75 ? 10 + Math.round(10 * (1.0 - dscr) / 0.25)
+                 : 20;
+    score -= finDed;
+    factors.push({factor:'Cash flow concern', deduction:finDed,
+      message:'At current rent and expense estimates, this property does not meet the 1.25x DSCR lender benchmark. Review rent assumptions, financing terms, or expense structure.'});
+  }
+  const gross = fullGross;
+
+  score = Math.max(0, Math.min(100, Math.round(score)));
+  const band = score>=85?'Excellent' : score>=70?'Good' : score>=50?'Fair' : score>=30?'Poor' : 'No Go';
+
+  const allSortedFlags = [...factors]
+    .filter(f => f.factor!=='HOA oversight')
+    .sort((a,b) => b.deduction - a.deduction)
+    .filter(f => f.deduction > 0);
+
+  const topFlags = allSortedFlags.slice(0,3);
+
+  return {score, band, hoaFlag, topFlags, allSortedFlags, gross, noi, net, be, dscr};
+}
+
+// ── CALCULATE & SHOW SCORE ────────────────────────────────────────────────────
+function calculateScore(){
+  const inp    = getInputs();
+  const tenant = inp.tenant;
+  const p      = TENANT_PROFILES[tenant];
+  const res    = scoreProperty(inp, tenant);
+  const score  = res.score;
+
+  setStep(3);
+
+  // Score ring
+  const color = score>=70 ? '#1D9E75' : score>=50 ? '#D97706' : '#E24B4A';
+  document.getElementById('r-ring').style.cssText += `--ring-color:${color}`;
+  document.getElementById('r-score-num').textContent = score;
+  document.getElementById('r-marker').style.left = score+'%';
+
+  // Band label
+  const tierEl = document.getElementById('r-tier');
+  const bandClass = score>=70 ? 'strong' : score>=50 ? 'moderate' : 'weak';
+  tierEl.textContent = res.band.toUpperCase();
+  tierEl.className = 'score-tier '+bandClass;
+
+  // Meta
+  document.getElementById('r-tenant-label').textContent = p.label;
+  const bathLabel = inp.baths + (inp.halfbaths ? ' full / '+inp.halfbaths+' half' : '') + ' bath';
+  document.getElementById('r-beds-baths').textContent   = inp.beds+' bed / '+bathLabel;
+  const sqftPerTenant = Math.round(inp.sqft / inp.beds);
+  document.getElementById('r-addr-text').innerHTML = inp.beds+' bed · '+bathLabel+' · '+inp.sqft.toLocaleString()+' sq ft <span class="tip" data-tip="'+sqftPerTenant+' sq ft per bedroom (total sq ft ÷ bedrooms). Useful for comparing what happens to livability when you add or remove a bedroom.">?</span>';
+
+  // Reg badge
+  const regBadge = document.getElementById('r-reg-badge');
+  if(inp.hoa==='prohibits'){ regBadge.textContent='HOA: Blocked'; regBadge.className='addr-reg blocked'; }
+  else if(inp.hoa==='unclear'){ regBadge.textContent='HOA: Verify'; regBadge.className='addr-reg caution'; }
+  else { regBadge.textContent='Regulatory: Clear'; regBadge.className='addr-reg clear'; }
+
+  // Financials
+  document.getElementById('r-gross').textContent = '$'+res.gross.toLocaleString();
+  document.getElementById('r-noi').textContent   = (res.net<0?'-$'+Math.abs(res.net).toLocaleString():'$'+res.net.toLocaleString());
+  document.getElementById('r-be').textContent    = res.be+'%';
+  document.getElementById('r-noi').style.color   = res.net>0 ? 'var(--green-dark)' : 'var(--red)';
+
+  // Audit flags
+  buildAuditFlags(inp, res);
+
+  // Referral & Pro gate
+  buildReferral(score, inp);
+  buildProGate(score, inp);
+
+  window._inputs = inp;
+  window._score  = score;
+  window._fin    = res;
+
+  showScreen('s-result');
+}
+
+function buildAuditFlags(inp, res){
+  const html = [];
+  const flag = (type, title, body) =>
+    `<div class="banner ${type}"><div class="banner-icon">${type==='success'?'✓':type==='caution'?'!':'✕'}</div><div class="banner-text"><strong>${title}</strong> ${body}</div></div>`;
+
+  // HOA — always shown
+  if(inp.hoa==='prohibits')
+    html.push(flag('critical','HOA prohibits rentals','This is a legal barrier. Do not invest capital until the CC&Rs are formally resolved.'));
+  else if(inp.hoa==='unclear')
+    html.push(flag('caution','HOA status unclear','Until co-living is explicitly approved, this property carries significant legal and financial risk. Verify before proceeding.'));
+  else if(inp.hoa==='permits')
+    html.push(flag('caution','HOA permits co-living','Confirm the rules specifically allow unrelated occupants sharing common areas. HOA oversight adds operational complexity.'));
+  else
+    html.push(flag('success','No HOA','Clean regulatory status for co-living conversion.'));
+
+  // Low bed count flag
+  if(inp.beds <= 3){
+    html.push(flag('caution','Limited bed count','Properties with 3 or fewer bedrooms have limited income potential for co-living. In markets with low acquisition costs, the numbers may still work — let your monthly net income and cash flow be the guide.'));
+  }
+
+  // Top 3 scoring deductions
+  res.topFlags.forEach(f => {
+    html.push(flag('caution', f.factor, f.message));
+  });
+
+  document.getElementById('r-flags').innerHTML = html.join('');
+}
+
+function buildReferral(score, inp){
+  let html = '';
+  if(score >= 70){
+    html = `<div class="referral-card featured">
+      <div class="ref-title">✓ Strong candidate — ready for conversion</div>
+      <div class="ref-desc">This property scores in the top tier. Connect with a co-living contractor to get improvement bids and a conversion timeline.</div>
+      <div class="ref-btns">
+      </div>
+    </div>`;
+  } else if(score >= 65){
+    html = `<div class="referral-card">
+      <div class="ref-title">Moderate candidate — worth a closer look</div>
+      <div class="ref-desc">This property has potential with the right improvements. A Pro Analysis will show you exactly what to fix and the ROI on each change.</div>
+    </div>`;
+  } else {
+    html = `<div class="referral-card">
+      <div class="ref-title">Weak candidate — consider your options</div>
+      <div class="ref-desc">The gaps identified above would require significant changes to overcome. You may get a better return selling to an investor or exploring a different use.</div>
+      <div class="ref-btns">
+      </div>
+    </div>`;
+  }
+  document.getElementById('r-referral').innerHTML = html;
+}
+
+function buildProGate(score, inp){
+  const headline = score < 50
+    ? 'Pro Analysis — Understand Why & What It Would Take to Fix It'
+    : 'Pro Analysis — Full 16-Page Financial Report';
+  const html = `<div class="pro-gate">
+    <h3>${headline}</h3>
+    <p>Get the complete picture: 16-page market analysis, itemized P&amp;L, financial ratios, location intelligence, SWOT, risk analysis, and a downloadable PDF.</p>
+    <div class="pro-features">
+      <div class="pro-feature">Executive Summary & Market Overview</div>
+      <div class="pro-feature">Rent Pricing Analysis</div>
+      <div class="pro-feature">P&L, DSCR & Key Ratios</div>
+      <div class="pro-feature">Location Intelligence</div>
+      <div class="pro-feature">SWOT & Risk Analysis</div>
+      <div class="pro-feature">Capital Improvement ROI</div>
+      <div class="pro-feature">Platform vs. Self-Managed</div>
+      <div class="pro-feature">Downloadable PDF Report</div>
+    </div>
+    <button class="btn-pro" onclick="startProAnalysis()">Get My Pro Analysis →</button>
+    <div style="margin-top:14px">
+      <a href="/static/sample-pro-report.pdf" target="_blank" style="color:rgba(255,255,255,0.75);font-size:13px;text-decoration:underline;text-underline-offset:3px">👁 View a sample report before you buy</a>
+    </div>
+  </div>`;
+  document.getElementById('r-pro-gate').innerHTML = html;
+}
+
+// ── REVIEW SCREEN ─────────────────────────────────────────────────────────────
+function showReviewScreen(){
+  const inp = window._inputs || {};
+  const beds = inp.beds || 5;
+
+  // Collect all pro form values
+  const rent     = parseInt(document.getElementById('f-rent').value)||0;
+  const occ      = parseFloat(document.getElementById('p-occ').value)||0.85;
+  const mortgageEl = document.getElementById('p-mortgage');
+  if(!mortgageEl.value.trim()){
+    mortgageEl.style.borderColor='var(--red)';
+    mortgageEl.focus();
+    mortgageEl.scrollIntoView({behavior:'smooth',block:'center'});
+    return;
+  }
+  mortgageEl.style.borderColor='';
+  const mortgage = parseInt(mortgageEl.value)||0;
+  const taxes    = parseInt(document.getElementById('p-taxes').value)||0;
+  const ins      = parseInt(document.getElementById('p-insurance').value)||0;
+  const hoa      = parseInt(document.getElementById('p-hoa').value)||0;
+  const uv       = getUtilityValues();
+  const internet = parseInt(document.getElementById('p-internet').value)||0;
+  const yard     = parseInt(document.getElementById('p-yard').value)||0;
+  const pest     = parseInt(document.getElementById('p-pest').value)||0;
+  const repairs  = parseInt(document.getElementById('p-repairs').value)||0;
+  const capex    = parseInt(document.getElementById('p-capex').value)||0;
+  const mgmtSel  = document.getElementById('p-mgmt').value;
+  const mgmtRate = Math.min(100, Math.max(0, parseFloat(document.getElementById('p-mgmt-rate').value)||15)) / 100;
+  const mgmtLabels = {self:'Self-Managed', specialist:'Co-Living Manager', padsplit:'PadSplit (8% and up)', other:'Other'};
+
+  // Store for use after payment
+  window._pendingProInputs = { rent, occ, mortgage, taxes, ins, hoa, ...uv, internet, yard, pest, repairs, capex, mgmtSel, mgmtRate };
+
+  const row = (label, value) =>
+    `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gray-100);font-size:13px">
+       <span style="color:var(--gray-600)">${label}</span>
+       <span style="font-weight:600;color:var(--gray-900)">${value}</span>
+     </div>`;
+
+  document.getElementById('rv-property').innerHTML =
+    row('Bedrooms', beds) +
+    row('Bathrooms', (inp.baths || '—') + (inp.halfbaths ? ' full / '+inp.halfbaths+' half' : '')) +
+    row('Square Footage', inp.sqft ? inp.sqft.toLocaleString() + ' sq ft' : '—') +
+    row('Stories', inp.floors || '—') +
+    row('Parking', (inp.garage||0) + ' garage · ' + (inp.carport||0) + ' carport · ' + (inp.uncovered||0) + ' uncovered') +
+    row('HOA Status', inp.hoa || '—') +
+    row('Transit', inp.transit || '—') +
+    row('Hospital proximity', inp.hospital || '—') +
+    row('Target Tenant', inp.tenantLabel || '—');
+
+  document.getElementById('rv-financials').innerHTML =
+    row('Rent per room / month', '$' + rent.toLocaleString()) +
+    row('Expected occupancy', Math.round(occ*100) + '%') +
+    row('Monthly mortgage', '$' + mortgage.toLocaleString()) +
+    row('Annual property taxes', '$' + taxes.toLocaleString()) +
+    row('Annual insurance', '$' + ins.toLocaleString()) +
+    row('HOA / month', '$' + hoa.toLocaleString()) +
+    row('Utilities paid by', uv.utilPayer==='tenant' ? 'Tenant' : 'Landlord') +
+    (uv.utilPayer==='landlord' ? row('Utilities / month', '$' + uv.utilTotal.toLocaleString()) : '') +
+    row('Internet / month', '$' + internet.toLocaleString()) +
+    row('Yard maintenance / month', '$' + yard.toLocaleString()) +
+    row('Pest control / month', '$' + pest.toLocaleString()) +
+    row('Repairs reserve / month', '$' + repairs.toLocaleString()) +
+    row('CapEx reserve / month', '$' + capex.toLocaleString()) +
+    row('Management model', (mgmtLabels[mgmtSel]||mgmtSel) + ' (' + Math.round(mgmtRate*100) + '%)');
+
+  showScreen('s-review');
+  setStep(4);
+}
+
+async function initiatePayment(){
+  const statusEl = document.getElementById('pay-status');
+  const btn = document.getElementById('btn-pay');
+  const emailVal = (document.getElementById('rv-email').value || '').trim();
+  if(!emailVal || !emailVal.includes('@')){
+    statusEl.textContent = 'Please enter a valid email address above.';
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = 'Connecting to payment...';
+  statusEl.textContent = '';
+
+  // Save inputs to sessionStorage so we can recover them after Stripe redirect
+  sessionStorage.setItem('cls_pending_pro', JSON.stringify(window._pendingProInputs || {}));
+  sessionStorage.setItem('cls_free_inputs', JSON.stringify({
+    ...(window._inputs || {}),
+    _address: window._address || '',
+    _place:   window._place   || null,
+  }));
+  if(window._score != null) sessionStorage.setItem('cls_free_score', String(window._score));
+  if(window._fin   != null) sessionStorage.setItem('cls_fin',        JSON.stringify(window._fin));
+
+  try {
+    const res = await fetch(_apiUrl('/create-checkout-session'), {
+      method: 'POST',
+      headers: {'Content-Type':'application/json', 'X-API-Key': window._apiKey||''},
+      body: JSON.stringify({
+        ...(window._pendingProInputs || {}),
+        _email:    emailVal,
+        _score:    window._score || 0,
+        _addr:     window._address || '',
+        _city:     (window._place || {}).city    || '',
+        _state:    (window._place || {}).state   || '',
+        _zip:      (window._place || {}).zip     || '',
+        _lat:      (window._place || {}).lat     || 0,
+        _lng:      (window._place || {}).lng     || 0,
+        _beds:     (window._inputs || {}).beds     || 4,
+        _baths:    (window._inputs || {}).baths    || 2,
+        _sqft:     (window._inputs || {}).sqft     || 0,
+        _tenant:   (window._inputs || {}).tenant   || 'workforce',
+        _floors:   (window._inputs || {}).floors   || 1,
+        _garage:   (window._inputs || {}).garage   || 0,
+        _transit:  (window._inputs || {}).transit  || 'walkable',
+        _hospital: (window._inputs || {}).hospital || 'close',
+      })
+    });
+    const data = await res.json();
+    if(data.url){
+      window.location.href = data.url;
+    } else {
+      statusEl.textContent = 'Payment error: ' + (data.error || 'Unknown error');
+      btn.disabled = false;
+      btn.textContent = 'Looks Good — Pay $29 →';
+    }
+  } catch(err){
+    statusEl.textContent = 'Connection error. Please try again.';
+    btn.disabled = false;
+    btn.textContent = 'Looks Good — Pay $29 →';
+  }
+}
+
+// ── TENANT SUITABILITY ENGINE ─────────────────────────────────────────────────
+function computeTenantSuitability(inp, fd) {
+  if (!inp) return [];
+  const ws = fd ? (fd.walkscore || {}) : {};
+  const nb = fd ? (fd.nearby    || {}) : {};
+  const hospitalDist   = (nb.hospital && nb.hospital.distance_miles != null) ? parseFloat(nb.hospital.distance_miles) : null;
+  const transitAvail   = (ws.transit_score || 0) >= 25;
+  const parkingAvail   = (inp.garage||0) + (inp.carport||0) + (inp.uncovered||0) > 0;
+  const coveredParking = (inp.garage||0) + (inp.carport||0) > 0;
+  const singleStory    = (inp.floors||1) <= 1;
+  const walkScore      = ws.walk_score || 0;
+  const walkHigh       = walkScore >= 70;
+  const walkMed        = walkScore >= 50;
+  const uniPlace       = (nb.amenities||[]).find(a => a.type === 'university');
+  const campusDist     = uniPlace ? parseFloat(uniPlace.distance_miles) : null;
+
+  function sig(type, text){ return {type, text}; }
+
+  const profiles = {
+    nurses: { label:'Travel Nurses', eval(){
+      const signals=[]; let fit='marginal';
+      if(hospitalDist!==null){
+        if(hospitalDist<3){       signals.push(sig('strong-pos',`Hospital ${hospitalDist} mi — strong draw for travel nurse placements`)); fit='strong'; }
+        else if(hospitalDist<=7){ signals.push(sig('marginal',  `Hospital ${hospitalDist} mi — acceptable but not ideal (target: under 3 mi)`)); }
+        else{                     signals.push(sig('strong-neg',`Hospital ${hospitalDist} mi — too far for most travel nurse placements`)); fit='poor'; }
+      } else { signals.push(sig('note','Hospital distance unavailable')); }
+      if(parkingAvail) signals.push(sig('pos','Parking available — travel nurses typically have vehicles'));
+      else             signals.push(sig('neg','No parking — travel nurses typically have vehicles'));
+      return {fit, signals};
+    }},
+    tech: { label:'Tech / Remote Workers', eval(){
+      const signals=[]; let pos=0;
+      if(walkHigh){      signals.push(sig('pos','Walkable area — appealing to remote workers')); pos++; }
+      else if(!walkMed){ signals.push(sig('neg','Low walkability — remote workers prefer walkable neighborhoods')); }
+      if(transitAvail){  signals.push(sig('pos','Transit accessible')); pos++; }
+      else{              signals.push(sig('note','Limited transit access')); }
+      signals.push(sig('note','Internet quality not assessed — verify fiber/cable availability'));
+      return {fit: pos>=2?'good':'marginal', signals};
+    }},
+    trades: { label:'Construction / Trades', eval(){
+      const signals=[]; let fit='marginal';
+      if(coveredParking){    signals.push(sig('strong-pos','Covered parking — trades workers need secure vehicle and tool storage')); fit='good'; }
+      else if(parkingAvail){ signals.push(sig('pos','Parking available')); }
+      else{                  signals.push(sig('strong-neg','No parking — dealbreaker for most trades workers')); fit='poor'; }
+      if(walkHigh) signals.push(sig('neg','Highly walkable urban area — typically not proximate to trades job sites'));
+      signals.push(sig('note','Employer and job site proximity not assessed'));
+      return {fit, signals};
+    }},
+    seniors: { label:'Seniors 55+', eval(){
+      const signals=[]; let penalty=false, pos=0;
+      if(singleStory){ signals.push(sig('pos','Single-story layout — ideal for 55+ mobility')); pos++; }
+      else{            signals.push(sig('strong-neg','Multi-story layout — significant accessibility barrier for 55+ residents')); penalty=true; }
+      if(hospitalDist!==null && hospitalDist<3){ signals.push(sig('pos',`Medical facilities ${hospitalDist} mi away`)); pos++; }
+      else if(hospitalDist!==null){              signals.push(sig('neg',`Medical facilities ${hospitalDist} mi away — seniors prefer under 3 mi`)); }
+      if(transitAvail){ signals.push(sig('pos','Transit accessible — important for non-driving residents')); pos++; }
+      if(walkHigh){     signals.push(sig('pos','Walkable neighborhood — quality of life for 55+')); pos++; }
+      return {fit: penalty?'poor':pos>=2?'good':'marginal', signals};
+    }},
+    sober: { label:'Sober Living', eval(){
+      const signals=[];
+      if(transitAvail) signals.push(sig('pos','Transit accessible — important for residents without vehicles'));
+      else             signals.push(sig('neg','No transit — limits mobility for residents without vehicles'));
+      signals.push(sig('note','Higher than average damage and turnover risk'));
+      signals.push(sig('note','Requires active management oversight and house rules enforcement'));
+      return {fit:'marginal', signals};
+    }},
+    students: { label:'Students', eval(){
+      const signals=[]; let fit='marginal';
+      if(campusDist!==null){
+        if(campusDist<3){                         signals.push(sig('strong-pos',`Campus ${campusDist} mi — strong student demand driver`)); fit='strong'; }
+        else if(campusDist<=5 && transitAvail){   signals.push(sig('marginal',  `Campus ${campusDist} mi — manageable with transit access`)); }
+        else{                                     signals.push(sig('strong-neg', campusDist>5?`Campus ${campusDist} mi — too far for consistent student demand`:`Campus ${campusDist} mi without transit — difficult commute`)); fit='poor'; }
+      } else { signals.push(sig('strong-neg','No university detected nearby — student demand unlikely')); fit='poor'; }
+      if(transitAvail) signals.push(sig('pos','Transit accessible'));
+      signals.push(sig('note','Seasonal vacancy risk — budget for summer months'));
+      return {fit, signals};
+    }},
+    workforce: { label:'General Workforce', eval(){
+      const signals=[]; let pos=0;
+      if(parkingAvail){ signals.push(sig('pos','Parking available')); pos++; }
+      if(transitAvail){ signals.push(sig('pos','Transit accessible')); pos++; }
+      signals.push(sig('note','Baseline tenant type — stable demand in most markets'));
+      return {fit: pos>=1?'good':'marginal', signals};
+    }}
+  };
+
+  return Object.entries(profiles).map(([key,p])=>{ const r=p.eval(); return {key, label:p.label, fit:r.fit, signals:r.signals}; });
+}
+
+function renderSuitabilityTable(results, currentTenant){
+  const FIT_ORDER  = {strong:0, good:1, marginal:2, poor:3};
+  const FIT_LABELS = {
+    strong:  {text:'Strong Fit', bg:'#dcfce7', color:'#15803d'},
+    good:    {text:'Good Fit',   bg:'#f0fdf4', color:'#166534'},
+    marginal:{text:'Marginal',   bg:'#fef9c3', color:'#854d0e'},
+    poor:    {text:'Poor Fit',   bg:'#fee2e2', color:'#991b1b'},
+  };
+  const SIG_ICONS = {
+    'strong-pos':{icon:'✓', color:'#15803d'},
+    'pos':       {icon:'✓', color:'#166534'},
+    'marginal':  {icon:'⚠', color:'#854d0e'},
+    'neg':       {icon:'✗', color:'#b91c1c'},
+    'strong-neg':{icon:'✗', color:'#991b1b'},
+    'note':      {icon:'·', color:'#6b7280'},
+  };
+
+  const current = results.find(r=>r.key===currentTenant);
+  const others  = results.filter(r=>r.key!==currentTenant).sort((a,b)=>FIT_ORDER[a.fit]-FIT_ORDER[b.fit]);
+  const sorted  = current ? [current, ...others] : [...results].sort((a,b)=>FIT_ORDER[a.fit]-FIT_ORDER[b.fit]);
+
+  const betterExists = current && others.length && FIT_ORDER[others[0].fit] < FIT_ORDER[current.fit];
+  let html = '';
+
+  if(betterExists){
+    html += `<div style="padding:10px 14px;background:#fef9c3;border:1px solid #fcd34d;border-radius:var(--radius);font-size:12.5px;color:#854d0e;margin-bottom:12px">
+      ⚠ A stronger tenant fit exists for this property. See <strong>${others[0].label}</strong> below.
+    </div>`;
+  }
+
+  sorted.forEach(r => {
+    const isCurrent = r.key === currentTenant;
+    const fl = FIT_LABELS[r.fit] || FIT_LABELS.marginal;
+    const shownSignals = isCurrent ? r.signals : r.signals.filter(s=>s.type!=='note').slice(0,2);
+    html += `<div class="suit-card" style="padding:12px 14px;border-radius:var(--radius);margin-bottom:8px;border:1px solid ${isCurrent?'#86efac':'var(--gray-200)'};background:${isCurrent?'#f0fdf4':'var(--white)'}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:${shownSignals.length?'8px':'0'}">
+        <div style="font-size:13px;font-weight:${isCurrent?'700':'600'};color:var(--dark)">${r.label}${isCurrent?` <span style="font-size:11px;font-weight:500;color:var(--green-dark)">(your selection)</span>`:''}</div>
+        <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;background:${fl.bg};color:${fl.color}">${fl.text}</span>
+      </div>
+      ${shownSignals.map(s=>{ const si=SIG_ICONS[s.type]||SIG_ICONS.note; return `<div style="font-size:12px;color:${si.color};line-height:1.6"><span style="font-weight:700;margin-right:4px">${si.icon}</span>${s.text}</div>`; }).join('')}
+    </div>`;
+  });
+  return html;
+}
+
+// ── PRO ANALYSIS ─────────────────────────────────────────────────────────────
+function startProAnalysis(){
+  const inp = window._inputs || {};
+  if(inp.beds){
+    const beds = inp.beds;
+    // Scale internet by rooms
+    document.getElementById('p-internet').value = beds * 24;
+  }
+  const rentVal = parseInt(document.getElementById('f-rent').value)||0;
+  document.getElementById('p-rent-display').textContent = '$' + rentVal.toLocaleString();
+  showScreen('s-pro-form');
+  setStep(4);
+}
+
+function generateProAnalysis(overrideInputs){
+  const mgmtLabels = {self:'Self-Managed', specialist:'Co-Living Manager', padsplit:'PadSplit (8% and up)', other:'Other'};
+  const inp = window._inputs;
+  const beds = inp ? inp.beds : 5;
+  const tenant = inp ? inp.tenant : 'nurses';
+  const p = TENANT_PROFILES[tenant];
+
+  // Use overrideInputs if coming back from Stripe, otherwise read from form
+  const src = overrideInputs || {};
+  const rent     = src.rent     || parseInt(document.getElementById('f-rent').value)||1100;
+  const occ      = src.occ      || parseFloat(document.getElementById('p-occ').value)||0.92;
+  const mortgage = src.mortgage || parseInt(document.getElementById('p-mortgage').value)||0;
+  const taxes    = src.taxes    || parseInt(document.getElementById('p-taxes').value)||4800;
+  const ins      = src.ins      || parseInt(document.getElementById('p-insurance').value)||2400;
+  const hoa      = src.hoa      !== undefined ? src.hoa : (parseInt(document.getElementById('p-hoa').value)||0);
+  const uv       = src.utilTotal !== undefined ? src : getUtilityValues();
+  const internet = src.internet || parseInt(document.getElementById('p-internet').value)||100;
+  const yard     = src.yard     || parseInt(document.getElementById('p-yard').value)||100;
+  const pest     = src.pest     || parseInt(document.getElementById('p-pest').value)||40;
+  const repairs  = src.repairs  || parseInt(document.getElementById('p-repairs').value)||200;
+  const capex    = src.capex    || parseInt(document.getElementById('p-capex').value)||150;
+  const mgmtSel  = src.mgmtSel  || document.getElementById('p-mgmt').value;
+  const mgmtPct  = src.mgmtRate !== undefined ? src.mgmtRate :
+                   Math.min(100, Math.max(0, parseFloat(document.getElementById('p-mgmt-rate').value)||15)) / 100;
+
+  const gross   = Math.round(beds * rent * occ);
+  const mgmtFee = Math.round(gross * mgmtPct);
+  const taxMo   = Math.round(taxes/12);
+  const insMo   = Math.round(ins/12);
+  const opEx    = taxMo + insMo + hoa + uv.utilTotal + internet + yard + pest + repairs + capex + mgmtFee;
+  const total   = mortgage + opEx;
+  const noi     = gross - opEx;      // Net Operating Income = gross minus operating expenses (before mortgage)
+  const cashFlow = gross - total;    // Cash Flow = NOI minus mortgage
+  const cashFlowAnn = cashFlow * 12;
+  const dscr    = mortgage ? +(noi/mortgage).toFixed(2) : 0;
+  const oer     = gross ? +(opEx/gross).toFixed(2) : 0;  // OER excludes mortgage
+  const be      = (beds*rent) ? +(total/(beds*rent)).toFixed(2) : 0;
+  const margin  = gross ? +(cashFlow/gross).toFixed(2) : 0;
+
+  // Save for PDF
+  window._proData = {
+    address: (inp ? inp.beds+' bed / '+inp.baths+' bath · '+inp.sqft.toLocaleString()+' sq ft' : 'Property'),
+    beds, baths: inp?inp.baths:3, sqft:inp?inp.sqft:2480,
+    floors:inp?inp.floors:1, parking:inp?inp.garage+' car garage':'',
+    hoa:'None', transit:inp?inp.transit:'walkable', hospital:inp?inp.hospital:'close',
+    target_tenant:p.label, score:window._score||87, regulatory:'Clear',
+    report_date: new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}),
+    mortgage, rent_per_room:rent, occupancy_rate:occ,
+    annual_taxes:taxes, annual_insurance:ins, hoa_monthly:hoa,
+    water_sewer:uv.water, garbage:uv.garbage, electric:uv.electric, gas:uv.gas, util_total:uv.utilTotal, util_payer:uv.utilPayer, internet, yard, pest_control:pest,
+    repairs_reserve:repairs, capex_reserve:capex,
+    mgmt_model: (mgmtLabels[mgmtSel]||mgmtSel) + ' (' + Math.round(mgmtPct*100) + '%)',
+    mgmt_model_key: mgmtSel,
+    mgmt_rate: mgmtPct,
+    gross_monthly:gross, total_expenses:total, noi_monthly:noi, cash_flow_monthly:cashFlow, cash_flow_annual:cashFlowAnn,
+    dscr, oer, breakeven_occ:be, cash_flow_margin:margin, per_room_noi:Math.round(noi/beds)
+  };
+
+  // Store pro financials for page 1 KPI strip
+  window._proFin = { gross, opEx, total, noi, cashFlow, cashFlowAnn, dscr, oer, be, margin, mortgage, mgmtSel, beds,
+    rent, occ, taxMo, insMo, hoa, utilTotal: uv.utilTotal, internet, yard, pest, repairs, capex, mgmtFee, mgmtPct };
+
+  // Render Pro results
+  document.getElementById('pr-addr').textContent = p.label + ' Analysis';
+
+  // Financial summary grid
+  const greenOrRed = v => v>0 ? 'color:var(--green-dark);font-weight:700' : 'color:var(--red);font-weight:700';
+  document.getElementById('pr-fin-grid').innerHTML = `
+    <div class="fin-card"><div class="fin-label">Gross Monthly Income</div><div class="fin-value green">$${gross.toLocaleString()}</div></div>
+    <div class="fin-card"><div class="fin-label">Operating Expenses (excl. mortgage)</div><div class="fin-value">$${opEx.toLocaleString()}</div></div>
+    <div class="fin-card"><div class="fin-label">Net Operating Income</div><div class="fin-value" style="${greenOrRed(noi)}">$${noi.toLocaleString()}</div></div>
+    <div class="fin-card"><div class="fin-label">Monthly Mortgage</div><div class="fin-value">$${mortgage.toLocaleString()}</div></div>
+    <div class="fin-card"><div class="fin-label">Monthly Cash Flow</div><div class="fin-value" style="${greenOrRed(cashFlow)}">$${cashFlow.toLocaleString()}</div></div>
+    <div class="fin-card"><div class="fin-label">Annual Cash Flow</div><div class="fin-value" style="${greenOrRed(cashFlowAnn)}">$${cashFlowAnn.toLocaleString()}</div></div>`;
+
+  // Ratios
+  const ratioRow = (label, value, benchmark, good) => {
+    const color = good ? 'var(--green-dark)' : 'var(--amber)';
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--gray-100)">
+      <div><div style="font-size:13px;font-weight:500">${label}</div><div style="font-size:11px;color:var(--gray-500)">${benchmark}</div></div>
+      <div style="font-size:16px;font-weight:700;color:${color}">${value}</div>
+    </div>`;
+  };
+  document.getElementById('pr-ratios').innerHTML =
+    ratioRow('Debt Service Coverage Ratio (NOI ÷ Mortgage) — how many times your operating income covers the mortgage. Lenders require 1.25x minimum.', dscr+'x', dscr>=1.25 ? '✓ Meets lender threshold' : '✗ Below lender minimum of 1.25x', dscr>=1.25) +
+    ratioRow('Operating Expense Ratio (Operating Expenses ÷ Gross Income) — excludes mortgage. Measures operating efficiency. Lower is healthier.', Math.round(oer*100)+'%', oer<=0.65 ? '✓ Within healthy range' : '✗ Target is under 65%', oer<=0.65) +
+    ratioRow('Break-Even Occupancy — the minimum occupancy needed to cover all costs including mortgage.', Math.round(be*100)+'%', be<=0.75 ? '✓ Good cushion above break-even' : '✗ Target is under 75%', be<=0.75) +
+    ratioRow('Cash Flow Margin — how much of your gross income remains after all expenses including mortgage.', Math.round(margin*100)+'%', margin>=0.20 ? '✓ Strong margin' : '✗ Target is 20% or higher', margin>=0.20);
+
+  // Tenant suitability analysis
+  try {
+    const fd = window._fastData || null;
+    const suitResults = computeTenantSuitability(inp, fd);
+    document.getElementById('pr-tenant-comparison').innerHTML = renderSuitabilityTable(suitResults, tenant);
+  } catch(e) {
+    console.warn('Suitability engine error:', e);
+    document.getElementById('pr-tenant-comparison').innerHTML = '';
+  }
+
+  // Improvements
+  const imps = [
+    {item:'Add bathroom (full addition)',  cost:18000,lift:150,months:10,priority:'High'},
+    {item:'Keypad entry per room',          cost:1200, lift:30, months:3, priority:'High'},
+    {item:'In-unit washer/dryer stack',     cost:2800, lift:50, months:5, priority:'High'},
+    {item:'Mini-fridge per bedroom',        cost:1600, lift:25, months:6, priority:'Medium'},
+    {item:'Dedicated desk + lighting',      cost:1800, lift:35, months:4, priority:'Medium'},
+  ];
+  // Add half-bath conversion if applicable
+  if(inp && inp.halfbaths > 0){
+    imps.unshift({item:'Convert half-bath to full bath (add standup shower)', cost:10000, lift:100, months:8, priority:'High'});
+  }
+  document.getElementById('pr-improvements').innerHTML = `
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:0;font-size:11px;font-weight:700;color:var(--gray-500);letter-spacing:0.5px;padding:8px 0;border-bottom:1px solid var(--gray-200)">
+      <div>IMPROVEMENT</div><div style="text-align:right">COST</div><div style="text-align:right">LIFT/RM</div><div style="text-align:right">PAYBACK</div><div style="text-align:right">PRIORITY</div>
+    </div>` +
+    imps.map(i=>`<div class="impr-row" style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:0;font-size:13px;padding:10px 0;border-bottom:1px solid var(--gray-100);align-items:center">
+      <div style="font-weight:500">${i.item}</div>
+      <div style="text-align:right;color:var(--gray-700)">$${i.cost.toLocaleString()}</div>
+      <div style="text-align:right;color:var(--green-dark);font-weight:600">+$${i.lift}/mo</div>
+      <div style="text-align:right;color:var(--gray-700)">${i.months} mo</div>
+      <div style="text-align:right;font-weight:600;color:${i.priority==='High'?'var(--green-dark)':'var(--gray-500)'}">${i.priority}</div>
+    </div>`).join('');
+
+  // Verdict
+  const goScore = window._score||87;
+  const isGo    = goScore>=65 && noi>0 && dscr>=1.0;
+  document.getElementById('pr-verdict').innerHTML = `
+    <div style="background:${isGo?'var(--green-light)':'var(--red-light)'};border:1px solid ${isGo?'#97C459':'#F09595'};border-radius:var(--radius-lg);padding:24px;margin-bottom:16px">
+      <div style="font-size:18px;font-weight:700;color:${isGo?'var(--green-dark)':'var(--red)'};margin-bottom:10px">${isGo?'✓ GO — Strong Co-Living Candidate':'✕ NO-GO — Does Not Meet Thresholds'}</div>
+      <div style="font-size:13px;color:var(--gray-700);line-height:1.7">
+        ${isGo
+          ? `DSCR of ${dscr}x ${dscr>=1.25?'exceeds':'is approaching'} the 1.25x lender benchmark. Break-even occupancy of ${Math.round(be*100)}% provides a ${be<=0.75?'comfortable':'tight'} cushion. Monthly cash flow of $${cashFlow.toLocaleString()} supports a viable co-living operation at this rent level.`
+          : `This property does not meet minimum thresholds for co-living investment at current inputs. Review the improvement recommendations above and re-run the analysis with adjusted rent or expense assumptions.`
+        }
+      </div>
+    </div>`;
+
+  showScreen('s-pro-result');
+}
+
+// ── PDF DOWNLOAD ──────────────────────────────────────────────────────────────
+function downloadPDF(){
+  var addr = ((window._address || (window._inputs && window._inputs.address) || 'Property')).split(',')[0].trim();
+  var prev = document.title;
+  document.title = 'CoLivingScore Pro Analysis \u2014 ' + addr;
+  window.print();
+  document.title = prev;
+}
+
+// ── EMAIL CAPTURE ─────────────────────────────────────────────────────────────
+function setUtilPayer(who){
+  window._utilPayer = who;
+  document.getElementById('util-landlord').classList.toggle('active', who==='landlord');
+  document.getElementById('util-tenant').classList.toggle('active', who==='tenant');
+  document.getElementById('util-fields').classList.toggle('greyed', who==='tenant');
+}
+function setElecBilling(mode){
+  window._elecBilling = mode;
+  document.getElementById('elec-combined-btn').classList.toggle('active', mode==='combined');
+  document.getElementById('elec-separate-btn').classList.toggle('active', mode==='separate');
+  document.getElementById('elec-combined-field').style.display = mode==='combined' ? '' : 'none';
+  document.getElementById('elec-electric-field').style.display = mode==='separate' ? '' : 'none';
+  document.getElementById('elec-gas-field').style.display = mode==='separate' ? '' : 'none';
+}
+function setWaterBilling(mode){
+  window._waterBilling = mode;
+  document.getElementById('water-combined-btn').classList.toggle('active', mode==='combined');
+  document.getElementById('water-separate-btn').classList.toggle('active', mode==='separate');
+  document.getElementById('water-combined-field').style.display = mode==='combined' ? '' : 'none';
+  document.getElementById('water-water-field').style.display = mode==='separate' ? '' : 'none';
+  document.getElementById('water-garbage-field').style.display = mode==='separate' ? '' : 'none';
+}
+function getUtilityValues(){
+  if((window._utilPayer||'landlord')==='tenant')
+    return {electric:0,gas:0,water:0,garbage:0,utilTotal:0,utilPayer:'tenant'};
+  const elecMode  = window._elecBilling  || 'combined';
+  const waterMode = window._waterBilling || 'combined';
+  let electric=0, gas=0, water=0, garbage=0;
+  if(elecMode==='combined'){
+    electric = parseInt(document.getElementById('p-elec-gas').value)||0;
+  } else {
+    electric = parseInt(document.getElementById('p-electric').value)||0;
+    gas      = parseInt(document.getElementById('p-gas').value)||0;
+  }
+  if(waterMode==='combined'){
+    water = parseInt(document.getElementById('p-water-combined').value)||0;
+  } else {
+    water   = parseInt(document.getElementById('p-water').value)||0;
+    garbage = parseInt(document.getElementById('p-garbage').value)||0;
+  }
+  return {electric,gas,water,garbage,utilTotal:electric+gas+water+garbage,utilPayer:'landlord'};
+}
+
+function _apiUrl(path){ return window._apiKey ? path+'?_k='+encodeURIComponent(window._apiKey) : path; }
+
+function submitEmail(){
+  const email = document.getElementById('r-email').value.trim();
+  if(!email || !email.includes('@')){ alert('Please enter a valid email address.'); return; }
+
+  const inp = window._inputs || {};
+  const fin = window._fin   || {};
+  const tenant = inp.tenant || document.getElementById('f-tenant').value;
+  const p = TENANT_PROFILES[tenant] || {};
+
+  const btn = document.getElementById('btn-save-email');
+  if(btn){ btn.disabled = true; btn.textContent = 'Sending…'; }
+
+  fetch(_apiUrl('/save-email'), {
+    method: 'POST',
+    headers: {'Content-Type':'application/json', 'X-API-Key': window._apiKey||''},
+    body: JSON.stringify({
+      email,
+      address:     window._address || '',
+      beds:        inp.beds,
+      baths:       inp.baths,
+      halfbaths:   inp.halfbaths,
+      sqft:        inp.sqft,
+      tenantLabel: p.label || tenant,
+      rent:        inp.rent,
+      mortgage:    inp.mortgage,
+      score:       window._score,
+      band:        fin.band,
+      gross:       fin.gross,
+      net:         fin.net,
+      dscr:        fin.dscr,
+      topFlags:    fin.topFlags || [],
+    })
+  })
+  .then(r => r.json())
+  .then(r => {
+    if(r.error) throw new Error(r.error);
+    document.getElementById('r-email-gate').innerHTML =
+      `<div class="banner success"><div class="banner-icon">✓</div><div class="banner-text"><strong>Report sent!</strong> Check your inbox for your CoLivingScore report.</div></div>`;
+  })
+  .catch(() => {
+    if(btn){ btn.disabled = false; btn.textContent = 'Save Score'; }
+    alert('Something went wrong — please try again.');
+  });
+}
+
+// ── NAVIGATION ────────────────────────────────────────────────────────────────
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function goToStep(n){
+  const screens = {1:'s-address',2:'s-form',3:'s-result'};
+  const el = document.getElementById('step'+n);
+  if(!el || !el.classList.contains('done')) return;
+  showScreen(screens[n]);
+  setStep(n);
+}
+
+function setStep(n){
+  ['step1','step2','step3','step4'].forEach((id,i)=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.className = 'step' + (i+1<n?' done':i+1===n?' active':'');
+    const dot = el.querySelector('.step-dot');
+    dot.textContent = i+1<n ? '✓' : String(i+1);
+  });
+}
+
+function goToPropertyForm(){
+  const typed = document.getElementById('f-address').value.trim();
+  if(!typed){ alert('Please enter a property address.'); return; }
+  window._address = window._place ? window._place.formatted_address : typed;
+  ['r-addr-text','pr-addr','rpt-addr','addr-form','addr-pro-form','addr-review'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.textContent = window._address;
+  });
+  showScreen('s-form');
+  setStep(2);
+}
+
+function resetForm(){
+  showScreen('s-address');
+  setStep(1);
+  window._place   = null;
+  window._address = null;
+  const addrInput = document.getElementById('f-address');
+  if(addrInput) addrInput.value = '';
+  document.getElementById('r-pro-gate').innerHTML='';
+  document.getElementById('r-referral').innerHTML='';
+  document.getElementById('r-email-gate').innerHTML=`
+    <h4>Save your score &amp; get the full report</h4>
+    <p>Enter your email to save this analysis and receive co-living tips for your market.</p>
+    <div class="email-row">
+      <input type="email" id="r-email" placeholder="your@email.com">
+      <button class="btn-primary" id="btn-save-email">Save Score</button>
+    </div>
+    <div class="text-xs text-muted mt-4">No spam. Unsubscribe anytime.</div>`;
+  const emailBtn = document.getElementById('btn-save-email');
+  if(emailBtn) emailBtn.addEventListener('click', submitEmail);
+}
+
+function showProGate(){
+  document.getElementById('r-pro-gate').scrollIntoView({behavior:'smooth'});
+}
+
+// ── GOOGLE PLACES AUTOCOMPLETE ────────────────────────────────────────────────
+window.initAutocomplete = function(){
+  const input = document.getElementById('f-address');
+  if(!input || !window.google) return;
+  const ac = new google.maps.places.Autocomplete(input, {
+    types: ['address'],
+    componentRestrictions: { country: 'us' },
+    fields: ['formatted_address','geometry','place_id','address_components']
+  });
+  ac.addListener('place_changed', function(){
+    const place = ac.getPlace();
+    if(!place.geometry) return;
+    const comps = {};
+    (place.address_components || []).forEach(c => {
+      if(c.types.includes('locality'))                       comps.city   = c.long_name;
+      if(c.types.includes('administrative_area_level_2'))    comps.county = c.long_name;
+      if(c.types.includes('administrative_area_level_1'))    comps.state  = c.short_name;
+      if(c.types.includes('postal_code'))                    comps.zip    = c.long_name;
+    });
+    window._place = {
+      formatted_address: place.formatted_address,
+      lat:      place.geometry.location.lat(),
+      lng:      place.geometry.location.lng(),
+      place_id: place.place_id,
+      ...comps
+    };
+    input.value = place.formatted_address;
+  });
+};
+
+// ── WIRE BUTTONS ─────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function(){
+  const wire = (id, fn) => { const el = document.getElementById(id); if(el) el.addEventListener('click', fn); };
+
+  // Load Google Maps JS API dynamically using key from /config
+  window._configReady = fetch('/config').then(r=>r.json()).then(cfg=>{
+    if(cfg.google_places_key){
+      const s = document.createElement('script');
+      s.src = `https://maps.googleapis.com/maps/api/js?key=${cfg.google_places_key}&libraries=places&callback=initAutocomplete`;
+      s.async = true; s.defer = true;
+      document.head.appendChild(s);
+    }
+    if(cfg.publishable_key) window._stripePK = cfg.publishable_key;
+    if(cfg.api_key) window._apiKey = cfg.api_key;
+  });
+
+  wire('btn-address-next', goToPropertyForm);
+  wire('btn-calculate',   calculateScore);
+  wire('btn-pro-generate', showReviewScreen);
+  wire('btn-pro-cancel',  function(){ showScreen('s-result'); });
+  wire('btn-reset-1',     resetForm);
+  wire('btn-reset-2',     resetForm);
+  wire('btn-save-email',  submitEmail);
+  wire('btn-pdf',         downloadPDF);
+  wire('btn-pdf-rpt',     downloadPDF);
+  wire('btn-pdf-hdr',     downloadPDF);
+  wire('btn-back-pro',    function(){ showScreen('s-result'); });
+  wire('btn-pay',         initiatePayment);
+  document.getElementById('rv-email').addEventListener('input', function(){
+    const valid = this.value.trim().includes('@') && this.value.trim().length > 3;
+    this.classList.toggle('input-required', !valid);
+    document.getElementById('btn-pay').disabled = !valid;
+  });
+  document.getElementById('p-mortgage').addEventListener('input', function(){
+    this.classList.toggle('input-required', !this.value.trim());
+  });
+
+  // If returning from Stripe payment success, auto-run Pro Analysis
+  const params = new URLSearchParams(window.location.search);
+  if(params.get('paid') === 'true' && window.opener && window.opener._paidProData){
+    window._proInputs = window.opener._paidProData;
+    runFullProAnalysis(window._proInputs);
+  }
+  // Handle paid redirect in same tab via sessionStorage
+  const pendingData = sessionStorage.getItem('cls_pending_pro');
+  if(params.get('paid') === 'true' && pendingData){
+    sessionStorage.removeItem('cls_pending_pro');
+    window._proInputs = JSON.parse(pendingData);
+    // Extract session_id from /success localStorage handoff then clean up
+    try {
+      const _sd = JSON.parse(localStorage.getItem('cls_session_data') || '{}');
+      window._sessionId = _sd._session_id || '';
+      localStorage.removeItem('cls_session_data');
+    } catch(e){}
+    const fi = sessionStorage.getItem('cls_free_inputs');
+    const fs = sessionStorage.getItem('cls_free_score');
+    const ff = sessionStorage.getItem('cls_fin');
+    if(fi){
+      const parsed    = JSON.parse(fi);
+      window._address = parsed._address || '';
+      window._place   = parsed._place   || null;
+      delete parsed._address;
+      delete parsed._place;
+      window._inputs  = parsed;
+      sessionStorage.removeItem('cls_free_inputs');
+    }
+    if(fs){ window._score = parseInt(fs);    sessionStorage.removeItem('cls_free_score'); }
+    if(ff){ window._fin   = JSON.parse(ff);  sessionStorage.removeItem('cls_fin'); }
+    runFullProAnalysis(window._proInputs);
+    history.replaceState({}, '', '/');
+  }
+
+  // Handle paid redirect from any browser (localStorage handoff set by /success)
+  const sessionData = localStorage.getItem('cls_session_data');
+  if(params.get('paid') === 'true' && sessionData && !pendingData){
+    localStorage.removeItem('cls_session_data');
+    const sd = JSON.parse(sessionData);
+    window._proInputs  = sd;
+    window._sessionId  = sd._session_id || '';
+    if(sd._addr){
+      window._address = sd._addr;
+      window._place   = { formatted_address:sd._addr, city:sd._city||'', state:sd._state||'', zip:sd._zip||'', lat:sd._lat||0, lng:sd._lng||0 };
+      window._inputs  = { beds:sd._beds||4, baths:sd._baths||2, halfbaths:0, sqft:sd._sqft||0, tenant:sd._tenant||'workforce', floors:sd._floors||1, garage:sd._garage||0, transit:sd._transit||'walkable', hospital:sd._hospital||'close', rent:sd.rent||0 };
+      if(sd._score) window._score = sd._score;
+    }
+    if(sd._cached){
+      // Serve identical cached report — no API calls needed
+      const raw = sd._cached;
+      const c = typeof raw === 'string' ? JSON.parse(raw) : raw;
+      window._fastData = c.fastData || {};
+      window._aiData   = c.aiData   || {};
+      window._fin      = c.fin      || {};
+      window._proFin   = c.proFin   || {};
+      if(c.score) window._score = c.score;
+      buildReportShell();
+      generateProAnalysis(window._proInputs);
+      renderPagedReport(window._fastData, window._aiData);
+      showScreen('s-pro-report');
+      showReportPage(1);
+    } else {
+      runFullProAnalysis(window._proInputs);
+    }
+    history.replaceState({}, '', '/');
+  }
+
+  checkForSavedReport();
+});
+
+// ── LOADING SCREEN ────────────────────────────────────────────────────────────
+const QUOTES = [
+  {q:"Real estate cannot be lost or stolen. Purchased with common sense and managed with care, it is about the safest investment in the world.", a:"Franklin D. Roosevelt"},
+  {q:"The best investment on earth is earth.", a:"Louis Glickman"},
+  {q:"Don't wait to buy real estate. Buy real estate and wait.", a:"Will Rogers"},
+  {q:"Ninety percent of all millionaires become so through owning real estate.", a:"Andrew Carnegie"},
+  {q:"Buy land, they're not making it anymore.", a:"Mark Twain"},
+  {q:"Real estate investing remains a tried and true means of building an individual's cash flow and wealth.", a:"Robert Kiyosaki"},
+  {q:"In real estate, location is everything — but in co-living, community is everything.", a:"CoLivingScore"},
+  {q:"The secret of getting ahead is getting started.", a:"Mark Twain"},
+  {q:"Opportunities don't happen. You create them.", a:"Chris Grosser"},
+  {q:"The time to buy is when there's blood in the streets.", a:"Baron Rothschild"},
+];
+
+const STAGES = [
+  {pct:8,  text:"Verifying property address..."},
+  {pct:18, text:"Pulling rental market data..."},
+  {pct:30, text:"Scoring neighborhood walkability..."},
+  {pct:42, text:"Calculating proximity to transit & hospitals..."},
+  {pct:55, text:"Analyzing market demographics..."},
+  {pct:65, text:"Building your financial model..."},
+  {pct:75, text:"Preparing your report..."},
+];
+
+let _loadingTimers = [];
+
+function startLoadingScreen(){
+  showScreen('s-loading');
+  const bar      = document.getElementById('loading-bar');
+  const stageEl  = document.getElementById('loading-stage');
+  const quoteEl  = document.getElementById('loading-quote');
+  const authorEl = document.getElementById('loading-author');
+
+  // Reset bar instantly (no transition) so a previous 100% doesn't animate backwards
+  bar.style.transition = 'none';
+  bar.style.width = '0%';
+  void bar.offsetWidth; // force reflow before restoring transition
+  bar.style.transition = '';
+
+  // Progress bar stages
+  let si = 0;
+  function advanceStage(){
+    if(si >= STAGES.length) return;
+    bar.style.width = STAGES[si].pct + '%';
+    stageEl.style.opacity = 0;
+    setTimeout(()=>{ stageEl.textContent = STAGES[si].text; stageEl.style.opacity=1; si++; }, 300);
+  }
+  advanceStage();
+  _loadingTimers.push(setInterval(advanceStage, 4500));
+
+  // Quote rotator
+  let qi = 0;
+  function showQuote(){
+    const q = QUOTES[qi % QUOTES.length];
+    quoteEl.style.opacity=0; authorEl.style.opacity=0;
+    setTimeout(()=>{ quoteEl.textContent='"'+q.q+'"'; authorEl.textContent='— '+q.a; quoteEl.style.opacity=1; authorEl.style.opacity=1; }, 400);
+    qi++;
+  }
+  showQuote();
+  _loadingTimers.push(setInterval(showQuote, 10000));
+
+  // Image rotator
+  let bi = 0;
+  function rotateImage(){
+    [0,1,2,3].forEach(i => document.getElementById('lbg'+i)?.classList.remove('active'));
+    document.getElementById('lbg'+bi)?.classList.add('active');
+    bi = (bi+1) % 4;
+  }
+  rotateImage();
+  _loadingTimers.push(setInterval(rotateImage, 6000));
+}
+
+function stopLoadingScreen(){
+  _loadingTimers.forEach(t => clearInterval(t));
+  _loadingTimers = [];
+  document.getElementById('loading-bar').style.width = '100%';
+  document.getElementById('loading-stage').textContent = 'Report ready!';
+}
+
+// ── PAGINATED REPORT — PAGE DEFINITIONS ──────────────────────────────────────
+const RPT_PAGES = [
+  [1,  'Home',      'Home — Score & Performance',              'Your co-living score (0–100) and key performance metrics at a glance.'],
+  [2,  'Summary',   'Executive Summary',                       'A high-level overview of the investment opportunity, key strengths, and primary risks.'],
+  [3,  'Market',    'Local Housing Market',                    'Current rental market conditions, vacancy rates, and demand trends in your area.'],
+  [4,  'Tenants',   'Target Tenant Profile & Demand Drivers',  'Who your ideal tenants are and what drives demand for co-living in this market.'],
+  [5,  'Supply',    'Supply Analysis',                         'How many co-living and rental units compete with this property in the local market.'],
+  [6,  'Pricing',   'Rent-by-Room Pricing Analysis',           'Per-room rent benchmarks and pricing strategy based on local market data.'],
+  [7,  'Location',  'Location Intelligence',                   'Walkability, transit access, nearby employers, and amenity quality scores.'],
+  [8,  'Zoning',    'Regulatory & Zoning Environment',         'Local zoning rules, permitting requirements, and regulatory considerations for co-living.'],
+  [9,  'P&L',       'Monthly Profit & Loss',                   'Full itemized income and expense waterfall showing your projected monthly cash flow.'],
+  [10, 'Ratios',    'Key Financial Ratios & Occupancy Sensitivity', 'DSCR, cap rate, cash-on-cash return, and how cash flow shifts at different occupancy levels.'],
+  [11, 'Turnover',  'Occupancy & Turnover',                    'Expected occupancy rates, tenant turnover costs, and lease-up timeline projections.'],
+  [12, 'Suitability','Tenant Suitability + Capital Improvements', 'Tenant compatibility assessment and ROI analysis on capital improvement investments.'],
+  [13, 'SWOT',      'SWOT + Risk Analysis',                    'Strengths, weaknesses, opportunities, and threats — plus a detailed risk breakdown.'],
+  [14, 'Employers', 'Employer Mapping & Amenity Optimization', 'Proximity to major employers and recommended amenity investments to attract target tenants.'],
+  [15, 'Platform',  'Platform vs. Independent Strategy',       'Cost-benefit analysis of using a co-living platform vs. self-managing the property.'],
+  [16, 'Verdict',   'Exit Strategy + Investment Verdict',      'Long-term exit options, projected appreciation, and the overall Go/No-Go investment verdict.'],
+];
+let _rptPage = 1;
+
+function buildReportShell(){
+  // Nav bar
+  const nav = document.getElementById('rpt-nav');
+  if(nav) nav.innerHTML = RPT_PAGES.map(([n,short,full])=>
+    `<button class="rpt-nav-btn${n===1?' active':''}" data-page="${n}" title="${full}" onclick="showReportPage(${n})">${n} · ${short}</button>`
+  ).join('');
+  // Page containers
+  const pages = document.getElementById('rpt-pages');
+  if(!pages) return;
+  pages.innerHTML = RPT_PAGES.map(([n,,title,tip])=>`
+    <div class="rpt-page${n===1?' active':''}" id="rpt-page-${n}">
+      <div class="rpt-page-hdr">
+        <div class="rpt-page-hdr-brand"><span style="color:#4DBF8F">CoLiving</span><span style="color:white">Score</span></div>
+        <div class="rpt-page-hdr-title">${title} <span class="tip" style="background:rgba(255,255,255,0.2);color:white;flex-shrink:0" data-tip="${tip}">?</span></div>
+        <div class="rpt-page-hdr-pg">${n} / 16</div>
+      </div>
+      <div class="rpt-page-body" id="rpt-pg-${n}">
+        <div class="rpt-loading"><div style="width:16px;height:16px;border:2px solid var(--green);border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite;flex-shrink:0"></div>&nbsp;Loading...</div>
+      </div>
+      <div class="rpt-page-foot">
+        <div class="rpt-page-foot-note">CoLivingScore.com — For informational purposes only. Not financial advice.</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          ${n>1  ? `<button class="rpt-nav-arrow" onclick="prevReportPage()">← Prev</button>` : ''}
+          <span style="font-size:11px;color:var(--gray-400)">Page ${n} of 16</span>
+          ${n<16 ? `<button class="rpt-nav-arrow" onclick="nextReportPage()">Next →</button>` : ''}
+        </div>
+      </div>
+    </div>`
+  ).join('');
+}
+
+function showReportPage(n){
+  _rptPage = n;
+  document.querySelectorAll('.rpt-page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.rpt-nav-btn').forEach(b=>b.classList.remove('active'));
+  const pg  = document.getElementById(`rpt-page-${n}`);
+  const btn = document.querySelector(`.rpt-nav-btn[data-page="${n}"]`);
+  if(pg)  pg.classList.add('active');
+  if(btn){ btn.classList.add('active'); btn.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'}); }
+  const rpt = document.getElementById('s-pro-report');
+  if(rpt) window.scrollTo({top: rpt.offsetTop - 60, behavior:'smooth'});
+}
+function prevReportPage(){ if(_rptPage>1)  showReportPage(_rptPage-1); }
+function nextReportPage(){ if(_rptPage<16) showReportPage(_rptPage+1); }
+
+// ── AI CONTENT RENDERER ───────────────────────────────────────────────────────
+function renderAIContent(text){
+  if(!text||!text.trim()) return `<div style="color:var(--gray-400);font-size:13px;padding:24px 0;text-align:center">No data available for this section.</div>`;
+
+  // Convert markdown tables to HTML before escaping (pipes are not HTML special chars)
+  const tbls = [];
+  text = text.replace(/^(\|.+\|)\n\|[-| :]+\|\n((?:\|.+\|\n?)*)/gm, (_, header, body) => {
+    const parseRow = r => r.trim().split('|').slice(1,-1).map(c=>c.trim());
+    const ths = parseRow(header).map(h=>`<th>${h.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')}</th>`).join('');
+    const trs = body.trim().split('\n').filter(Boolean).map(r=>`<tr>${parseRow(r).map(c=>`<td>${c.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')}</td>`).join('')}</tr>`).join('');
+    const idx = tbls.length;
+    tbls.push(`<table class="ai-table"><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table>`);
+    return `\x00TBL${idx}\x00`;
+  });
+
+  let html = text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/^#{3,4} (.+)$/gm,'<h4>$1</h4>')
+    .replace(/^## (.+)$/gm,'<h3>$1</h3>')
+    .replace(/^# (.+)$/gm,'<h3>$1</h3>')
+    .replace(/^[*-] (.+)$/gm,'<li>$1</li>')
+    .replace(/^(\d+)\. (.+)$/gm,'<li>$2</li>');
+  html = html.replace(/((?:<li>[^\n]*\n?)+)/g,'<ul>$1</ul>');
+  html = html.split(/\n\n+/).map(chunk=>{
+    chunk = chunk.trim();
+    if(!chunk) return '';
+    if(/^<[h3h4ul]/.test(chunk)||/<li>/.test(chunk)||chunk.includes('\x00TBL')) return chunk;
+    return `<p>${chunk.replace(/\n/g,'<br>')}</p>`;
+  }).filter(Boolean).join('\n');
+
+  // Restore table HTML (safe — not affected by HTML escaping)
+  tbls.forEach((tbl,i)=>{ html = html.split(`\x00TBL${i}\x00`).join(tbl); });
+
+  return `<div class="ai-content">${html}</div>`;
+}
+
+// ── FULL PRO ANALYSIS ORCHESTRATOR ───────────────────────────────────────────
+async function runFullProAnalysis(overrideInputs){
+  startLoadingScreen();
+  buildReportShell();
+
+  // Ensure /config has resolved so window._apiKey is set before any protected call
+  if(window._configReady) await window._configReady;
+
+  const inp   = window._inputs || {};
+  const place = window._place  || {};
+
+  // Step 1 — Fast data: RentCast, WalkScore, Nearby, Demographics
+  let fastData = {};
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(()=>ctrl.abort(), 30000);
+    const res = await fetch(_apiUrl('/api/pro-data-fast'), {
+      method:'POST', headers:{'Content-Type':'application/json', 'X-API-Key': window._apiKey||''},
+      signal: ctrl.signal,
+      body: JSON.stringify({
+        address:    window._address || '',
+        lat:        place.lat,      lng:   place.lng,
+        zip:        place.zip  ||'',city:  place.city ||'',state: place.state||'',
+        beds:       inp.beds   ||4, baths: inp.baths  ||2,
+        tenant_key: inp.tenant ||'workforce',
+      })
+    });
+    clearTimeout(t);
+    fastData = await res.json();
+    window._fastData = fastData;
+  } catch(e){ console.warn('pro-data-fast failed:',e); }
+
+  // Step 2 — Full AI market analysis (Claude + 20 web searches, up to 3 min)
+  let aiData = {};
+  try {
+    const ctrl2 = new AbortController();
+    const t2 = setTimeout(()=>ctrl2.abort(), 180000);
+    const mgmtKey = (overrideInputs&&(overrideInputs.mgmtSel||overrideInputs.mgmt_model_key)) ||
+                    (document.getElementById('p-mgmt')&&document.getElementById('p-mgmt').value) || 'self';
+    const res2 = await fetch(_apiUrl('/api/market-analysis'), {
+      method:'POST', headers:{'Content-Type':'application/json', 'X-API-Key': window._apiKey||''},
+      signal: ctrl2.signal,
+      body: JSON.stringify({
+        address:      window._address || '',
+        city:         place.city  ||'', state:    place.state ||'', zip: place.zip||'',
+        beds:         inp.beds    ||4,  baths:    inp.baths   ||2,  sqft: inp.sqft||0,
+        tenant_key:   inp.tenant  ||'workforce',
+        rent_per_room: inp.rent   ||0,
+        mortgage:     (overrideInputs&&overrideInputs.mortgage) ||
+                      parseInt(document.getElementById('p-mortgage')&&document.getElementById('p-mortgage').value||0),
+        mgmt_model:   mgmtKey,
+        rentcast:     fastData.rentcast     ||{},
+        walkscore:    fastData.walkscore    ||{},
+        demographics: fastData.demographics ||{},
+        nearby:       fastData.nearby       ||{},
+      })
+    });
+    clearTimeout(t2);
+    aiData = await res2.json();
+    window._aiData = aiData;
+  } catch(e){ console.warn('market-analysis failed:',e); }
+
+  stopLoadingScreen();
+  generateProAnalysis(overrideInputs);
+  renderPagedReport(fastData, aiData);
+  showScreen('s-pro-report');
+  showReportPage(1);
+  saveReportToLocalStorage();
+
+  // Cache report server-side (Upstash) — only if aiData has real content
+  const _aiSections = Object.keys(window._aiData || {}).filter(k => k !== 'raw' && (window._aiData||{})[k]);
+  if(window._sessionId && _aiSections.length > 3){
+    fetch(_apiUrl('/api/cache-report'), {
+      method: 'POST',
+      headers: {'Content-Type':'application/json', 'X-API-Key': window._apiKey||''},
+      body: JSON.stringify({
+        session_id: window._sessionId,
+        fastData:   window._fastData || {},
+        aiData:     window._aiData   || {},
+        fin:        window._fin      || {},
+        proFin:     window._proFin   || {},
+        score:      window._score    || 0,
+      })
+    }).catch(()=>{});
+  }
+}
+
+// ── PAGE-BY-PAGE RENDERER ─────────────────────────────────────────────────────
+function renderPagedReport(md, ai){
+  const inp  = window._inputs || {};
+  const fin  = window._fin   || {};
+  const pf   = window._proFin || {};
+  const addr = window._address || '';
+
+  // Update address in addr-strip
+  const addrEl = document.getElementById('rpt-addr');
+  if(addrEl) addrEl.textContent = addr;
+
+  // Populate print cover page
+  const aParts = addr.split(',');
+  document.getElementById('pc-address').textContent = aParts[0]?.trim() || addr;
+  document.getElementById('pc-city').textContent    = aParts.slice(1).join(',').trim();
+  document.getElementById('pc-tenant').textContent  = TENANT_PROFILES[inp.tenant||'nurses']?.label || '';
+  document.getElementById('pc-date').textContent    = 'Generated ' + new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+
+  // ── PAGE 1: Home — Score & Performance ───────────────────────────────
+  const score  = window._score || 0;
+  const band   = fin.band || '';
+  const bColor = score>=70?'#1D9E75':score>=50?'#D97706':'#E24B4A';
+  const gross  = pf.gross  || 0;
+  const trNOI  = pf.noi      || 0;
+  const cf     = pf.cashFlow || 0;
+  const dscr   = pf.dscr   || 0;
+  const fmt    = n => n!=null ? '$'+Math.abs(Math.round(n)).toLocaleString() : '—';
+  set('rpt-pg-1',`
+    <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--gray-100)">
+      <div style="text-align:center;min-width:90px">
+        <div style="font-size:60px;font-weight:800;color:${bColor};line-height:1">${score}</div>
+        <div style="font-size:13px;font-weight:700;color:${bColor};letter-spacing:0.5px">${band.toUpperCase()}</div>
+      </div>
+      <div style="flex:1;min-width:200px">
+        <div style="font-size:17px;font-weight:700;color:var(--dark);margin-bottom:6px">${addr}</div>
+        <div style="font-size:13px;color:var(--gray-500)">${inp.beds||'—'} bed · ${inp.baths||'—'} bath · ${(inp.sqft||0).toLocaleString()} sq ft</div>
+        <div style="font-size:13px;color:var(--gray-500);margin-top:2px">Tenant type: <strong>${TENANT_PROFILES[inp.tenant||'workforce']?.label||''}</strong></div>
+      </div>
+    </div>
+    <div class="rpt-kpi-strip">
+      <div class="rpt-kpi-cell">
+        <div class="rpt-kpi-label">Gross Monthly Income</div>
+        <div class="rpt-kpi-value">${gross?fmt(gross):'—'}</div>
+        <div class="rpt-kpi-sub">at full occupancy</div>
+      </div>
+      <div class="rpt-kpi-cell">
+        <div class="rpt-kpi-label">Net Operating Income</div>
+        <div class="rpt-kpi-value">${trNOI?fmt(trNOI):'—'}</div>
+        <div class="rpt-kpi-sub">income after expenses, before mortgage</div>
+      </div>
+      <div class="rpt-kpi-cell">
+        <div class="rpt-kpi-label">Monthly Cash Flow</div>
+        <div class="rpt-kpi-value" style="color:${cf>=0?'var(--green)':'#E24B4A'}">${cf!=null?(cf>=0?'+':'-')+fmt(cf):'—'}</div>
+        <div class="rpt-kpi-sub">after all expenses and mortgage</div>
+      </div>
+      <div class="rpt-kpi-cell">
+        <div class="rpt-kpi-label">Debt Service Coverage Ratio</div>
+        <div class="rpt-kpi-value" style="color:${dscr>=1.25?'var(--green)':'#E24B4A'}">${dscr?dscr+'x':'—'}</div>
+        <div class="rpt-kpi-sub">lenders require 1.25x minimum</div>
+      </div>
+    </div>
+    <div style="margin-top:20px;padding:14px 16px;background:var(--gray-50);border-radius:var(--radius);font-size:12.5px;color:var(--gray-600);line-height:1.6">
+      <strong>Score guide:</strong> 85–100 Excellent &nbsp;·&nbsp; 70–84 Good &nbsp;·&nbsp; 50–69 Fair &nbsp;·&nbsp; 30–49 Poor &nbsp;·&nbsp; 0–29 No Go
+    </div>
+    `);
+
+  // ── PAGE 2: Executive Summary ─────────────────────────────────────────
+  set('rpt-pg-2', renderAIContent(ai.executive_summary));
+
+  // ── PAGE 3: Local Housing Market (demographics + AI) ─────────────────
+  const dm = md.demographics||{};
+  const pop    = dm.population  ? dm.population.toLocaleString()  : '—';
+  const rPct   = dm.renter_pct  != null ? dm.renter_pct+'%'       : '—';
+  const income = dm.median_income ? '$'+dm.median_income.toLocaleString() : '—';
+  const mRent  = dm.median_rent   ? '$'+dm.median_rent.toLocaleString()+'/mo' : '—';
+  set('rpt-pg-3',`
+    <div class="market-grid" style="margin-bottom:20px">
+      <div class="market-stat"><div class="market-stat-label">Population (ZIP)</div><div class="market-stat-value">${pop}</div></div>
+      <div class="market-stat"><div class="market-stat-label">Renter Occupied</div><div class="market-stat-value">${rPct}</div></div>
+      <div class="market-stat"><div class="market-stat-label">Median Income</div><div class="market-stat-value">${income}</div></div>
+      <div class="market-stat"><div class="market-stat-label">Median Rent (ZIP)</div><div class="market-stat-value">${mRent}</div></div>
+    </div>
+    ${renderAIContent(ai.housing_market)}`);
+
+  // ── PAGE 4: Tenant Profile + Demand Drivers ───────────────────────────
+  set('rpt-pg-4', renderAIContent((ai.tenant_profile||'') + '\n\n' + (ai.demand_drivers||'')));
+
+  // ── PAGE 5: Supply Analysis ───────────────────────────────────────────
+  set('rpt-pg-5', renderAIContent(ai.supply_analysis));
+
+  // ── PAGE 6: Rent-by-Room Pricing (Claude training data) ──────────────
+  set('rpt-pg-6', renderAIContent(ai.rent_pricing));
+
+  // ── PAGE 7: Location Intelligence ────────────────────────────────────
+  const nb = md.nearby||{};
+  const ws = md.walkscore||{};
+  const tr = nb.transit||{};
+  const ho = nb.hospital||{};
+  const walk    = ws.walk_score    ??'—';
+  const transit = ws.transit_score ??'—';
+  const bike    = ws.bike_score    ??'—';
+  const amenities = nb.amenities||[];
+  const A_ICONS = {pharmacy:'💊',grocery_or_supermarket:'🛒',supermarket:'🛒',cafe:'☕',gym:'🏋️',park:'🌳',restaurant:'🍽️',hardware_store:'🔧',gas_station:'⛽',convenience_store:'🏪',university:'🎓'};
+  const A_COLORS = {
+    transit:                {bg:'#dbeafe',border:'#93c5fd'},
+    hospital:               {bg:'#fee2e2',border:'#fca5a5'},
+    pharmacy:               {bg:'#fce7f3',border:'#f9a8d4'},
+    grocery_or_supermarket: {bg:'#dcfce7',border:'#86efac'},
+    supermarket:            {bg:'#dcfce7',border:'#86efac'},
+    cafe:                   {bg:'#fef3c7',border:'#fcd34d'},
+    gym:                    {bg:'#ffedd5',border:'#fdba74'},
+    park:                   {bg:'#d1fae5',border:'#6ee7b7'},
+    restaurant:             {bg:'#f3e8ff',border:'#d8b4fe'},
+    hardware_store:         {bg:'#f1f5f9',border:'#cbd5e1'},
+    gas_station:            {bg:'#fef9c3',border:'#fde047'},
+    convenience_store:      {bg:'#ccfbf1',border:'#5eead4'},
+    university:             {bg:'#e0e7ff',border:'#a5b4fc'},
+  };
+  function pill(icon,name,dist,bnd,type){
+    const c=A_COLORS[type]||{};
+    const bg=c.bg||'var(--gray-50)';
+    const bc=c.border||'#e5e7eb';
+    return `<div class="location-pill" style="background:${bg};border-color:${bc}"><div class="location-pill-icon">${icon}</div><div class="location-pill-info"><div class="location-pill-name">${name||'Not found'}</div><div class="location-pill-dist">${dist?dist+' miles away':'—'}</div></div>${bnd?`<span class="location-pill-band band-${bnd}">${bnd.charAt(0).toUpperCase()+bnd.slice(1)}</span>`:''}</div>`;
+  }
+  const amenityPills = amenities.map(a=>pill(A_ICONS[a.type]||'📍',a.name,a.distance_miles,null,a.type)).join('');
+  const allP=[];
+  if(tr.name&&tr.distance_miles<=3) allP.push({name:tr.name,dist:tr.distance_miles});
+  if(ho.name&&ho.distance_miles<=5) allP.push({name:ho.name,dist:ho.distance_miles});
+  amenities.forEach(a=>{if(a.name&&a.distance_miles<=3) allP.push({name:a.name,dist:a.distance_miles});});
+  allP.sort((a,b)=>a.dist-b.dist);
+  const top4=allP.slice(0,4);
+  const city = aParts[1]?.trim() || '';
+  const hasParking = (inp.garage||0)+(inp.carport||0)+(inp.uncovered||0) > 0;
+  const utilitiesIncluded = window._utilPayer === 'landlord';
+  const LISTING = {
+    nurses:   {
+      headline: `🏥 Furnished Co-Living for Travel Nurses — ${city}`,
+      hook: `Private furnished room in a ${inp.beds}-bedroom home built for healthcare professionals. Quiet house, professional tenants, and flexible lease terms designed to match your contract.`,
+      tags: '#TravelNurse #TravelNurseHousing #NurseLife #FurnishedRoom #CoLiving'
+    },
+    tech:     {
+      headline: `💻 Co-Living for Remote Workers — ${city}`,
+      hook: `Private furnished room with a dedicated workspace in a ${inp.beds}-bedroom home. High-speed internet, quiet environment, and professional housemates — everything you need to work from home.`,
+      tags: '#RemoteWork #CoLiving #FurnishedRoom #WorkFromHome #DigitalNomad'
+    },
+    trades:   {
+      headline: `🔧 Furnished Co-Living for Working Professionals — ${city}`,
+      hook: `Clean, furnished private room in a ${inp.beds}-bedroom home close to job sites and daily essentials. Flexible lease terms and an easy commute.`,
+      tags: '#WorkforceHousing #FurnishedRoom #CoLiving #AffordableHousing'
+    },
+    students: {
+      headline: `🎓 Student Co-Living — ${city}`,
+      hook: `Private furnished room in a ${inp.beds}-bedroom home minutes from campus. Quiet study environment, fast internet, and all the daily essentials nearby.`,
+      tags: '#StudentHousing #CollegeLife #FurnishedRoom #CoLiving #OffCampus'
+    },
+    seniors:  {
+      headline: `🏡 55+ Co-Living — ${city}`,
+      hook: `Private furnished room in a quiet ${inp.beds}-bedroom home close to medical care and everyday needs. Comfortable, safe, and professionally managed.`,
+      tags: '#SeniorLiving #55Plus #IndependentLiving #CoLiving #AffordableSeniorHousing'
+    },
+    sober:    {
+      headline: `🌿 Sober Living Home — ${city}`,
+      hook: `Safe, structured co-living in a ${inp.beds}-bedroom home. Quiet neighborhood, supportive environment, and all the daily essentials within easy reach.`,
+      tags: '#SoberLiving #RecoveryHousing #SoberLife #CleanAndSober'
+    },
+    workforce:{
+      headline: `🏠 Furnished Co-Living — ${city}`,
+      hook: `Private furnished room in a ${inp.beds}-bedroom home. All the essentials nearby, flexible lease terms, and a quiet professional environment.`,
+      tags: '#CoLiving #FurnishedRoom #WorkforceHousing #AffordableHousing'
+    },
+  };
+  const tpl = LISTING[inp.tenant||'workforce'] || LISTING.workforce;
+  const perks = [
+    'Private furnished room',
+    utilitiesIncluded ? 'All utilities included' : null,
+    'High-speed internet',
+    hasParking ? 'Parking available' : null,
+    `${inp.beds} bed · ${inp.baths} bath`,
+  ].filter(Boolean);
+  const nearbyLine = top4.length ? '📍 Nearby: ' + top4.map(p=>`${p.name} (${p.dist} mi)`).join(' · ') : '';
+  const listingBlock = `
+    <div style="font-size:14px;font-weight:700;color:var(--dark);margin-bottom:10px">${tpl.headline}</div>
+    <div style="font-size:13px;color:var(--gray-700);line-height:1.7;margin-bottom:10px">${tpl.hook}</div>
+    <div style="font-size:12.5px;color:var(--gray-700);margin-bottom:10px">${perks.map(p=>`✓ ${p}`).join('&emsp;')}</div>
+    ${nearbyLine?`<div style="font-size:12.5px;color:var(--gray-600);margin-bottom:12px;line-height:1.6">${nearbyLine}</div>`:''}
+    <div style="font-size:11.5px;color:var(--green-dark);font-style:italic">${tpl.tags}</div>`;
+  set('rpt-pg-7',`
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+      <span class="score-badge walk">🚶 Walkability ${walk}</span>
+      <span class="score-badge transit">🚌 Public Transportation ${transit}</span>
+      <span class="score-badge bike">🚲 Bike Score ${bike}</span>
+      ${ws.walk_desc?`<span style="font-size:12px;color:var(--gray-500);align-self:center">${ws.walk_desc}</span>`:''}
+    </div>
+    <div style="font-size:12.5px;color:var(--gray-500);margin-bottom:10px;line-height:1.5">These nearby amenities and transportation options directly influence which tenant types this property attracts and what rent it can command.</div>
+    <div style="margin-bottom:14px;padding:10px 12px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius);font-size:11.5px;color:var(--gray-600);line-height:1.8">
+      <strong>Walk Score</strong> — How easily you can walk to daily needs (groceries, restaurants, schools). 70+ means the car mostly stays parked.<br>
+      <strong>Transit Score</strong> — How well-served an address is by public transit, weighted by frequency, route type, and proximity to stops.<br>
+      <strong>Bike Score</strong> — How practical biking is as transportation, based on bike lanes, hills, and local cycling infrastructure.
+    </div>
+    ${pill('🚌',tr.name,tr.distance_miles,nb.transit_band,'transit')}
+    ${pill('🏥',ho.name,ho.distance_miles,nb.hospital_band,'hospital')}
+    ${amenityPills}
+    <div style="margin-top:16px;padding:16px 18px;background:var(--green-light);border:1px solid rgba(29,158,117,0.2);border-radius:var(--radius)">
+      <div style="font-size:11px;font-weight:700;color:var(--green-dark);letter-spacing:0.5px;margin-bottom:12px">SAMPLE LISTING TEXT — Copy, edit, and make it your own</div>
+      ${listingBlock}
+    </div>`);
+
+  // ── PAGE 8: Regulatory & Zoning ───────────────────────────────────────
+  const beAware = `
+    <div class="be-aware-box" style="margin-top:20px;padding:16px;background:var(--amber-light);border:1px solid #E8C87A;border-radius:var(--radius)">
+      <div style="font-size:12px;font-weight:700;color:#92400E;margin-bottom:10px">⚠ Be Aware — Before You Buy</div>
+      <div style="font-size:12.5px;color:var(--gray-700);line-height:1.7">
+        <p style="margin-bottom:6px"><strong>Minimum room size:</strong> Bedrooms used for co-living should be a minimum of 70 sq ft with a 7 ft or higher ceiling and a legal egress window. Standards vary by jurisdiction.</p>
+        <p style="margin-bottom:6px"><strong>Occupancy limits:</strong> Many jurisdictions limit unrelated occupants per unit or require permits for group housing. Verify local ordinances before purchasing.</p>
+        <p style="margin-bottom:6px"><strong>Property condition:</strong> This analysis assumes the home is in good to excellent condition. Deferred maintenance can significantly affect real operating costs.</p>
+        <p style="margin-bottom:6px"><strong>Seasonal occupancy:</strong> Student tenant demand fluctuates seasonally — account for off-peak vacancy when evaluating annual cash flow.</p>
+        <p><strong>Furnishing costs:</strong> Most co-living tenants expect a furnished room. Budget furnishing as a one-time capital expense before your first tenant.</p>
+      </div>
+    </div>`;
+  set('rpt-pg-8', renderAIContent(ai.regulatory) + beAware);
+
+  // ── PAGE 9: P&L Waterfall + Occupancy Sensitivity ────────────────────
+  {
+    const p9  = window._proFin || {};
+    const fm  = function(n){ return '$' + Math.abs(Math.round(n||0)).toLocaleString(); };
+    const row = function(lbl, val, indent){
+      var ps = indent ? 'padding-left:14px' : 'font-weight:500';
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--gray-100)">'
+        + '<div style="font-size:12.5px;color:var(--gray-700);' + ps + '">' + lbl + '</div>'
+        + '<div style="font-size:12.5px;font-weight:500;color:var(--gray-900);font-family:var(--mono)">' + fm(val) + '</div>'
+        + '</div>';
+    };
+    const tot = function(lbl, val, col){
+      var disp = val < 0 ? '(' + fm(val) + ')' : fm(val);
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;margin:2px 0;border-top:2px solid var(--gray-300);border-bottom:2px solid var(--gray-300)">'
+        + '<div style="font-size:13px;font-weight:700;color:' + col + '">' + lbl + '</div>'
+        + '<div style="font-size:14px;font-weight:700;color:' + col + ';font-family:var(--mono)">' + disp + '</div>'
+        + '</div>';
+    };
+    const sec = function(lbl){
+      return '<div style="font-size:10px;font-weight:700;color:var(--gray-500);letter-spacing:0.8px;text-transform:uppercase;margin:16px 0 4px">' + lbl + '</div>';
+    };
+
+    var grossLbl = 'Gross Rent <span style="font-size:11px;color:var(--gray-500);font-weight:400">'
+      + (p9.beds||0) + ' rooms \u00d7 ' + fm(p9.rent) + '/mo \u00d7 ' + Math.round((p9.occ||0.92)*100) + '% occupancy</span>';
+    var mgmtLbl  = 'Management Fee <span style="font-size:11px;color:var(--gray-500);font-weight:400">'
+      + Math.round((p9.mgmtPct||0)*100) + '% of gross</span>';
+
+    var kpis = [
+      ['Annual Cash Flow', p9.cashFlowAnn >= 0 ? fm(p9.cashFlowAnn) : '(' + fm(p9.cashFlowAnn) + ')', p9.cashFlowAnn >= 0 ? '#15803d' : '#b91c1c'],
+      ['DSCR', (p9.dscr||0) + 'x', (p9.dscr||0) >= 1.25 ? '#15803d' : '#b91c1c'],
+      ['OER', Math.round((p9.oer||0)*100) + '%', 'var(--dark)'],
+      ['Break-Even Occ.', Math.round((p9.be||0)*100) + '%', 'var(--dark)'],
+    ];
+    var kpiHtml = kpis.map(function(k){
+      return '<div style="background:var(--gray-50);border:var(--border);border-radius:var(--radius);padding:12px;text-align:center">'
+        + '<div style="font-size:9.5px;font-weight:700;color:var(--gray-500);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:6px">' + k[0] + '</div>'
+        + '<div style="font-size:18px;font-weight:700;color:' + k[2] + ';font-family:var(--mono)">' + k[1] + '</div>'
+        + '</div>';
+    }).join('');
+
+    var occLevels = [0.65, 0.75, 0.85, p9.occ||0.92, 1.0]
+      .filter(function(v,i,a){ return a.findIndex(function(x){ return Math.abs(x-v)<0.005; })===i; })
+      .sort(function(a,b){ return a-b; });
+    var sensRows = occLevels.map(function(o){
+      var g  = Math.round((p9.beds||0)*(p9.rent||0)*o);
+      var n  = g - (p9.opEx||0);
+      var cf = n - (p9.mortgage||0);
+      var d  = p9.mortgage ? +(n/p9.mortgage).toFixed(2) : 0;
+      var cur = Math.abs(o-(p9.occ||0.92))<0.005;
+      var cfC = cf>=0 ? '#15803d' : '#b91c1c';
+      var dC  = d>=1.25 ? '#15803d' : d>=1.0 ? '#92400e' : '#b91c1c';
+      return '<tr style="background:' + (cur?'#f0fdf4':'') + '">'
+        + '<td style="padding:7px 10px;font-size:12px;font-weight:' + (cur?700:400) + '">' + Math.round(o*100) + '%' + (cur?' \u25c4':'') + '</td>'
+        + '<td style="padding:7px 10px;font-size:12px;text-align:right">' + fm(g) + '</td>'
+        + '<td style="padding:7px 10px;font-size:12px;text-align:right;color:' + (n>=0?'inherit':'#b91c1c') + '">' + fm(n) + '</td>'
+        + '<td style="padding:7px 10px;font-size:12px;text-align:right;color:' + cfC + '">' + (cf<0?'('+fm(cf)+')':fm(cf)) + '</td>'
+        + '<td style="padding:7px 10px;font-size:12px;text-align:right;color:' + dC + '">' + d + 'x</td>'
+        + '</tr>';
+    }).join('');
+
+    var html9 = '<div style="font-size:11px;font-weight:700;color:var(--gray-500);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:14px">Year 1 P&amp;L \u2014 Line Item Detail</div>'
+      + sec('Revenue')
+      + row(grossLbl, p9.gross, false)
+      + sec('Operating Expenses')
+      + row('Property Taxes', p9.taxMo, true)
+      + row('Insurance', p9.insMo, true)
+      + (p9.hoa ? row('HOA', p9.hoa, true) : '')
+      + row('Utilities', p9.utilTotal, true)
+      + row('Internet', p9.internet, true)
+      + row('Yard Maintenance', p9.yard, true)
+      + row('Pest Control', p9.pest, true)
+      + row('Repairs Reserve', p9.repairs, true)
+      + row('CapEx Reserve', p9.capex, true)
+      + row(mgmtLbl, p9.mgmtFee, true)
+      + tot('Total Operating Expenses', p9.opEx, '#b91c1c')
+      + tot('Net Operating Income (NOI)', p9.noi, p9.noi>=0?'#15803d':'#b91c1c')
+      + sec('Debt Service')
+      + row('Mortgage (P&amp;I)', p9.mortgage, true)
+      + tot('Monthly Cash Flow', p9.cashFlow, p9.cashFlow>=0?'#15803d':'#b91c1c');
+
+    set('rpt-pg-9', html9);
+
+    var html10 = '<div style="font-size:11px;font-weight:700;color:var(--gray-500);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:14px">Key Financial Ratios</div>'
+      + '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px">' + kpiHtml + '</div>'
+      + '<div style="font-size:10px;font-weight:700;color:var(--gray-500);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:10px">Occupancy Sensitivity</div>'
+      + '<table class="ai-table" style="width:100%"><thead><tr>'
+      + '<th>Occupancy</th><th style="text-align:right">Gross Income</th><th style="text-align:right">NOI</th><th style="text-align:right">Cash Flow</th><th style="text-align:right">DSCR</th>'
+      + '</tr></thead><tbody>' + sensRows + '</tbody></table>'
+      + '<div style="font-size:11px;color:var(--gray-400);margin-top:6px">\u25c4 = your occupancy assumption. Op. expenses fixed at ' + fm(p9.opEx) + '/mo across all scenarios.</div>';
+
+    var annMort = (p9.mortgage || 0) * 12;
+    var yr5Rows = '';
+    for (var y = 1; y <= 5; y++) {
+      var gF = Math.pow(1.03, y - 1);
+      var eF = Math.pow(1.02, y - 1);
+      var ag = Math.round((p9.gross || 0) * 12 * gF);
+      var ae = Math.round((p9.opEx  || 0) * 12 * eF);
+      var an = ag - ae;
+      var ac = an - annMort;
+      var ad = annMort > 0 ? +(an / annMort).toFixed(2) : 0;
+      var cfC2 = ac >= 0 ? '#15803d' : '#b91c1c';
+      var dC2  = ad >= 1.25 ? '#15803d' : ad >= 1.0 ? '#92400e' : '#b91c1c';
+      yr5Rows += '<tr' + (y === 1 ? ' style="background:#f0fdf4"' : '') + '>'
+        + '<td style="padding:7px 10px;font-size:12px;font-weight:' + (y===1?700:400) + '">Year ' + y + (y===1?' <span style="font-size:10px;color:var(--gray-400);font-weight:400">(current)</span>':'') + '</td>'
+        + '<td style="padding:7px 10px;font-size:12px;text-align:right">' + fm(ag) + '</td>'
+        + '<td style="padding:7px 10px;font-size:12px;text-align:right;color:#b91c1c">(' + fm(ae) + ')</td>'
+        + '<td style="padding:7px 10px;font-size:12px;text-align:right;color:' + (an>=0?'inherit':'#b91c1c') + '">' + fm(an) + '</td>'
+        + '<td style="padding:7px 10px;font-size:12px;text-align:right;color:' + cfC2 + '">' + (ac<0?'('+fm(ac)+')':fm(ac)) + '</td>'
+        + '<td style="padding:7px 10px;font-size:12px;text-align:right;color:' + dC2 + '">' + ad + 'x</td>'
+        + '</tr>';
+    }
+    html10 += '<div style="margin-top:24px">'
+      + '<div style="font-size:10px;font-weight:700;color:var(--gray-500);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:10px">5-Year Projection</div>'
+      + '<table class="ai-table" style="width:100%"><thead><tr>'
+      + '<th>Year</th><th style="text-align:right">Annual Gross</th><th style="text-align:right">Op Expenses</th><th style="text-align:right">Annual NOI</th><th style="text-align:right">Cash Flow</th><th style="text-align:right">DSCR</th>'
+      + '</tr></thead><tbody>' + yr5Rows + '</tbody></table>'
+      + '<div style="font-size:11px;color:var(--gray-400);margin-top:6px">3% annual rent growth \u00b7 2% annual expense growth \u00b7 fixed mortgage. For planning purposes only.</div>'
+      + '</div>';
+
+    set('rpt-pg-10', html10);
+  }
+
+  // ── PAGE 11: Occupancy & Turnover ─────────────────────────────────────
+  set('rpt-pg-11', renderAIContent(ai.occupancy_turnover));
+
+  // ── PAGE 12: Tenant Comparison + Capital Improvements ────────────────
+  const tenComp = document.getElementById('pr-tenant-comparison');
+  const improv  = document.getElementById('pr-improvements');
+  const suggestions = (fin.allSortedFlags||fin.topFlags||[]).slice(0,5);
+  const suggHtml = suggestions.length ? suggestions.map(f=>`
+    <div style="padding:12px 0;border-bottom:1px solid var(--gray-100)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <div style="font-size:13px;font-weight:600;color:var(--gray-900)">${f.factor}</div>
+        <span style="font-size:12px;font-weight:700;color:var(--red);background:var(--red-light);padding:2px 8px;border-radius:4px">−${f.deduction} pts</span>
+      </div>
+      <div style="font-size:12.5px;color:var(--gray-600);line-height:1.5">${f.message}</div>
+    </div>`).join('') : '';
+  set('rpt-pg-12',`
+    <div style="font-size:11px;font-weight:700;color:var(--gray-500);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px">Tenant Suitability Analysis</div>
+    <div style="font-size:11.5px;color:var(--gray-500);margin-bottom:12px">Signals assessed: hospital proximity · transit · parking · stories · walkability · campus proximity</div>
+    ${tenComp?tenComp.innerHTML:''}
+    <div class="divider"></div>
+    <div class="pg12-hdr" style="font-size:11px;font-weight:700;color:var(--gray-500);letter-spacing:0.5px;text-transform:uppercase;margin:16px 0 12px">Capital Improvements — Return on Investment Analysis</div>
+    ${improv?improv.innerHTML:''}
+    ${suggHtml?`<div class="pdf-break"></div><div class="sugg-hdr" style="font-size:11px;font-weight:700;color:var(--gray-500);letter-spacing:0.5px;text-transform:uppercase;margin:16px 0 12px">Score Improvement Opportunities</div>${suggHtml}`:''}`);
+
+  // ── PAGE 13: SWOT + Risk Analysis ─────────────────────────────────────
+  set('rpt-pg-13', renderAIContent(ai.swot||'') + '<div class="pdf-break"></div>' + renderAIContent(ai.risk_analysis||''));
+
+  // ── PAGE 14: Employer Mapping + Amenity Optimization ─────────────────
+  set('rpt-pg-14', renderAIContent(ai.employer_mapping));
+
+  // ── PAGE 15: Platform vs. Independent Strategy ────────────────────────
+  set('rpt-pg-15', renderAIContent(ai.platform_strategy).replace(
+    /Realistic fit:(<\/strong>)?\s*([\s\S]*?)(<\/li>)/g,
+    (m, maybeClose, content, close) => {
+      const txt = content.replace(/<[^>]+>/g,'').toLowerCase().trim();
+      const color = /best match|ideal|highly|strong fit|excellent/.test(txt) ? '#15803d' :
+                    /not recommended|poor|avoid|not a fit/.test(txt) ? '#dc2626' : '#b45309';
+      const label = maybeClose ? 'Realistic fit:</strong>' : 'Realistic fit:';
+      return `${label} <span style="color:${color};font-weight:600">${content.trim()}</span>${close}`;
+    }
+  ));
+
+  // ── PAGE 16: Exit Strategy + Investment Verdict ───────────────────────
+  const verdict = document.getElementById('pr-verdict');
+  set('rpt-pg-16',`
+    ${renderAIContent(ai.exit_strategy)}
+    ${verdict?`<div class="divider"></div>${verdict.innerHTML}`:''}`);
+
+  // Wire PDF button
+  const pdfBtn = document.getElementById('btn-pdf-rpt');
+  if(pdfBtn) pdfBtn.onclick = function(){
+    const st = document.getElementById('pdf-status-rpt');
+    if(st) st.textContent = 'Generating…';
+    fetch('/generate-pdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(window._proData||{})})
+      .then(r=>r.blob()).then(blob=>{
+        const a=document.createElement('a');
+        a.href=URL.createObjectURL(blob);
+        a.download='CoLivingScore_Pro_Report.pdf';
+        a.click();
+        if(st) st.textContent='';
+      }).catch(e=>{ if(st) st.textContent='Error generating PDF. Please try again.'; });
+  };
+}
+
+function set(id, html){ const el=document.getElementById(id); if(el) el.innerHTML=html; }
+
+// ── REPORT PERSISTENCE ────────────────────────────────────────────────────────
+function saveReportToLocalStorage(){
+  try {
+    localStorage.setItem('cls_report', JSON.stringify({
+      ts:        Date.now(),
+      address:   window._address   || '',
+      place:     window._place     || {},
+      inputs:    window._inputs    || {},
+      proInputs: window._proInputs || {},
+      proData:   window._proData   || {},
+      proFin:    window._proFin    || {},
+      fastData:  window._fastData  || {},
+      aiData:    window._aiData    || {},
+      score:     window._score     || 0,
+      fin:       window._fin       || {},
+    }));
+  } catch(e){ console.warn('localStorage save failed:', e); }
+}
+
+function checkForSavedReport(){
+  try {
+    const raw = localStorage.getItem('cls_report');
+    if(!raw) return;
+    const data = JSON.parse(raw);
+    const age  = Date.now() - (data.ts || 0);
+    if(age > 30 * 24 * 60 * 60 * 1000){ localStorage.removeItem('cls_report'); return; }
+    const addr   = data.address || 'your property';
+    const days   = Math.floor(age / (24*60*60*1000));
+    const ageStr = days === 0 ? 'earlier today' : days === 1 ? 'yesterday' : `${days} days ago`;
+    const banner = document.getElementById('restore-banner');
+    if(banner){
+      banner.innerHTML =
+        `<span style="font-size:13px;color:var(--gray-600)">Last report: <strong style="color:var(--gray-900)">${addr}</strong> <span style="color:var(--gray-400)">(${ageStr})</span></span>` +
+        `<button onclick="restoreReport()" style="margin-left:12px;height:28px;padding:0 14px;background:var(--green);color:white;border:none;border-radius:var(--radius);font-size:12px;font-weight:600;font-family:var(--font);cursor:pointer">Restore Report →</button>`;
+      banner.style.display = 'flex';
+    }
+  } catch(e){}
+}
+
+function restoreReport(){
+  try {
+    const data = JSON.parse(localStorage.getItem('cls_report'));
+    window._address   = data.address;
+    window._place     = data.place;
+    window._inputs    = data.inputs;
+    window._proInputs = data.proInputs;
+    window._proData   = data.proData;
+    window._proFin    = data.proFin;
+    window._fastData  = data.fastData;
+    window._aiData    = data.aiData;
+    window._score     = data.score;
+    window._fin       = data.fin;
+    buildReportShell();
+    generateProAnalysis(data.proInputs);
+    renderPagedReport(data.fastData || {}, data.aiData || {});
+    showScreen('s-pro-report');
+    showReportPage(1);
+  } catch(e){ alert('Could not restore report. Please try re-running the analysis.'); }
+}
+
+</script>
+</body>
+</html>
