@@ -1141,8 +1141,8 @@ def create_checkout_session():
             }],
             mode="payment",
             metadata=meta,
-            success_url=BASE_URL + "/success?session_id={CHECKOUT_SESSION_ID}",
-            cancel_url=BASE_URL + "/?cancelled=true",
+            success_url=request.host_url.rstrip('/') + "/success?session_id={CHECKOUT_SESSION_ID}",
+            cancel_url=request.host_url.rstrip('/') + "/?cancelled=true",
         )
         if customer_email:
             session_kwargs["customer_email"] = customer_email
@@ -1223,7 +1223,7 @@ def success():
         emailed_flag = f"/tmp/cls_emailed_{session_id}"
         if customer_email and not os.path.exists(emailed_flag):
             try:
-                session_url  = f"{BASE_URL}/success?session_id={session_id}"
+                session_url  = request.host_url.rstrip('/') + f"/success?session_id={session_id}"
                 address_str  = pro_data.get("_addr", pro_data.get("address", "your property"))
                 resend.Emails.send({
                     "from":    "CoLivingScore <hello@colivingscore.com>",
