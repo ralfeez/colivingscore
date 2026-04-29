@@ -123,6 +123,7 @@ All field values are collected in the same `window._inputs` object as the deskto
 - `window._inputs`, `window._proInputs`, `window._fastData`, `window._aiData` globals work identically
 - localStorage persistence and restore banner work identically
 - Upstash Redis cache, API key gating, and rate limiting all apply equally
+- Post-payment re-access email link is device-agnostic (`/?session_id=cs_xxx`) — tapping on phone serves mobile view, clicking on desktop serves desktop view automatically
 
 ---
 

@@ -12,7 +12,7 @@ import anthropic
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
-from flask import Flask, send_from_directory, request, send_file, jsonify, redirect
+from flask import Flask, send_from_directory, request, send_file, jsonify, redirect, make_response
 from pdf.generate_report import build_pdf_from_data
 
 app = Flask(__name__, static_folder="static")
@@ -123,7 +123,11 @@ def _is_mobile():
 @app.route("/")
 def index():
     filename = "index-mobile.html" if _is_mobile() else "index.html"
-    return send_from_directory("static", filename)
+    resp = make_response(send_from_directory("static", filename))
+    resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    resp.headers["Pragma"] = "no-cache"
+    resp.headers["Expires"] = "0"
+    return resp
 
 
 # ── PDF generation endpoint ───────────────────────────────────────────────────
