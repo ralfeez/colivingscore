@@ -546,15 +546,7 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
           <label>Monthly mortgage (PITI)</label>
           <input type="number" id="f-mortgage" value="2850" min="0">
         </div>
-        <div class="field">
-          <label>Laundry</label>
-          <select id="f-laundry">
-            <option value="provided" selected>In-home W/D provided</option>
-            <option value="pay">In-home pay / coin-op</option>
-            <option value="none">None</option>
-          </select>
-        </div>
-        <div class="field">
+        <div class="field-full">
           <label>Target tenant type <span class="req">*</span></label>
           <select id="f-tenant" onchange="updateRentDefault()">
             <option value="nurses" selected>Travel Nurses</option>
@@ -566,12 +558,20 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
             <option value="workforce">General Workforce</option>
           </select>
         </div>
+        <div class="field-full" id="f-tenant-note" style="display:none"></div>
         <div class="field">
           <label>Target rent per room / month <span class="req">*</span></label>
           <input type="number" id="f-rent" value="1100" min="0">
           <div class="field-hint">Default based on tenant type — adjust for your market</div>
         </div>
-        <div class="field-full" id="f-tenant-note" style="display:none"></div>
+        <div class="field">
+          <label>Laundry</label>
+          <select id="f-laundry">
+            <option value="provided" selected>In-home W/D provided</option>
+            <option value="pay">In-home pay / coin-op</option>
+            <option value="none">None</option>
+          </select>
+        </div>
       </div>
 
       <div class="assumption-notice"><strong>Note:</strong> Results assume you have already verified local zoning and occupancy requirements and that the home is in good to excellent condition. Any legal fees, permits, repairs, or seasonal occupancy shifts should be factored into your decision before proceeding.</div>
