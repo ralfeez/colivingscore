@@ -443,7 +443,7 @@ input, select, button { font-size: 16px !important; } /* prevent iOS zoom on foc
 .util-group { margin: 0 16px 12px; }
 .field-grid { grid-template-columns: 1fr; }
 #s-pro-form .card { padding: 20px 16px; }
-#s-pro-form .btn-row { padding: 0 16px 80px; }
+#s-pro-form .btn-row { padding: 0 16px max(140px, calc(env(safe-area-inset-bottom) + 100px)); }
 
 /* ══ SCREEN 4: REVIEW ══ */
 #s-review .card { padding: 20px 16px; }
