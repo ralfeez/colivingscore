@@ -1165,20 +1165,27 @@ def _build_report_access_email(email, address, session_url):
     <span style="font-size:20px;font-weight:700;color:white">CoLiving<span style="color:#4DBF8F">Score</span></span>
   </div>
   <div style="background:#f9fafb;padding:32px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 8px 8px">
-    <h2 style="margin:0 0 12px;font-size:18px;color:#0D2818">Your Pro Analysis is ready</h2>
+    <h2 style="margin:0 0 12px;font-size:18px;color:#0D2818">Your CoLivingScore Pro Analysis</h2>
     <p style="margin:0 0 8px;font-size:14px;color:#555;line-height:1.6">
       Property: <strong>{address}</strong>
     </p>
+    <p style="margin:0 0 16px;font-size:14px;color:#555;line-height:1.6">
+      Your payment was confirmed. Use the link below to access your full 15-page Pro Analysis —
+      including financial projections, market data, and improvement recommendations.
+    </p>
     <p style="margin:0 0 24px;font-size:14px;color:#555;line-height:1.6">
-      If you need to access your report again from any device, use the link below.
-      It will re-run your full analysis (takes 2–4 minutes).
+      <strong>Please allow approximately 3–4 minutes</strong> for the report to generate once
+      you open the link. For the best experience, open it on a laptop or desktop.
     </p>
     <a href="{session_url}"
        style="display:inline-block;background:#1D9E75;color:white;font-size:14px;font-weight:600;
               padding:12px 28px;border-radius:6px;text-decoration:none">
-      Re-access My Report →
+      Open My Pro Analysis →
     </a>
-    <p style="margin:28px 0 0;font-size:11px;color:#999;line-height:1.5">
+    <p style="margin:20px 0 0;font-size:13px;color:#666;line-height:1.6">
+      This link is unique to your property and analysis. Bookmark it for future reference.
+    </p>
+    <p style="margin:20px 0 0;font-size:11px;color:#999;line-height:1.5">
       For informational purposes only. Not financial or investment advice.
     </p>
   </div>
