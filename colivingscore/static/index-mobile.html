@@ -464,6 +464,37 @@ input, select, button { font-size: 16px !important; } /* prevent iOS zoom on foc
 /* ══ SCREEN 5: LOADING ══ */
 .loading-quote-wrap { padding: 16px 20px; box-sizing: border-box; width: 100%; }
 .loading-quote { word-break: break-word; }
+/* ══ SCREEN 7: POST-PAYMENT SCORECARD ══ */
+#s-scorecard { background:#0a0f0d; min-height:100vh; padding:0 0 40px; }
+.sc-hero { padding:28px 20px 20px; text-align:center; }
+.sc-check { width:52px;height:52px;background:var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:22px;color:#0a2416;font-weight:900; }
+.sc-title { font-size:20px;font-weight:800;color:white; }
+.sc-addr { font-size:13px;color:rgba(255,255,255,0.5);margin-top:6px;line-height:1.4; }
+.sc-card { background:#111a14;margin:0 16px 12px;border-radius:12px;padding:18px 16px; }
+.sc-card-title { font-size:14px;font-weight:800;color:rgba(255,255,255,0.9);margin-bottom:4px; }
+.sc-card-sub { font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:14px; }
+.sc-row { display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.06); }
+.sc-row:last-child { border-bottom:none; }
+.sc-row-label { font-size:13px;color:rgba(255,255,255,0.75); }
+.sc-stars { display:flex;gap:3px; }
+.sc-star-filled { color:var(--green);font-size:16px; }
+.sc-star-empty { color:rgba(255,255,255,0.15);font-size:16px; }
+.sc-verdict-card { margin:0 16px 12px;border-radius:12px;padding:18px 16px; }
+.sc-verdict-go { background:#0d2e1a;border:1px solid var(--green); }
+.sc-verdict-caution { background:#2e1f0a;border:1px solid #D97706; }
+.sc-verdict-nogo { background:#2e0a0a;border:1px solid #E24B4A; }
+.sc-verdict-label { font-size:11px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px; }
+.sc-verdict-badge { font-size:22px;font-weight:900; }
+.sc-verdict-go .sc-verdict-badge { color:var(--green); }
+.sc-verdict-caution .sc-verdict-badge { color:#D97706; }
+.sc-verdict-nogo .sc-verdict-badge { color:#E24B4A; }
+.sc-verdict-desc { font-size:13px;color:rgba(255,255,255,0.6);margin-top:6px;line-height:1.5; }
+.sc-flag { margin:0 16px 12px;background:#1a1a10;border:1px solid rgba(217,119,6,0.3);border-radius:10px;padding:14px 16px;font-size:13px;color:rgba(255,255,255,0.65);line-height:1.5; }
+.sc-hoa-flag { margin:0 16px 12px;background:#1a100a;border:1px solid rgba(226,75,74,0.3);border-radius:10px;padding:14px 16px;font-size:13px;color:rgba(255,255,255,0.65);line-height:1.5; }
+.sc-improve { margin:0 16px 12px;background:rgba(29,158,117,0.08);border:1px solid rgba(29,158,117,0.2);border-radius:10px;padding:14px 16px;font-size:13px;color:rgba(255,255,255,0.65);line-height:1.5; }
+.sc-email-note { margin:0 16px 16px;background:rgba(255,255,255,0.04);border-radius:10px;padding:14px 16px;font-size:12px;color:rgba(255,255,255,0.45);line-height:1.6; }
+.sc-report-btn { display:block;margin:0 16px;width:calc(100% - 32px);box-sizing:border-box;padding:14px;background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.6);font-size:14px;font-weight:600;border:1px solid rgba(255,255,255,0.15);border-radius:8px;cursor:pointer;font-family:var(--font);text-align:center; }
+
 /* ══ SCREEN 6: PRO REPORT ══ */
 .rpt-nav { display: none !important; }
 .mobile-rpt-nav {
@@ -1060,6 +1091,34 @@ input, select, button { font-size: 16px !important; } /* prevent iOS zoom on foc
     </div>
   </div>
 
+  <!-- ══ SCREEN 7: POST-PAYMENT SCORECARD ══ -->
+  <div class="screen" id="s-scorecard">
+    <div class="sc-hero">
+      <div class="sc-check">✓</div>
+      <div class="sc-title">Payment Confirmed</div>
+      <div class="sc-addr" id="sc-addr"></div>
+    </div>
+    <div class="sc-card">
+      <div class="sc-card-title">Property Scorecard</div>
+      <div class="sc-card-sub">Based on your Pro Analysis inputs</div>
+      <div id="sc-rows"></div>
+    </div>
+    <div id="sc-hoa-flag" class="sc-hoa-flag" style="display:none"></div>
+    <div class="sc-verdict-card" id="sc-verdict-card">
+      <div class="sc-verdict-label">Verdict</div>
+      <div class="sc-verdict-badge" id="sc-verdict-badge"></div>
+      <div class="sc-verdict-desc" id="sc-verdict-desc"></div>
+    </div>
+    <div id="sc-tenant-flag" class="sc-flag" style="display:none"></div>
+    <div class="sc-improve">
+      Low-scoring categories can often be improved. Your Pro Analysis identifies the highest-impact changes and shows exactly what they're worth to your returns.
+    </div>
+    <div class="sc-email-note">
+      Your full Pro Analysis link has been emailed to you. The report takes approximately 3–4 minutes to generate once opened. For the best experience, open it on a laptop or desktop.
+    </div>
+    <button class="sc-report-btn" onclick="runProFromScorecard()">View Report on This Device →</button>
+  </div>
+
   <!-- ══ SCREEN 6: FULL PRO REPORT ══ -->
   <div class="screen" id="s-pro-report">
     <div class="mobile-rpt-nav" id="mobile-rpt-nav">
@@ -1530,8 +1589,12 @@ async function initiatePayment(){
         _tenant:   (window._inputs || {}).tenant   || 'workforce',
         _floors:   (window._inputs || {}).floors   || 1,
         _garage:   (window._inputs || {}).garage   || 0,
-        _transit:  (window._inputs || {}).transit  || 'walkable',
-        _hospital: (window._inputs || {}).hospital || 'close',
+        _transit:   (window._inputs || {}).transit   || 'walkable',
+        _hospital:  (window._inputs || {}).hospital  || 'close',
+        _laundry:   (window._inputs || {}).laundry   || 'provided',
+        _carport:   (window._inputs || {}).carport   || 0,
+        _uncovered: (window._inputs || {}).uncovered || 0,
+        _hoa:       (window._inputs || {}).hoa       || 'none',
       })
     });
     const data = await res.json();
@@ -1546,6 +1609,161 @@ async function initiatePayment(){
     statusEl.textContent = 'Connection error. Please try again.';
     btn.disabled = false;
     btn.textContent = 'Looks Good — Pay $29 →';
+  }
+}
+
+// ── POST-PAYMENT SCORECARD ────────────────────────────────────────────────────
+
+const SC_PROFILES = {
+  nurses:    {bathW:25,sqftW:12,parkW:12,transitW:10,hospW:20,churnP:8,  label:'Travel Nurses'},
+  tech:      {bathW:18,sqftW:12,parkW:12,transitW:8, hospW:4, churnP:4,  label:'Tech / Remote'},
+  trades:    {bathW:18,sqftW:12,parkW:12,transitW:8, hospW:4, churnP:5,  label:'Construction / Trades'},
+  students:  {bathW:18,sqftW:12,parkW:6, transitW:25,hospW:4, churnP:3,  label:'Students'},
+  seniors:   {bathW:25,sqftW:12,parkW:12,transitW:15,hospW:14,churnP:0,  label:'Seniors 55+'},
+  sober:     {bathW:18,sqftW:12,parkW:6, transitW:8, hospW:10,churnP:2,  label:'Sober Living'},
+  workforce: {bathW:18,sqftW:12,parkW:12,transitW:8, hospW:6, churnP:5,  label:'General Workforce'},
+};
+
+function _scPenaltyPcts(inp) {
+  const beds  = parseInt(inp._beds)  || 4;
+  const baths = parseInt(inp._baths) || 2;
+  const sqft  = parseInt(inp._sqft)  || 0;
+  const ratio = beds / Math.max(1, baths);
+  const bathPct   = ratio > 2.5 ? 1.0 : ratio > 2.0 ? 0.67 : ratio > 1.5 ? 0.33 : 0;
+  const sqftPB    = sqft > 0 ? sqft / Math.max(1, beds) : 350;
+  const sqftPct   = sqftPB < 180 ? 1.0 : sqftPB < 250 ? 0.67 : sqftPB < 350 ? 0.33 : 0;
+  let spots = [];
+  const garage  = parseInt(inp._garage)   || 0;
+  const carport = parseInt(inp._carport)  || 0;
+  const uncov   = parseInt(inp._uncovered)|| 0;
+  for(let i=0;i<garage;i++)  spots.push(1.0);
+  for(let i=0;i<carport;i++) spots.push(0.65);
+  for(let i=0;i<uncov;i++)   spots.push(0.40);
+  while(spots.length < beds) spots.push(0);
+  const parkPct    = 1 - (spots.slice(0,beds).reduce((a,b)=>a+b,0) / Math.max(1,beds));
+  const transitPct = ({walkable:0,close:0.33,moderate:0.67,far:1.0})[inp._transit||'walkable'] ?? 0.67;
+  const hospPct    = ({close:0,moderate:0.5,far:1.0})[inp._hospital||'close'] ?? 0.5;
+  const laundryRaw = ({provided:0,pay:3,none:10})[inp._laundry||'provided'] ?? 0;
+  return {bathPct, sqftPct, parkPct, transitPct, hospPct, laundryRaw};
+}
+
+function computeScorecardStars(inp) {
+  const p    = SC_PROFILES[inp._tenant||'workforce'] || SC_PROFILES.workforce;
+  const pcts = _scPenaltyPcts(inp);
+  const toStars = pct => Math.max(1, Math.round(5 - pct * 4));
+  const rent     = parseFloat(inp.rent)     || 0;
+  const mortgage = parseFloat(inp.mortgage) || 0;
+  const beds     = parseInt(inp._beds) || 4;
+  let dscrPct = 0;
+  if (mortgage > 0 && rent > 0) {
+    const gross    = beds * rent;
+    const effGross = gross * (parseFloat(inp.occ) || 0.92);
+    const mgmt     = effGross * (parseFloat(inp.mgmtRate) || 0.15);
+    const opEx     = mgmt + (parseFloat(inp.utilTotal) || 0) + 350;
+    const dscr     = (effGross - opEx) / mortgage;
+    dscrPct = dscr >= 1.25 ? 0 : dscr >= 1.0 ? 0.33 : dscr >= 0.75 ? 0.67 : 1.0;
+  }
+  const totalScore = Math.max(0, 100
+    - Math.round(p.bathW    * pcts.bathPct)
+    - Math.round(p.sqftW    * pcts.sqftPct)
+    - Math.round(p.parkW    * pcts.parkPct)
+    - Math.round(p.transitW * pcts.transitPct)
+    - Math.round(p.hospW    * pcts.hospPct)
+    - pcts.laundryRaw
+    - p.churnP
+  );
+  return {
+    rows: [
+      {label:'Bathroom Access',    stars: toStars(pcts.bathPct)},
+      {label:'Space & Layout',     stars: toStars(pcts.sqftPct)},
+      {label:'Parking',            stars: toStars(pcts.parkPct)},
+      {label:'Location / Transit', stars: toStars(pcts.transitPct)},
+      {label:'Medical Access',     stars: toStars(pcts.hospPct)},
+      {label:'Amenities',          stars: toStars(pcts.laundryRaw / 10)},
+      {label:'Financial Fit',      stars: toStars(dscrPct)},
+    ],
+    totalScore,
+    hoaStatus: inp._hoa || 'none',
+  };
+}
+
+function computeBestTenantFit(inp) {
+  const pcts = _scPenaltyPcts(inp);
+  let best = null, bestScore = -Infinity;
+  for(const [key, p] of Object.entries(SC_PROFILES)) {
+    const score = 100
+      - Math.round(p.bathW    * pcts.bathPct)
+      - Math.round(p.sqftW    * pcts.sqftPct)
+      - Math.round(p.parkW    * pcts.parkPct)
+      - Math.round(p.transitW * pcts.transitPct)
+      - Math.round(p.hospW    * pcts.hospPct)
+      - pcts.laundryRaw
+      - p.churnP;
+    if(score > bestScore){ bestScore = score; best = {key, label:p.label}; }
+  }
+  return best;
+}
+
+function showScorecardScreen(inp) {
+  document.getElementById('sc-addr').textContent = inp._addr || window._address || '';
+  const sc = computeScorecardStars(inp);
+  const stars = n => Array.from({length:5},(_,i) =>
+    `<span class="${i<n?'sc-star-filled':'sc-star-empty'}">★</span>`).join('');
+  document.getElementById('sc-rows').innerHTML = sc.rows.map(r =>
+    `<div class="sc-row"><span class="sc-row-label">${r.label}</span><div class="sc-stars">${stars(r.stars)}</div></div>`
+  ).join('');
+  const hoaFlag = document.getElementById('sc-hoa-flag');
+  if(sc.hoaStatus==='unclear'){
+    hoaFlag.textContent = '⚠ HOA rules are unclear — verify co-living permissions before proceeding.';
+    hoaFlag.style.display = 'block';
+  } else if(sc.hoaStatus==='prohibits'){
+    hoaFlag.textContent = '⛔ HOA prohibits rentals — this property may not qualify for co-living.';
+    hoaFlag.style.display = 'block';
+  } else {
+    hoaFlag.style.display = 'none';
+  }
+  const vc = document.getElementById('sc-verdict-card');
+  const vb = document.getElementById('sc-verdict-badge');
+  const vd = document.getElementById('sc-verdict-desc');
+  vc.className = 'sc-verdict-card';
+  const s = sc.totalScore, hoa = sc.hoaStatus;
+  if(hoa==='prohibits' || s < 30){
+    vc.classList.add('sc-verdict-nogo');
+    vb.textContent = 'No Go';
+    vd.textContent = 'Significant barriers identified. Review your Pro Analysis for detailed guidance.';
+  } else if(s < 50 || hoa==='unclear'){
+    vc.classList.add('sc-verdict-caution');
+    vb.textContent = 'Proceed with Caution';
+    vd.textContent = 'Notable risk factors present. Your Pro Analysis outlines the steps to improve viability.';
+  } else if(s < 70){
+    vc.classList.add('sc-verdict-caution');
+    vb.textContent = 'Fair — Viable with Work';
+    vd.textContent = 'This property can work for co-living with targeted improvements. See your report for specifics.';
+  } else if(s < 85){
+    vc.classList.add('sc-verdict-go');
+    vb.textContent = 'Good — Viable';
+    vd.textContent = 'Solid co-living candidate. Your report identifies the remaining areas to optimise.';
+  } else {
+    vc.classList.add('sc-verdict-go');
+    vb.textContent = 'Excellent — Strong GO';
+    vd.textContent = 'This property is well-suited for co-living. See your report for market data and projections.';
+  }
+  const best = computeBestTenantFit(inp);
+  const tenantFlag = document.getElementById('sc-tenant-flag');
+  if(best && best.key !== (inp._tenant||'workforce')){
+    tenantFlag.textContent = `This property may be better suited for ${best.label} tenants. See your Pro Analysis for a full tenant type comparison.`;
+    tenantFlag.style.display = 'block';
+  } else {
+    tenantFlag.style.display = 'none';
+  }
+  showScreen('s-scorecard');
+}
+
+function runProFromScorecard() {
+  if(window._reportPreloaded){
+    showScreen('s-pro-report');
+  } else {
+    runFullProAnalysis(window._proInputs);
   }
 }
 
@@ -2083,11 +2301,11 @@ document.addEventListener('DOMContentLoaded', function(){
     this.classList.toggle('input-required', !this.value.trim());
   });
 
-  // If returning from Stripe payment success, auto-run Pro Analysis
+  // If returning from Stripe payment success, show scorecard
   const params = new URLSearchParams(window.location.search);
   if(params.get('paid') === 'true' && window.opener && window.opener._paidProData){
     window._proInputs = window.opener._paidProData;
-    runFullProAnalysis(window._proInputs);
+    showScorecardScreen(window._proInputs);
   }
   // Handle paid redirect in same tab via sessionStorage
   const pendingData = sessionStorage.getItem('cls_pending_pro');
@@ -2114,7 +2332,7 @@ document.addEventListener('DOMContentLoaded', function(){
     }
     if(fs){ window._score = parseInt(fs);    sessionStorage.removeItem('cls_free_score'); }
     if(ff){ window._fin   = JSON.parse(ff);  sessionStorage.removeItem('cls_fin'); }
-    runFullProAnalysis(window._proInputs);
+    showScorecardScreen(window._proInputs);
     history.replaceState({}, '', '/');
   }
 
@@ -2132,7 +2350,7 @@ document.addEventListener('DOMContentLoaded', function(){
       if(sd._score) window._score = sd._score;
     }
     if(sd._cached){
-      // Serve identical cached report — no API calls needed
+      // Pre-render cached report silently — scorecard shows first, report ready if user taps through
       const raw = sd._cached;
       const c = typeof raw === 'string' ? JSON.parse(raw) : raw;
       window._fastData = c.fastData || {};
@@ -2143,11 +2361,9 @@ document.addEventListener('DOMContentLoaded', function(){
       buildReportShell();
       generateProAnalysis(window._proInputs);
       renderPagedReport(window._fastData, window._aiData);
-      showScreen('s-pro-report');
-      showReportPage(1);
-    } else {
-      runFullProAnalysis(window._proInputs);
+      window._reportPreloaded = true;
     }
+    showScorecardScreen(window._proInputs);
     history.replaceState({}, '', '/');
   }
 
