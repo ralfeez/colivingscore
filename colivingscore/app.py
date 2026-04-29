@@ -1249,7 +1249,7 @@ def success():
 <html><head><meta charset="UTF-8">
 <script>
   try {{ localStorage.setItem('cls_session_data', JSON.stringify({pro_data_json})); }} catch(e) {{}}
-  window.location.href = "/?paid=true";
+  window.location.href = "/?paid=true&_t=" + Date.now();
 </script>
 </head><body>Payment confirmed. Redirecting...</body></html>"""
         return html
