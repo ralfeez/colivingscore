@@ -390,7 +390,7 @@ body { font-size: 15px; background: #0a0f0d; }
 header { padding: 0 16px; height: 44px; }
 .screen { padding: 0; }
 input, select, button { font-size: 16px !important; } /* prevent iOS zoom on focus */
-.btn-primary, .btn-outline { width: 100%; box-sizing: border-box; padding: 14px; font-size: 15px; }
+.btn-primary, .btn-outline { width: 100%; box-sizing: border-box; padding: 14px; font-size: 15px; height: auto; }
 .card { border-radius: 0; border-left: none; border-right: none; margin: 0; }
 .addr-strip { padding: 10px 16px; }
 
@@ -492,7 +492,8 @@ input, select, button { font-size: 16px !important; } /* prevent iOS zoom on foc
 .sc-flag { margin:0 16px 12px;background:#1a1a10;border:1px solid rgba(217,119,6,0.3);border-radius:10px;padding:14px 16px;font-size:13px;color:rgba(255,255,255,0.65);line-height:1.5; }
 .sc-hoa-flag { margin:0 16px 12px;background:#1a100a;border:1px solid rgba(226,75,74,0.3);border-radius:10px;padding:14px 16px;font-size:13px;color:rgba(255,255,255,0.65);line-height:1.5; }
 .sc-improve { margin:0 16px 12px;background:rgba(29,158,117,0.08);border:1px solid rgba(29,158,117,0.2);border-radius:10px;padding:14px 16px;font-size:13px;color:rgba(255,255,255,0.65);line-height:1.5; }
-.sc-email-note { margin:0 16px 16px;background:rgba(255,255,255,0.04);border-radius:10px;padding:14px 16px;font-size:12px;color:rgba(255,255,255,0.45);line-height:1.6; }
+.sc-email-note { margin:0 16px 16px;background:rgba(29,158,117,0.12);border:1px solid var(--green);border-radius:10px;padding:16px;font-size:14px;color:rgba(255,255,255,0.9);line-height:1.6; }
+.sc-email-note strong { color:var(--green);display:block;font-size:15px;margin-bottom:6px; }
 .sc-report-btn { display:block;margin:0 16px;width:calc(100% - 32px);box-sizing:border-box;padding:14px;background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.6);font-size:14px;font-weight:600;border:1px solid rgba(255,255,255,0.15);border-radius:8px;cursor:pointer;font-family:var(--font);text-align:center; }
 
 /* ══ SCREEN 6: PRO REPORT ══ */
@@ -1114,6 +1115,7 @@ input, select, button { font-size: 16px !important; } /* prevent iOS zoom on foc
       Low-scoring categories can often be improved. Your Pro Analysis identifies the highest-impact changes and shows exactly what they're worth to your returns.
     </div>
     <div class="sc-email-note">
+      <strong>Check Your Email</strong>
       Your full Pro Analysis link has been emailed to you. The report takes approximately 3–4 minutes to generate once opened. For the best experience, open it on a laptop or desktop.
     </div>
     <button class="sc-report-btn" onclick="runProFromScorecard()">View Report on This Device →</button>
