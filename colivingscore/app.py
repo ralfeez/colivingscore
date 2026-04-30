@@ -1219,11 +1219,11 @@ def success():
             inputs_str = m.get("cls", "") + m.get("cls2", "")
             pro_data = json.loads(inputs_str) if inputs_str else {}
 
-        # 3. Send re-access email — once per session only
+        # 3. Send re-access email — once per session only (Redis flag survives restarts)
         customer_email = session.customer_email or m.get("_email", "") or ""
         print(f"[success] customer_email={repr(customer_email)}")
-        emailed_flag = f"/tmp/cls_emailed_{session_id}"
-        if customer_email and not os.path.exists(emailed_flag):
+        emailed_cache_key = f"cls_emailed_{session_id}"
+        if customer_email and not _cache_get(emailed_cache_key):
             try:
                 session_url  = request.host_url.rstrip('/') + f"/success?session_id={session_id}"
                 address_str  = pro_data.get("_addr", pro_data.get("address", "your property"))
@@ -1233,7 +1233,7 @@ def success():
                     "subject": f"Your CoLivingScore Pro Analysis — {address_str}",
                     "html":    _build_report_access_email(customer_email, address_str, session_url),
                 })
-                open(emailed_flag, "w").close()
+                _cache_set(emailed_cache_key, 1, ttl=86400 * 30)
                 print(f"[success] email sent to {customer_email}")
             except Exception as mail_err:
                 print(f"report-access email error: {mail_err}")
