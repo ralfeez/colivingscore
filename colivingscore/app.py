@@ -1190,6 +1190,7 @@ def _build_report_access_email(email, address, session_url):
     </a>
     <p style="margin:20px 0 0;font-size:13px;color:#666;line-height:1.6">
       This link is unique to your property and analysis. Bookmark it for future reference.
+      <strong style="color:#333">Note: this link expires in 30 days.</strong>
     </p>
     <p style="margin:20px 0 0;font-size:11px;color:#999;line-height:1.5">
       For informational purposes only. Not financial or investment advice.
