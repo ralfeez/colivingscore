@@ -1552,11 +1552,14 @@ function showReviewScreen(){
 }
 
 async function initiatePayment(){
-  const statusEl = document.getElementById('pay-status');
   const btn = document.getElementById('btn-pay');
+  if(btn.disabled) return;
+  btn.disabled = true;
+  const statusEl = document.getElementById('pay-status');
   const emailVal = (document.getElementById('rv-email').value || '').trim();
   if(!emailVal || !emailVal.includes('@')){
     statusEl.textContent = 'Please enter a valid email address above.';
+    btn.disabled = false;
     return;
   }
   btn.disabled = true;
@@ -2283,7 +2286,7 @@ document.addEventListener('DOMContentLoaded', function(){
     }
     if(cfg.publishable_key) window._stripePK = cfg.publishable_key;
     if(cfg.api_key) window._apiKey = cfg.api_key;
-  });
+  }).catch(e => console.warn('config fetch failed:', e));
 
   wire('btn-address-next', goToPropertyForm);
   wire('btn-pro-generate', showReviewScreen);
@@ -2345,7 +2348,9 @@ document.addEventListener('DOMContentLoaded', function(){
   const sessionData = localStorage.getItem('cls_session_data');
   if(params.get('paid') === 'true' && sessionData && !pendingData){
     localStorage.removeItem('cls_session_data');
-    const sd = JSON.parse(sessionData);
+    let sd; try { sd = JSON.parse(sessionData); } catch(e){ sd = null; }
+    if(!sd){ history.replaceState({},'',' /'); }
+    if(sd){
     window._proInputs  = sd;
     window._sessionId  = sd._session_id || '';
     if(sd._addr){
@@ -2370,6 +2375,7 @@ document.addEventListener('DOMContentLoaded', function(){
     }
     showScorecardScreen(window._proInputs);
     history.replaceState({}, '', '/');
+    } // end if(sd)
   }
 
   checkForSavedReport();
@@ -3109,7 +3115,8 @@ function checkForSavedReport(){
     const data = JSON.parse(raw);
     const age  = Date.now() - (data.ts || 0);
     if(age > 30 * 24 * 60 * 60 * 1000){ localStorage.removeItem('cls_report'); return; }
-    const addr   = data.address || 'your property';
+    const addrRaw = data.address || 'your property';
+    const addr = addrRaw.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     const days   = Math.floor(age / (24*60*60*1000));
     const ageStr = days === 0 ? 'earlier today' : days === 1 ? 'yesterday' : `${days} days ago`;
     const banner = document.getElementById('restore-banner');
