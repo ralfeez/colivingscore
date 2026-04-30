@@ -1112,6 +1112,8 @@ def cache_report():
 
 @app.route("/create-checkout-session", methods=["POST"])
 def create_checkout_session():
+    if not _check_api_key():
+        return jsonify({"error": "Forbidden"}), 403
     try:
         data = request.get_json(force=True)
 

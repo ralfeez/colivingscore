@@ -2112,7 +2112,7 @@ function getUtilityValues(){
   return {electric,gas,water,garbage,utilTotal:electric+gas+water+garbage,utilPayer:'landlord'};
 }
 
-function _apiUrl(path){ return window._apiKey ? path+'?_k='+encodeURIComponent(window._apiKey) : path; }
+function _apiUrl(path){ return path; }
 
 function submitEmail(){
   const email = document.getElementById('r-email').value.trim();
@@ -2312,10 +2312,11 @@ document.addEventListener('DOMContentLoaded', function(){
     showScorecardScreen(window._proInputs);
   }
   // Handle paid redirect in same tab via sessionStorage
+  // Requires cls_session_data (written by /success server route) as proof of real payment
   const pendingData = sessionStorage.getItem('cls_pending_pro');
-  if(params.get('paid') === 'true' && pendingData){
+  if(params.get('paid') === 'true' && pendingData && localStorage.getItem('cls_session_data')){
     sessionStorage.removeItem('cls_pending_pro');
-    window._proInputs = JSON.parse(pendingData);
+    try { window._proInputs = JSON.parse(pendingData); } catch(e){ history.replaceState({},'',' /'); }
     // Extract session_id from /success localStorage handoff then clean up
     try {
       const _sd = JSON.parse(localStorage.getItem('cls_session_data') || '{}');
