@@ -487,6 +487,7 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
           <select id="f-floors">
             <option value="1" selected>1 story</option>
             <option value="2">2 stories</option>
+            <option value="split">Split level</option>
             <option value="3">3 stories</option>
           </select>
         </div>
@@ -987,6 +988,9 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
 <script>
 // ── SCORING ENGINE ────────────────────────────────────────────────────────────
 
+function floorsNum(f){ return f==='split'?2:parseInt(f)||1; }
+function floorsLabel(f){ return {1:'1 story','1':'1 story',2:'2 stories','2':'2 stories',3:'3 stories','3':'3 stories',split:'Split level'}[f]||f; }
+
 const TENANT_PROFILES = {
   nurses:    {label:'Travel Nurses',         bathW:25, sqftW:12, parkW:12, transitW:10, hospitalW:20, floorPenalty:4,  churnPenalty:8, rent:1100},
   tech:      {label:'Tech / Remote Workers', bathW:18, sqftW:12, parkW:12, transitW:8,  hospitalW:4,  floorPenalty:4,  churnPenalty:4, rent:1000},
@@ -1016,7 +1020,7 @@ function getInputs(){
     baths:     parseInt(document.getElementById('f-baths').value),
     halfbaths: parseInt(document.getElementById('f-halfbaths').value),
     sqft:      parseInt(document.getElementById('f-sqft').value),
-    floors:    parseInt(document.getElementById('f-floors').value),
+    floors:    document.getElementById('f-floors').value,
     garage:    parseInt(document.getElementById('f-garage').value),
     carport:   parseInt(document.getElementById('f-carport').value),
     uncovered: parseInt(document.getElementById('f-uncovered').value),
@@ -1105,8 +1109,8 @@ function scoreProperty(inp, tenantKey){
   }
 
   // 8. Floor penalty
-  if(inp.floors > 1){
-    const floorDed = p.floorPenalty * (inp.floors - 1);
+  if(floorsNum(inp.floors) > 1){
+    const floorDed = p.floorPenalty * (floorsNum(inp.floors) - 1);
     const floorMsg = tenantKey==='seniors'
       ? 'Multi-story homes present significant accessibility challenges for Seniors 55+. Single-story properties are strongly preferred for this tenant type.'
       : tenantKey==='sober'
@@ -1340,7 +1344,7 @@ function showReviewScreen(){
     row('Bedrooms', beds) +
     row('Bathrooms', (inp.baths || '—') + (inp.halfbaths ? ' full / '+inp.halfbaths+' half' : '')) +
     row('Square Footage', inp.sqft ? inp.sqft.toLocaleString() + ' sq ft' : '—') +
-    row('Stories', inp.floors || '—') +
+    row('Stories', floorsLabel(inp.floors)) +
     row('Parking', (inp.garage||0) + ' garage · ' + (inp.carport||0) + ' carport · ' + (inp.uncovered||0) + ' uncovered') +
     row('HOA Status', inp.hoa || '—') +
     row('Transit', inp.transit || '—') +
@@ -1437,7 +1441,7 @@ function computeTenantSuitability(inp, fd) {
   const transitAvail   = (ws.transit_score || 0) >= 25;
   const parkingAvail   = (inp.garage||0) + (inp.carport||0) + (inp.uncovered||0) > 0;
   const coveredParking = (inp.garage||0) + (inp.carport||0) > 0;
-  const singleStory    = (inp.floors||1) <= 1;
+  const singleStory    = floorsNum(inp.floors||1) <= 1;
   const walkScore      = ws.walk_score || 0;
   const walkHigh       = walkScore >= 70;
   const walkMed        = walkScore >= 50;
@@ -1619,7 +1623,7 @@ function generateProAnalysis(overrideInputs){
   window._proData = {
     address: (inp ? inp.beds+' bed / '+inp.baths+' bath · '+inp.sqft.toLocaleString()+' sq ft' : 'Property'),
     beds, baths: inp?inp.baths:3, sqft:inp?inp.sqft:2480,
-    floors:inp?inp.floors:1, parking:inp?inp.garage+' car garage':'',
+    floors:inp?floorsLabel(inp.floors):'1 story', parking:inp?inp.garage+' car garage':'',
     hoa:'None', transit:inp?inp.transit:'walkable', hospital:inp?inp.hospital:'close',
     target_tenant:p.label, score:window._score||87, regulatory:'Clear',
     report_date: new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}),
