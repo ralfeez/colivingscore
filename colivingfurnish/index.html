@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CoLivingFurnish — Furnish Your Co-Living Home, Room by Room</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
+<style>
+  :root {
+    --cream: #faf7f2;
+    --cream-dark: #f2ede4;
+    --charcoal: #1e1c18;
+    --charcoal-light: #3a3830;
+    --terracotta: #c0603a;
+    --terracotta-light: #e8927a;
+    --sage: #6b8c6e;
+    --sage-light: #a8c4a8;
+    --amber: #e8a84a;
+    --amber-light: #f5cc88;
+    --text-muted: #7a7570;
+    --border: rgba(30,28,24,0.1);
+    --card-shadow: 0 4px 24px rgba(30,28,24,0.08);
+    --card-shadow-hover: 0 12px 40px rgba(30,28,24,0.14);
+    --radius: 16px;
+    --font-display: 'Playfair Display', Georgia, serif;
+    --font-body: 'DM Sans', system-ui, sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: var(--font-body);
+    background: var(--cream);
+    color: var(--charcoal);
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+  #root { min-height: 100vh; }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--cream-dark); }
+  ::-webkit-scrollbar-thumb { background: var(--terracotta-light); border-radius: 3px; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  .anim-fade-up { animation: fadeUp 0.5s ease forwards; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+
+  /* ── Mobile breakpoint ─────────────────────────────── */
+  @media (max-width: 767px) {
+    /* Wizard: hide right panel, go full width */
+    .wizard-layout { grid-template-columns: 1fr !important; }
+    .wizard-right  { display: none !important; }
+    .wizard-left   { padding: 32px 24px !important; max-width: 100% !important; }
+
+    /* Dashboard nav: compact */
+    .dash-nav-address { display: none !important; }
+    .dash-nav         { padding: 0 16px !important; gap: 10px !important; }
+
+    /* Dashboard layout: single column */
+    .dash-layout   { grid-template-columns: 1fr !important; padding: 16px !important; }
+    .dash-sidebar  { display: none !important; }
+    .dash-tabs     { display: flex !important; }
+
+    /* Hero bar: stack */
+    .hero-inner    { flex-direction: column !important; gap: 16px !important; }
+    .hero-stats    { flex-wrap: wrap !important; gap: 12px !important; }
+
+    /* Items: make touch targets larger */
+    .item-row      { padding: 16px !important; min-height: 56px; }
+
+    /* Mobile budget */
+    .mobile-budget { display: block !important; }
+  }
+
+  /* ── Print styles ──────────────────────────────────── */
+  @media print {
+    .no-print     { display: none !important; }
+    .print-header { display: block !important; }
+    body          { background: white; font-size: 12px; }
+    nav, .dash-sidebar, .dash-tabs, .mobile-budget,
+    .wizard-right, .hero-bar, .export-modal-overlay { display: none !important; }
+    .dash-layout  { display: block !important; padding: 0 !important; }
+    .print-header { margin-bottom: 24px; border-bottom: 2px solid #1e1c18; padding-bottom: 12px; }
+    .room-section { page-break-inside: avoid; margin-bottom: 24px; }
+    .item-row     { padding: 6px 0 !important; border-bottom: 1px solid #eee !important; background: transparent !important; border-radius: 0 !important; }
+    .find-link    { font-size: 10px; color: #555 !important; background: transparent !important; }
+    .optional-hidden { display: none !important; }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script>
+// FURNISHINGS_DATA is populated at runtime via PapaParse in App's useEffect.
+// Components access data via window.FURNISHINGS_DATA after dataReady is true.
+window.FURNISHINGS_DATA = null;
+</script>
+
+
+<script type="text/babel">
+
+
+
+// ── Shared React hooks ──────────────────────────────────────────────────────
+const { useState, useEffect, useRef, useCallback, useMemo } = React;
+
+// ── Test harness ─────────────────────────────────────────────────────────────
+function runTests() {
+  const assert = (cond, msg) => {
+    if (!cond) { console.error("FAIL:", msg); } else { console.log("PASS:", msg); }
+  };
+  return assert;
+}
+
+// ── parseItemFilters ──────────────────────────────────────────────────────────
+function parseItemFilters(val) {
+  const s = (val || "").toString().trim().toLowerCase();
+  if (!s) return [];
+  return s.split(",").map(v => v.trim()).filter(Boolean);
+}
+
+// inline tests — run once on load
+(function() {
+  const assert = runTests();
+  assert(parseItemFilters("").length === 0, "parseItemFilters: blank → empty array");
+  assert(parseItemFilters("all").length === 1, "parseItemFilters: all → ['all']");
+  assert(parseItemFilters("seniors,sober").length === 2, "parseItemFilters: two values parsed");
+  assert(parseItemFilters(" cold , hot ").includes("cold"), "parseItemFilters: values trimmed");
+})();
+
+// ── isItemVisible ─────────────────────────────────────────────────────────────
+function isItemVisible(item, tenantType, climate) {
+  if (item.required) return true;
+
+  const tt = item.tenant_types;
+  const cz = item.climate_zones;
+
+  const tenantOk = tt.length === 0 || tt.includes("all") || tt.includes(tenantType);
+  const climateOk = cz.length === 0 || cz.includes("all") || cz.includes(climate);
+
+  return tenantOk && climateOk;
+}
+
+(function() {
+  const assert = runTests();
+  const req      = { required: true,  tenant_types: [],          climate_zones: [] };
+  const optAll   = { required: false, tenant_types: [],          climate_zones: [] };
+  const optSen   = { required: false, tenant_types: ["seniors"], climate_zones: [] };
+  const optCold  = { required: false, tenant_types: [],          climate_zones: ["cold"] };
+  const optBoth  = { required: false, tenant_types: ["nurses"],  climate_zones: ["cold"] };
+
+  assert(isItemVisible(req, "students", "hot"),         "isItemVisible: required always shows");
+  assert(isItemVisible(optAll, "students", "hot"),      "isItemVisible: blank cols → shows for all");
+  assert(isItemVisible(optSen, "seniors", "cold"),      "isItemVisible: seniors item shows for seniors");
+  assert(!isItemVisible(optSen, "students", "cold"),    "isItemVisible: seniors item hidden from students");
+  assert(isItemVisible(optCold, "students", "cold"),    "isItemVisible: cold item shows in cold");
+  assert(!isItemVisible(optCold, "students", "hot"),    "isItemVisible: cold item hidden in hot");
+  assert(isItemVisible(optBoth, "nurses", "cold"),      "isItemVisible: nurses+cold: both match");
+  assert(!isItemVisible(optBoth, "nurses", "hot"),      "isItemVisible: nurses+cold: wrong climate hidden");
+  assert(!isItemVisible(optBoth, "students", "cold"),   "isItemVisible: nurses+cold: wrong tenant hidden");
+})();
+
+// ── computeMultiplier ─────────────────────────────────────────────────────────
+function computeMultiplier(item, beds, baths) {
+  if (item.per_window) return 1;
+  if (item.qty_per_bedroom > 0) return item.qty_per_bedroom * beds;
+  if (item.qty_per_bath > 0) return item.qty_per_bath * baths;
+  if (item.qty_per_home > 0) return item.qty_per_home;
+  return 1;
+}
+
+(function() {
+  const assert = runTests();
+  const bedItem  = { per_window: false, qty_per_bedroom: 1, qty_per_bath: 0, qty_per_home: 0 };
+  const bathItem = { per_window: false, qty_per_bedroom: 0, qty_per_bath: 2, qty_per_home: 0 };
+  const homeItem = { per_window: false, qty_per_bedroom: 0, qty_per_bath: 0, qty_per_home: 3 };
+  const winItem  = { per_window: true,  qty_per_bedroom: 0, qty_per_bath: 0, qty_per_home: 0 };
+
+  assert(computeMultiplier(bedItem, 4, 2)  === 4, "computeMultiplier: bed item ×4 beds");
+  assert(computeMultiplier(bathItem, 4, 2) === 4, "computeMultiplier: bath item ×2 baths × qty 2");
+  assert(computeMultiplier(homeItem, 4, 2) === 3, "computeMultiplier: home item fixed qty 3");
+  assert(computeMultiplier(winItem, 4, 2)  === 1, "computeMultiplier: window item always ×1");
+})();
+
+// ── Room maps and config ──────────────────────────────────────────────────────
+const ROOM_ID_MAP = {
+  "bedroom": "bedroom",
+  "shared kitchen": "kitchen",
+  "shared living room": "living",
+  "shared bathroom(s)": "bathroom",
+  "laundry area": "laundry",
+  "tech & safety": "tech",
+  "common area": "common",
+  "common area optional": "common",
+};
+
+const ROOM_CONFIG = {
+  bedroom: {
+    name: "Private Bedroom", icon: "🛏",
+    story: {
+      students: "Students need a room that does double duty: a place to crash after late nights AND grind through coursework. The desk placement matters. Natural light in the morning helps regulate sleep. Storage is always the pain point — they never have enough.",
+      professionals: "Working professionals often bring less than they think they need, and quickly realize they need more than they brought. A great desk setup and blackout curtains are the non-negotiables. Think: hotel room that actually feels like home.",
+      seniors: "For 55+ tenants, the bedroom is a sanctuary. Accessibility matters — no sharp corners, good lighting, easy-to-reach storage. A comfortable chair for reading makes a room feel complete, not just functional.",
+      trades: "Construction and trades workers keep irregular hours and need solid blackout curtains, a durable mattress, and simple storage. Less is more — they want easy maintenance.",
+      nurses: "Traveling nurses work rotating shifts and sleep at odd hours. Blackout curtains are essential. Noise machines help. The room should feel calming and instantly familiar.",
+      nomads: "Digital nomads treat the bedroom as a base of operations. Fast WiFi access point nearby, a monitor stand on the desk, and good lighting for video calls are the true essentials.",
+      sober: "For sober living tenants, the bedroom should feel safe, calm, and welcoming. Personal touches like good lighting and a comfortable reading chair support well-being and a sense of ownership.",
+      default: "Every bedroom tells a story the moment a new tenant walks in. The right furnishings — a quality mattress, thoughtful lighting, and real storage — turn a room into a home within hours."
+    }
+  },
+  kitchen: {
+    name: "Shared Kitchen", icon: "🍳",
+    story: {
+      students: "A student kitchen needs to survive everything from ramen at midnight to meal-prep Sundays. Label-able shelf space, a big enough fridge, and a kitchen table that fits everyone — these are the essentials that make shared cooking feel collaborative, not chaotic.",
+      professionals: "Working professionals often meal-prep on Sundays and grab-and-go during the week. A well-equipped kitchen with quality appliances and clearly defined storage prevents the friction that kills housemate relationships.",
+      seniors: "For 55+ tenants, the kitchen should feel familiar and accessible. Good overhead lighting, easy-to-open storage, and quality appliances signal that this isn't temporary housing — it's a real home.",
+      trades: "Construction workers often have early starts and need a kitchen that's easy to use at 5am. A good coffee maker, easy-clean surfaces, and a large fridge are the priorities.",
+      default: "The shared kitchen is where housemates become neighbors and neighbors become community. The right layout and appliances can turn daily cooking into a shared ritual instead of a daily negotiation."
+    }
+  },
+  living: {
+    name: "Shared Living Room", icon: "🛋",
+    story: {
+      students: "The shared living room in a student house becomes the social hub — the place where friendships form over late-night study sessions and weekend hangouts. It needs to handle everything from Netflix marathons to impromptu board game nights.",
+      professionals: "Working professionals use the common area as a decompression zone. After a long day, it's where they decompress, connect with housemates, or take a work call from the couch. It should feel polished, not chaotic.",
+      seniors: "For 55+ tenants, the shared living room is often the heart of community. Comfortable seating, good lighting, and a TV at the right height make it a place they actually want to spend time.",
+      sober: "The shared living room in a sober living home is especially important — it's a safe, welcoming space for community and support. Comfortable, non-institutional furniture signals care and respect.",
+      default: "The shared living room sets the tone for the entire home. It's the first space new tenants see and the last they remember. Get this right and the whole house feels like a home."
+    }
+  },
+  bathroom: {
+    name: "Shared Bathroom(s)", icon: "🚿",
+    story: {
+      default: "A shared bathroom is the most personal shared space in any co-living home — and the one most likely to cause friction if not set up right. Designated shelf space, good lighting, and enough hooks and towel bars go around make the difference between a functional bathroom and a daily argument."
+    }
+  },
+  laundry: {
+    name: "Laundry Area", icon: "🧺",
+    story: {
+      default: "Often the most overlooked room in a co-living home, the laundry area can become a major pain point without the right setup. Clear days and times for laundry, proper supplies, and a folding surface transform a functional necessity into a smooth operation."
+    }
+  },
+  tech: {
+    name: "Tech & Safety", icon: "🔐",
+    story: {
+      professionals: "For professional tenants, reliable WiFi and a secure smart lock are non-negotiable. The tech setup is often what seals the deal — operators who get this right have much lower turnover.",
+      nomads: "Digital nomads will specifically ask about your WiFi setup before signing. Mesh coverage, backup hardware, and the right router are worth the investment if nomads are your tenant profile.",
+      default: "The tech and safety layer of a co-living home is invisible when it works and catastrophic when it doesn't. Smart locks, smoke detectors, and reliable WiFi are the backbone of a well-run property."
+    }
+  },
+  common: {
+    name: "Common Areas", icon: "🏠",
+    story: {
+      default: "Common areas set the first impression and daily tone of the home. A well-stocked entryway, clean hallways, and thoughtful shared touches signal to tenants that the operator cares — and that signal translates directly into satisfaction and tenure."
+    }
+  }
+};
+
+const ROOM_SWATCHES = {
+  "bedroom":  ["#e8d5c4", "#c4a882"],
+  "kitchen":  ["#d8dce4", "#7888a0"],
+  "living":   ["#e0d4c4", "#a08060"],
+  "bathroom": ["#cce0e4", "#5890a0"],
+  "laundry":  ["#dce0e8", "#7880a0"],
+  "tech":     ["#d0d8e8", "#6878a8"],
+  "common":   ["#dce4e0", "#70a090"],
+};
+
+// ── buildFurnishingsData ──────────────────────────────────────────────────────
+function buildFurnishingsData(rows) {
+  const num = (v) => parseFloat((v || "").toString().replace(/[$,\s]/g, "")) || 0;
+  const clean = (v) => (v || "").toString().trim();
+
+  const ROOM_ORDER = ["bedroom", "kitchen", "living", "bathroom", "laundry", "tech", "common"];
+  const roomMap = {};
+
+  rows.forEach((row, idx) => {
+    const rawRoom = clean(row["Room / Area"]);
+    if (!rawRoom) return;
+
+    const roomId = ROOM_ID_MAP[rawRoom.toLowerCase()];
+    if (!roomId) return;
+
+    if (!roomMap[roomId]) {
+      roomMap[roomId] = { ...ROOM_CONFIG[roomId], id: roomId, items: [] };
+    }
+
+    const item = {
+      id: `row_${idx}`,
+      name: clean(row["Item"]),
+      notes: clean(row["Notes"]),
+      room: roomId,
+      required: clean(row["Required"]).toLowerCase() === "yes",
+      link: clean(row["Affiliate URL"]),
+      price_low: Math.max(0, num(row["Cost Each"])),
+      qty_per_home: num(row["Min Quantity per home"]),
+      qty_per_bedroom: num(row["Min Quantity per Bedroom"]),
+      qty_per_bath: num(row["Min Quantity per Bath"]),
+      qty_per_window: num(row["Quantity per window"]),
+      per_window: num(row["Quantity per window"]) > 0,
+      tenant_types: parseItemFilters(row["tenant_types"]),
+      climate_zones: parseItemFilters(row["climate_zones"]),
+      category: roomId,
+    };
+
+    if (item.name) roomMap[roomId].items.push(item);
+  });
+
+  return {
+    rooms: ROOM_ORDER.filter(id => roomMap[id]).map(id => roomMap[id]),
+    tenantTypes: [
+      { id: "students",      label: "Students / Young Adults",  icon: "🎓" },
+      { id: "professionals", label: "Working Professionals",    icon: "💼" },
+      { id: "seniors",       label: "55+ / Seniors",            icon: "🌿" },
+      { id: "nurses",        label: "Traveling Nurses",         icon: "🏥" },
+      { id: "trades",        label: "Construction / Trades",    icon: "🔨" },
+      { id: "nomads",        label: "Digital Nomads",           icon: "💻" },
+      { id: "sober",         label: "Sober Living",             icon: "🤝" },
+    ],
+    climateZones: [
+      { id: "cold",       label: "Cold / Northern",    description: "Zone 5–8 · Heavy winters, insulation critical", color: "#4a90d9" },
+      { id: "temperate",  label: "Temperate / Mixed",  description: "Zone 3–4 · Mild seasons, year-round use",       color: "#5a9e6f" },
+      { id: "hot",        label: "Hot / Southern",     description: "Zone 1–2 · Warm year-round, cooling essential", color: "#d97b4a" },
+    ]
+  };
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// WIZARD
+// ══════════════════════════════════════════════════════════════════════════════
+// Wizard.jsx — onboarding setup flow
+
+
+// ── Step indicator ──────────────────────────────────────────────────────────
+function StepDots({ total, current }) {
+  return (
+    <div style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "center" }}>
+      {Array.from({ length: total }).map((_, i) => (
+        <div key={i} style={{
+          width: i === current ? 28 : 8,
+          height: 8,
+          borderRadius: 4,
+          background: i === current ? "var(--terracotta)" : i < current ? "var(--terracotta-light)" : "var(--border)",
+          transition: "all 0.3s ease"
+        }} />
+      ))}
+    </div>
+  );
+}
+
+// ── Logo ────────────────────────────────────────────────────────────────────
+function Logo({ size = 28 }) {
+  const h = size * 1.1;
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      {/* House icon — matches brand */}
+      <svg width={h} height={h} viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+        {/* House outline */}
+        <path d="M4 20L22 5L40 20V40H4V20Z" fill="white" stroke="#1e1c18" strokeWidth="2.5" strokeLinejoin="round"/>
+        {/* Roof peak */}
+        <path d="M22 5L40 20" stroke="#1e1c18" strokeWidth="2.5" strokeLinecap="round"/>
+        {/* Room dividers */}
+        <line x1="22" y1="20" x2="22" y2="40" stroke="#1e1c18" strokeWidth="1.5"/>
+        <line x1="4" y1="30" x2="40" y2="30" stroke="#1e1c18" strokeWidth="1.5"/>
+        {/* Top-left: bed */}
+        <rect x="6" y="21" width="14" height="8" rx="1" fill="#6baab8" opacity="0.6"/>
+        <rect x="6" y="21" width="14" height="3" rx="1" fill="#6baab8"/>
+        {/* Top-right: desk */}
+        <rect x="24" y="22" width="14" height="6" rx="1" fill="#e8a84a" opacity="0.5"/>
+        <rect x="30" y="18" width="3" height="4" rx="0.5" fill="#e8a84a" opacity="0.8"/>
+        {/* Bottom-left: sofa */}
+        <rect x="6" y="32" width="14" height="5" rx="2" fill="#c0603a" opacity="0.7"/>
+        <rect x="6" y="31" width="3" height="6" rx="1" fill="#c0603a"/>
+        <rect x="17" y="31" width="3" height="6" rx="1" fill="#c0603a"/>
+        {/* Bottom-right: plant */}
+        <circle cx="31" cy="35" r="3" fill="#6b8c6e" opacity="0.7"/>
+        <rect x="30" y="36" width="2" height="3" rx="0.5" fill="#6b8c6e" opacity="0.6"/>
+      </svg>
+      <div style={{ display: "flex", flexDirection: "column", lineHeight: 1 }}>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 0 }}>
+          <span style={{ fontFamily: "var(--font-body)", fontWeight: 700, fontSize: size * 0.78, color: "#1e1c18", letterSpacing: "-0.3px" }}>CoLiving</span>
+          <span style={{ fontFamily: "var(--font-body)", fontWeight: 700, fontSize: size * 0.78, color: "#c0603a", letterSpacing: "-0.3px" }}>Furnish</span>
+        </div>
+        <span style={{ fontSize: size * 0.28, color: "#1e1c18", letterSpacing: "0.8px", textTransform: "uppercase", opacity: 0.6, marginTop: 2 }}>
+          Furnish your co-living home, <span style={{ color: "#e8a84a", fontWeight: 600 }}>room by room.</span>
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// ── Step 1: Address ─────────────────────────────────────────────────────────
+function StepAddress({ value, onChange, onNext }) {
+  const [localVal, setLocalVal] = useState(value || "");
+  const [focused, setFocused] = useState(false);
+  const inputRef = useRef(null);
+  useEffect(() => { inputRef.current && inputRef.current.focus(); }, []);
+
+  function handleNext() {
+    if (localVal.trim().length > 4) {
+      onChange(localVal.trim());
+      onNext();
+    }
+  }
+
+  return (
+    <div style={{ animation: "fadeUp 0.5s ease" }}>
+      <div style={{ marginBottom: 12, display: "inline-block", background: "var(--terracotta)", color: "white", borderRadius: 20, padding: "4px 14px", fontSize: 12, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase" }}>Step 1 of 4</div>
+      <h1 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(32px, 5vw, 52px)", fontWeight: 700, lineHeight: 1.15, marginBottom: 16, color: "var(--charcoal)" }}>
+        Where is your<br /><em style={{ color: "var(--terracotta)" }}>co-living home?</em>
+      </h1>
+      <p style={{ color: "var(--text-muted)", fontSize: 17, marginBottom: 40, maxWidth: 480 }}>
+        The address helps us tailor furnishing recommendations to your location — climate, region, and tenant market.
+      </p>
+      <div style={{
+        position: "relative",
+        marginBottom: 24,
+        border: `2px solid ${focused ? "var(--terracotta)" : "var(--border)"}`,
+        borderRadius: 14,
+        background: "white",
+        transition: "border-color 0.2s ease",
+        boxShadow: focused ? "0 0 0 4px rgba(192,96,58,0.1)" : "none"
+      }}>
+        <span style={{ position: "absolute", left: 18, top: "50%", transform: "translateY(-50%)", fontSize: 20 }}>📍</span>
+        <input
+          ref={inputRef}
+          value={localVal}
+          onChange={e => setLocalVal(e.target.value)}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          onKeyDown={e => e.key === "Enter" && handleNext()}
+          placeholder="123 Main St, Austin, TX 78701"
+          style={{
+            display: "block", width: "100%", padding: "18px 18px 18px 52px",
+            fontSize: 17, border: "none", outline: "none", borderRadius: 12,
+            fontFamily: "var(--font-body)", background: "transparent", color: "var(--charcoal)"
+          }}
+        />
+      </div>
+      <button onClick={handleNext} disabled={localVal.trim().length < 5}
+        style={{
+          width: "100%", padding: "18px", background: localVal.trim().length >= 5 ? "var(--terracotta)" : "var(--border)",
+          color: localVal.trim().length >= 5 ? "white" : "var(--text-muted)",
+          border: "none", borderRadius: 14, fontSize: 17, fontWeight: 600,
+          cursor: localVal.trim().length >= 5 ? "pointer" : "not-allowed",
+          transition: "all 0.2s ease", fontFamily: "var(--font-body)",
+          letterSpacing: "0.3px"
+        }}>
+        Continue →
+      </button>
+    </div>
+  );
+}
+
+// ── Step 2: Beds & Baths ────────────────────────────────────────────────────
+function Counter({ label, value, onChange, min = 1, max = 12 }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "center", background: "white", borderRadius: 16, padding: "24px 20px", flex: 1, boxShadow: "0 2px 12px rgba(30,28,24,0.06)" }}>
+      <span style={{ fontSize: 32 }}>{label === "Bedrooms" ? "🛏" : "🚿"}</span>
+      <span style={{ fontFamily: "var(--font-display)", fontSize: 15, fontWeight: 600, color: "var(--charcoal)" }}>{label}</span>
+      <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+        <button onClick={() => onChange(Math.max(min, value - 1))} style={{
+          width: 40, height: 40, borderRadius: "50%", border: "2px solid var(--border)",
+          background: "var(--cream)", cursor: "pointer", fontSize: 20, display: "flex",
+          alignItems: "center", justifyContent: "center", color: "var(--charcoal)",
+          transition: "all 0.15s ease", fontWeight: 700
+        }}>−</button>
+        <span style={{ fontFamily: "var(--font-display)", fontSize: 36, fontWeight: 700, color: "var(--terracotta)", minWidth: 40, textAlign: "center" }}>{value}</span>
+        <button onClick={() => onChange(Math.min(max, value + 1))} style={{
+          width: 40, height: 40, borderRadius: "50%", border: "none",
+          background: "var(--terracotta)", cursor: "pointer", fontSize: 20, display: "flex",
+          alignItems: "center", justifyContent: "center", color: "white",
+          transition: "all 0.15s ease", fontWeight: 700
+        }}>+</button>
+      </div>
+    </div>
+  );
+}
+
+function StepBedsAndBaths({ value, onChange, onNext, onBack }) {
+  const { beds = 3, baths = 2 } = value || {};
+  return (
+    <div style={{ animation: "fadeUp 0.5s ease" }}>
+      <div style={{ marginBottom: 12, display: "inline-block", background: "var(--terracotta)", color: "white", borderRadius: 20, padding: "4px 14px", fontSize: 12, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase" }}>Step 2 of 4</div>
+      <h1 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(28px, 4.5vw, 48px)", fontWeight: 700, lineHeight: 1.2, marginBottom: 14 }}>
+        How big is<br /><em style={{ color: "var(--terracotta)" }}>the home?</em>
+      </h1>
+      <p style={{ color: "var(--text-muted)", fontSize: 16, marginBottom: 36 }}>Each bedroom is a private room for one tenant. This determines the furnishing list and estimated budget range.</p>
+      <div style={{ display: "flex", gap: 16, marginBottom: 36 }}>
+        <Counter label="Bedrooms" value={beds} onChange={v => onChange({ ...value, beds: v })} />
+        <Counter label="Bathrooms" value={baths} onChange={v => onChange({ ...value, baths: v })} />
+      </div>
+      <div style={{ background: "var(--cream-dark)", borderRadius: 12, padding: "14px 18px", marginBottom: 32, fontSize: 14, color: "var(--text-muted)" }}>
+        <strong style={{ color: "var(--charcoal)" }}>{beds} private tenant{beds > 1 ? "s" : ""} · {baths} shared bathroom{baths > 1 ? "s" : ""}</strong> · Estimated total items: <strong style={{ color: "var(--terracotta)" }}>{beds * 15 + 40}–{beds * 18 + 55}</strong>
+      </div>
+      <div style={{ display: "flex", gap: 12 }}>
+        <button onClick={onBack} style={{ flex: 1, padding: "16px", background: "white", border: "2px solid var(--border)", borderRadius: 14, fontSize: 16, fontWeight: 500, cursor: "pointer", fontFamily: "var(--font-body)", color: "var(--charcoal)" }}>← Back</button>
+        <button onClick={onNext} style={{ flex: 2, padding: "16px", background: "var(--terracotta)", color: "white", border: "none", borderRadius: 14, fontSize: 16, fontWeight: 600, cursor: "pointer", fontFamily: "var(--font-body)" }}>Continue →</button>
+      </div>
+    </div>
+  );
+}
+
+// ── Step 3: Tenant Type ─────────────────────────────────────────────────────
+function StepTenantType({ value, onChange, onNext, onBack }) {
+  const types = window.FURNISHINGS_DATA.tenantTypes;
+  return (
+    <div style={{ animation: "fadeUp 0.5s ease" }}>
+      <div style={{ marginBottom: 12, display: "inline-block", background: "var(--terracotta)", color: "white", borderRadius: 20, padding: "4px 14px", fontSize: 12, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase" }}>Step 3 of 4</div>
+      <h1 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(26px, 4vw, 44px)", fontWeight: 700, lineHeight: 1.2, marginBottom: 14 }}>
+        Who will call this<br /><em style={{ color: "var(--terracotta)" }}>home?</em>
+      </h1>
+      <p style={{ color: "var(--text-muted)", fontSize: 16, marginBottom: 28 }}>Your tenant type shapes the stories and recommended items.</p>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 32 }}>
+        {types.map(t => {
+          const sel = value === t.id;
+          return (
+            <button key={t.id} onClick={() => onChange(t.id)} style={{
+              padding: "16px 14px", borderRadius: 14, border: `2px solid ${sel ? "var(--terracotta)" : "var(--border)"}`,
+              background: sel ? "rgba(192,96,58,0.07)" : "white",
+              cursor: "pointer", textAlign: "left", transition: "all 0.2s ease",
+              boxShadow: sel ? "0 0 0 3px rgba(192,96,58,0.12)" : "none",
+              fontFamily: "var(--font-body)"
+            }}>
+              <div style={{ fontSize: 24, marginBottom: 6 }}>{t.icon}</div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: sel ? "var(--terracotta)" : "var(--charcoal)", lineHeight: 1.3 }}>{t.label}</div>
+            </button>
+          );
+        })}
+      </div>
+      <div style={{ display: "flex", gap: 12 }}>
+        <button onClick={onBack} style={{ flex: 1, padding: "16px", background: "white", border: "2px solid var(--border)", borderRadius: 14, fontSize: 16, fontWeight: 500, cursor: "pointer", fontFamily: "var(--font-body)", color: "var(--charcoal)" }}>← Back</button>
+        <button onClick={onNext} disabled={!value} style={{
+          flex: 2, padding: "16px", background: value ? "var(--terracotta)" : "var(--border)",
+          color: value ? "white" : "var(--text-muted)", border: "none", borderRadius: 14,
+          fontSize: 16, fontWeight: 600, cursor: value ? "pointer" : "not-allowed", fontFamily: "var(--font-body)"
+        }}>Continue →</button>
+      </div>
+    </div>
+  );
+}
+
+// ── Step 4: Climate ─────────────────────────────────────────────────────────
+function StepClimate({ value, onChange, onNext, onBack }) {
+  const zones = window.FURNISHINGS_DATA.climateZones;
+  return (
+    <div style={{ animation: "fadeUp 0.5s ease" }}>
+      <div style={{ marginBottom: 12, display: "inline-block", background: "var(--terracotta)", color: "white", borderRadius: 20, padding: "4px 14px", fontSize: 12, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase" }}>Step 4 of 4</div>
+      <h1 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(26px, 4vw, 44px)", fontWeight: 700, lineHeight: 1.2, marginBottom: 14 }}>
+        What's the<br /><em style={{ color: "var(--terracotta)" }}>climate like?</em>
+      </h1>
+      <p style={{ color: "var(--text-muted)", fontSize: 16, marginBottom: 28 }}>Climate zone affects seasonal items — fans, blankets, patio furniture and more.</p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 32 }}>
+        {zones.map(z => {
+          const sel = value === z.id;
+          const icons = { cold: "🌨", temperate: "🍂", hot: "☀️" };
+          return (
+            <button key={z.id} onClick={() => onChange(z.id)} style={{
+              padding: "20px 22px", borderRadius: 16, border: `2px solid ${sel ? z.color : "var(--border)"}`,
+              background: sel ? `${z.color}12` : "white",
+              cursor: "pointer", textAlign: "left", transition: "all 0.2s ease",
+              display: "flex", alignItems: "center", gap: 18,
+              boxShadow: sel ? `0 0 0 3px ${z.color}25` : "none",
+              fontFamily: "var(--font-body)"
+            }}>
+              <span style={{ fontSize: 32 }}>{icons[z.id]}</span>
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: sel ? z.color : "var(--charcoal)", marginBottom: 3 }}>{z.label}</div>
+                <div style={{ fontSize: 13, color: "var(--text-muted)" }}>{z.description}</div>
+              </div>
+              {sel && <div style={{ marginLeft: "auto", background: z.color, color: "white", borderRadius: "50%", width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13 }}>✓</div>}
+            </button>
+          );
+        })}
+      </div>
+      <div style={{ display: "flex", gap: 12 }}>
+        <button onClick={onBack} style={{ flex: 1, padding: "16px", background: "white", border: "2px solid var(--border)", borderRadius: 14, fontSize: 16, fontWeight: 500, cursor: "pointer", fontFamily: "var(--font-body)", color: "var(--charcoal)" }}>← Back</button>
+        <button onClick={onNext} disabled={!value} style={{
+          flex: 2, padding: "16px", background: value ? "var(--terracotta)" : "var(--border)",
+          color: value ? "white" : "var(--text-muted)", border: "none", borderRadius: 14,
+          fontSize: 16, fontWeight: 600, cursor: value ? "pointer" : "not-allowed", fontFamily: "var(--font-body)"
+        }}>Build My Furnishing Plan →</button>
+      </div>
+    </div>
+  );
+}
+
+// ── Main Wizard ─────────────────────────────────────────────────────────────
+function Wizard({ onComplete }) {
+  const [step, setStep] = useState(0);
+  const [address, setAddress] = useState("");
+  const [homeSizing, setHomeSizing] = useState({ beds: 3, baths: 2 });
+  const [tenantType, setTenantType] = useState("");
+  const [climate, setClimate] = useState("");
+
+  function finish() {
+    onComplete({ address, beds: homeSizing.beds, baths: homeSizing.baths, tenantType, climate });
+  }
+
+  const steps = [
+    <StepAddress value={address} onChange={setAddress} onNext={() => setStep(1)} />,
+    <StepBedsAndBaths value={homeSizing} onChange={setHomeSizing} onNext={() => setStep(2)} onBack={() => setStep(0)} />,
+    <StepTenantType value={tenantType} onChange={setTenantType} onNext={() => setStep(3)} onBack={() => setStep(1)} />,
+    <StepClimate value={climate} onChange={setClimate} onNext={finish} onBack={() => setStep(2)} />
+  ];
+
+  return (
+    <div className="wizard-layout" style={{
+      minHeight: "100vh", display: "grid", gridTemplateColumns: "1fr 1fr",
+      background: "var(--cream)"
+    }}>
+      {/* Left panel — form */}
+      <div className="wizard-left" style={{
+        display: "flex", flexDirection: "column", justifyContent: "center",
+        padding: "48px clamp(32px, 6vw, 80px)", maxWidth: 640, margin: "0 auto", width: "100%"
+      }}>
+        <div style={{ marginBottom: 48 }}><Logo /></div>
+        <StepDots total={4} current={step} />
+        <div style={{ marginTop: 40 }}>
+          {steps[step]}
+        </div>
+      </div>
+
+      {/* Right panel — decorative */}
+      <div className="wizard-right" style={{
+        background: "#1e1c18",
+        position: "relative", overflow: "hidden",
+        display: "flex", flexDirection: "column", justifyContent: "flex-end",
+        padding: 48
+      }}>
+        {/* Pattern overlay */}
+        <svg style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", opacity: 0.05 }} viewBox="0 0 400 600" preserveAspectRatio="xMidYMid slice">
+          {Array.from({ length: 12 }).map((_, r) =>
+            Array.from({ length: 8 }).map((_, c) => (
+              <circle key={`${r}-${c}`} cx={c * 55 + 27} cy={r * 55 + 27} r="18" fill="white" />
+            ))
+          )}
+        </svg>
+
+        {/* Room preview illustration */}
+        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: "80%", opacity: 0.15 }}>
+          <svg viewBox="0 0 320 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+            {/* Floor */}
+            <rect x="20" y="160" width="280" height="60" rx="4" fill="white"/>
+            {/* Wall */}
+            <rect x="20" y="40" width="280" height="120" rx="4" fill="white" opacity="0.5"/>
+            {/* Bed */}
+            <rect x="60" y="130" width="120" height="50" rx="6" fill="white"/>
+            <rect x="60" y="130" width="120" height="20" rx="6" fill="white" opacity="0.7"/>
+            {/* Nightstand */}
+            <rect x="190" y="150" width="30" height="30" rx="4" fill="white" opacity="0.6"/>
+            {/* Lamp */}
+            <rect x="200" y="130" width="10" height="20" rx="2" fill="white" opacity="0.8"/>
+            <ellipse cx="205" cy="128" rx="16" ry="8" fill="white" opacity="0.5"/>
+            {/* Window */}
+            <rect x="220" y="60" width="60" height="80" rx="4" fill="white" opacity="0.3"/>
+            <line x1="250" y1="60" x2="250" y2="140" stroke="white" strokeWidth="2" opacity="0.5"/>
+            <line x1="220" y1="100" x2="280" y2="100" stroke="white" strokeWidth="2" opacity="0.5"/>
+            {/* Dresser */}
+            <rect x="30" y="120" width="50" height="60" rx="4" fill="white" opacity="0.6"/>
+            <line x1="30" y1="140" x2="80" y2="140" stroke="white" strokeWidth="1.5" opacity="0.4"/>
+            <line x1="30" y1="160" x2="80" y2="160" stroke="white" strokeWidth="1.5" opacity="0.4"/>
+          </svg>
+        </div>
+
+        {/* Quote cards */}
+        <div style={{ position: "relative", zIndex: 1 }}>
+          <div style={{
+            background: "rgba(255,255,255,0.07)", backdropFilter: "blur(8px)",
+            borderRadius: 20, padding: "28px 32px", border: "1px solid rgba(255,255,255,0.1)",
+            marginBottom: 20
+          }}>
+            <p style={{ fontFamily: "var(--font-display)", fontStyle: "italic", fontSize: 18, color: "rgba(255,255,255,0.9)", lineHeight: 1.6, marginBottom: 16 }}>
+              "The right furnishings don't just fill a room. They create a home that tenants want to stay in — and tell their friends about."
+            </p>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#4a8c6e", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>🏠</div>
+              <div>
+                <div style={{ color: "rgba(255,255,255,0.9)", fontSize: 13, fontWeight: 600 }}>CoLivingFurnish</div>
+                <div style={{ color: "#e8a84a", fontSize: 12, fontWeight: 600 }}>Room by Room.</div>
+              </div>
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 12 }}>
+            {[{ n: "500+", l: "Items curated" }, { n: "12", l: "Room types" }, { n: "7", l: "Tenant profiles" }].map(stat => (
+              <div key={stat.n} style={{ flex: 1, background: "rgba(255,255,255,0.05)", borderRadius: 14, padding: "16px", border: "1px solid rgba(255,255,255,0.08)", textAlign: "center" }}>
+                <div style={{ fontFamily: "var(--font-display)", fontSize: 24, fontWeight: 700, color: "var(--terracotta-light)" }}>{stat.n}</div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginTop: 2 }}>{stat.l}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+
+
+// ══════════════════════════════════════════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════════════════════════════════════════
+// Dashboard.jsx — main furnishing checklist interface
+
+function PrintHeader({ project }) {
+  const tenantLabel = window.FURNISHINGS_DATA.tenantTypes.find(t => t.id === project.tenantType)?.label || project.tenantType;
+  const climateLabel = window.FURNISHINGS_DATA.climateZones.find(z => z.id === project.climate)?.label || project.climate;
+  const today = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+  return (
+    <div className="print-header" style={{ display: "none" }}>
+      <div style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 700, marginBottom: 6 }}>
+        CoLivingFurnish — Furnishing Checklist
+      </div>
+      <div style={{ fontSize: 13, color: "#555", marginBottom: 4 }}>
+        <strong>{project.address}</strong>
+      </div>
+      <div style={{ fontSize: 12, color: "#777" }}>
+        {project.beds} private bedroom{project.beds > 1 ? "s" : ""} · {project.baths} bathroom{project.baths > 1 ? "s" : ""} · {tenantLabel} · {climateLabel} Climate · Generated {today}
+      </div>
+    </div>
+  );
+}
+
+
+// ── Image placeholder for items ─────────────────────────────────────────────
+function ItemImage({ keyword, size = 56 }) {
+  const [bg, stroke] = ROOM_SWATCHES[keyword] || ["#e8e4dc", "#a09880"];
+  const initial = keyword ? keyword[0].toUpperCase() : "?";
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: 12, background: bg,
+      display: "flex", alignItems: "center", justifyContent: "center",
+      flexShrink: 0, border: `1.5px solid ${stroke}30`
+    }}>
+      <span style={{ fontFamily: "var(--font-display)", fontSize: size * 0.38, fontWeight: 700, color: stroke, opacity: 0.7 }}>{initial}</span>
+    </div>
+  );
+}
+
+// ── Price helpers — high = floor * 1.3 ────────────────────────────────────
+const pH = i => Math.round(i.price_low * 1.3);
+const pMid = i => (i.price_low + pH(i)) / 2;
+
+// ── Budget bar ──────────────────────────────────────────────────────────────
+function BudgetBar({ items, checked }) {
+  const fmt = n => "$" + Math.round(n).toLocaleString();
+
+  const requiredTotal = useMemo(() =>
+    items.filter(i => i.required).reduce((s, i) => s + pMid(i) * (i._multiplier || 1), 0),
+  [items]);
+  const optionalTotal = useMemo(() =>
+    items.filter(i => !i.required).reduce((s, i) => s + pMid(i) * (i._multiplier || 1), 0),
+  [items]);
+  const requiredSpent = useMemo(() =>
+    items.filter(i => i.required && checked[i.id]).reduce((s, i) => s + pMid(i) * (i._multiplier || 1), 0),
+  [items, checked]);
+  const optionalSpent = useMemo(() =>
+    items.filter(i => !i.required && checked[i.id]).reduce((s, i) => s + pMid(i) * (i._multiplier || 1), 0),
+  [items, checked]);
+
+  const requiredPct = requiredTotal > 0 ? Math.min(100, Math.round((requiredSpent / requiredTotal) * 100)) : 0;
+  const optionalPct = optionalTotal > 0 ? Math.min(100, Math.round((optionalSpent / optionalTotal) * 100)) : 0;
+  const requiredRemaining = requiredTotal - requiredSpent;
+
+  return (
+    <div style={{ background: "white", borderRadius: 16, padding: "20px 24px", boxShadow: "0 2px 16px rgba(30,58,74,0.07)", marginBottom: 24 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4 }}>
+        <span style={{ fontFamily: "var(--font-display)", fontSize: 14, fontWeight: 700 }}>Minimum Budget</span>
+        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+          <strong style={{ color: "var(--terracotta)" }}>{fmt(requiredSpent)}</strong> / {fmt(requiredTotal)}
+        </span>
+      </div>
+      <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 10 }}>Required items · scaled by beds &amp; baths</div>
+      <div style={{ height: 10, background: "var(--cream-dark)", borderRadius: 5, overflow: "hidden", marginBottom: 6 }}>
+        <div style={{ height: "100%", width: `${requiredPct}%`, background: "linear-gradient(90deg, var(--terracotta), var(--terracotta-light))", borderRadius: 5, transition: "width 0.4s ease" }} />
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16, fontSize: 11, color: "var(--text-muted)" }}>
+        <span>{requiredPct}% acquired</span>
+        <span style={{ color: requiredRemaining > 0 ? "var(--terracotta)" : "var(--sage)", fontWeight: 600 }}>
+          {requiredRemaining > 0 ? `${fmt(requiredRemaining)} still needed` : "✓ Required complete"}
+        </span>
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4 }}>
+        <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)" }}>Optional Upgrades</span>
+        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+          <strong style={{ color: "var(--sage)" }}>{fmt(optionalSpent)}</strong> / {fmt(optionalTotal)}
+        </span>
+      </div>
+      <div style={{ height: 6, background: "var(--cream-dark)", borderRadius: 3, overflow: "hidden" }}>
+        <div style={{ height: "100%", width: `${optionalPct}%`, background: "linear-gradient(90deg, var(--sage), var(--sage-light))", borderRadius: 3, transition: "width 0.4s ease" }} />
+      </div>
+      <div style={{ marginTop: 5, fontSize: 11, color: "var(--text-muted)", textAlign: "right" }}>{optionalPct}% of upgrades acquired</div>
+
+      <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Total committed</span>
+        <span style={{ fontFamily: "var(--font-display)", fontSize: 16, fontWeight: 700, color: "var(--charcoal)" }}>{fmt(requiredSpent + optionalSpent)}</span>
+      </div>
+    </div>
+  );
+}
+
+// ── Story card ──────────────────────────────────────────────────────────────
+function StoryCard({ room, tenantType }) {
+  const [open, setOpen] = useState(false);
+  const story = room.story[tenantType] || room.story["default"] || "";
+  if (!story) return null;
+  const preview = story.slice(0, 280) + (story.length > 280 ? "…" : "");
+
+  return (
+    <div style={{
+      background: "linear-gradient(135deg, #1e1c18 0%, #3a3830 100%)",
+      borderRadius: 20, padding: "28px 28px", marginBottom: 24, position: "relative", overflow: "hidden"
+    }}>
+      {/* Decorative quote mark */}
+      <div style={{ position: "absolute", top: -10, right: 20, fontFamily: "var(--font-display)", fontSize: 120, color: "rgba(255,255,255,0.04)", lineHeight: 1, userSelect: "none" }}>"</div>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+        <div style={{ background: "var(--terracotta)", borderRadius: "50%", width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>📖</div>
+        <span style={{ color: "rgba(255,255,255,0.6)", fontSize: 12, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase" }}>Room Notes</span>
+      </div>
+      <p style={{
+        fontFamily: "var(--font-display)", fontStyle: "italic",
+        fontSize: 17, color: "rgba(255,255,255,0.92)", lineHeight: 1.8,
+        marginBottom: story.length > 280 ? 14 : 0
+      }}>
+        {open ? story : preview}
+      </p>
+      {story.length > 280 && (
+        <button onClick={() => setOpen(!open)} style={{
+          background: "none", border: "none", color: "var(--terracotta-light)", cursor: "pointer",
+          fontSize: 13, fontWeight: 600, padding: 0, fontFamily: "var(--font-body)"
+        }}>
+          {open ? "Show less ↑" : "Read more ↓"}
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ── Item row ────────────────────────────────────────────────────────────────
+function ItemRow({ item, checked, onToggle }) {
+  const [hovered, setHovered] = useState(false);
+  const isChecked = checked[item.id];
+  const mult = item._multiplier || 1;
+  const priceLow = item.price_low;
+  const priceHigh = pH(item);
+
+  const priceRange = item.per_window
+    ? `$${Math.round(priceLow)}–$${Math.round(priceHigh)} per window`
+    : mult > 1
+      ? `$${Math.round(priceLow * mult)}–$${Math.round(priceHigh * mult)} (×${mult})`
+      : `$${Math.round(priceLow)}–$${Math.round(priceHigh)}`;
+
+  return (
+    <div
+      className="item-row"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        display: "flex", alignItems: "center", gap: 14, padding: "14px 16px",
+        borderRadius: 14, border: `1.5px solid ${isChecked ? "var(--sage-light)" : hovered ? "var(--border)" : "transparent"}`,
+        background: isChecked ? "rgba(107,140,110,0.06)" : hovered ? "white" : "transparent",
+        transition: "all 0.18s ease", cursor: "pointer"
+      }}
+      onClick={() => onToggle(item.id)}
+    >
+      {/* Checkbox */}
+      <div style={{
+        width: 24, height: 24, borderRadius: 7, border: `2px solid ${isChecked ? "var(--sage)" : "var(--border)"}`,
+        background: isChecked ? "var(--sage)" : "transparent",
+        display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.15s ease"
+      }}>
+        {isChecked && <span style={{ color: "white", fontSize: 13, fontWeight: 700 }}>✓</span>}
+      </div>
+
+      {/* Image placeholder */}
+      <ItemImage keyword={item.category} size={48} />
+
+      {/* Info */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
+          <span style={{
+            fontSize: 15, fontWeight: 600, color: isChecked ? "var(--text-muted)" : "var(--charcoal)",
+            textDecoration: isChecked ? "line-through" : "none", transition: "all 0.15s ease"
+          }}>{item.name}</span>
+          {item.required && <span style={{ fontSize: 10, fontWeight: 700, background: "rgba(192,96,58,0.12)", color: "var(--terracotta)", padding: "2px 7px", borderRadius: 20, textTransform: "uppercase", letterSpacing: 0.5, flexShrink: 0 }}>Required</span>}
+          {!item.required && <span style={{ fontSize: 10, fontWeight: 700, background: "rgba(107,140,110,0.12)", color: "var(--sage)", padding: "2px 7px", borderRadius: 20, textTransform: "uppercase", letterSpacing: 0.5, flexShrink: 0 }}>Optional</span>}
+        </div>
+        {item.notes && <div style={{ fontSize: 12, color: "var(--text-muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.notes}</div>}
+      </div>
+
+      {/* Price + link */}
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, flexShrink: 0 }}>
+        <span style={{ fontSize: 13, fontWeight: 600, color: "var(--charcoal)" }}>{priceRange}</span>
+        <a
+          href={item.link} target="_blank" rel="noopener noreferrer"
+          onClick={e => e.stopPropagation()}
+          className="find-link"
+          style={{
+            fontSize: 11, fontWeight: 600, color: "var(--terracotta)", textDecoration: "none",
+            background: "rgba(192,96,58,0.08)", padding: "3px 10px", borderRadius: 20,
+            transition: "background 0.15s ease"
+          }}
+        >Find →</a>
+      </div>
+    </div>
+  );
+}
+
+// ── Room section ────────────────────────────────────────────────────────────
+function RoomSection({ room, tenantType, climate, beds, baths, checked, onToggle, isActive, onActivate }) {
+  // Filter items by tenant type and climate, required always visible
+  const visibleItems = useMemo(() => {
+    return room.items
+      .filter(item => isItemVisible(item, tenantType, climate))
+      .sort((a, b) => (b.required ? 1 : 0) - (a.required ? 1 : 0))
+      .map(item => ({ ...item, _multiplier: computeMultiplier(item, beds, baths) }));
+  }, [room.items, tenantType, climate, beds, baths]);
+
+  const requiredItems = visibleItems.filter(i => i.required);
+  const optionalItems = visibleItems.filter(i => !i.required);
+  const checkedCount = visibleItems.filter(i => checked[i.id]).length;
+  const pct = visibleItems.length > 0 ? Math.round((checkedCount / visibleItems.length) * 100) : 0;
+  const [showOptional, setShowOptional] = useState(false);
+
+  return (
+    <div id={`room-${room.id}`} className="room-section" style={{ marginBottom: 16 }}>
+      {/* Room header — always visible */}
+      <button
+        onClick={onActivate}
+        style={{
+          width: "100%", padding: "20px 24px", borderRadius: isActive ? "20px 20px 0 0" : 20,
+          background: isActive ? "var(--charcoal)" : "white",
+          border: `2px solid ${isActive ? "var(--charcoal)" : "var(--border)"}`,
+          cursor: "pointer", display: "flex", alignItems: "center", gap: 16,
+          transition: "all 0.25s ease", textAlign: "left",
+          boxShadow: isActive ? "0 8px 32px rgba(30,28,24,0.16)" : "0 2px 12px rgba(30,28,24,0.05)"
+        }}
+      >
+        <span style={{ fontSize: 28 }}>{room.icon}</span>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 700, color: isActive ? "white" : "var(--charcoal)", marginBottom: 4 }}>{room.name}</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ height: 4, width: 120, background: isActive ? "rgba(255,255,255,0.2)" : "var(--cream-dark)", borderRadius: 2, overflow: "hidden" }}>
+              <div style={{ height: "100%", width: `${pct}%`, background: isActive ? "var(--terracotta-light)" : "var(--terracotta)", borderRadius: 2, transition: "width 0.3s ease" }} />
+            </div>
+            <span style={{ fontSize: 12, color: isActive ? "rgba(255,255,255,0.6)" : "var(--text-muted)" }}>{checkedCount}/{visibleItems.length} items</span>
+          </div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+          <span style={{ fontSize: 13, fontWeight: 700, color: isActive ? "var(--terracotta-light)" : "var(--terracotta)" }}>{pct}%</span>
+          <span style={{ fontSize: 18, color: isActive ? "rgba(255,255,255,0.5)" : "var(--text-muted)", transition: "transform 0.25s ease", display: "inline-block", transform: isActive ? "rotate(180deg)" : "none" }}>⌄</span>
+        </div>
+      </button>
+
+      {/* Room body */}
+      {isActive && (
+        <div style={{
+          background: "var(--cream)", border: "2px solid var(--charcoal)", borderTop: "none",
+          borderRadius: "0 0 20px 20px", padding: 24, animation: "fadeUp 0.3s ease"
+        }}>
+          <StoryCard room={room} tenantType={tenantType} />
+
+          {/* Required items */}
+          <div style={{ marginBottom: 8, display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: "var(--terracotta)", textTransform: "uppercase", letterSpacing: 1 }}>Required ({requiredItems.length})</span>
+            <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
+          </div>
+          <div style={{ marginBottom: 20 }}>
+            {requiredItems.map(item => (
+              <ItemRow key={item.id} item={item} checked={checked} onToggle={onToggle} />
+            ))}
+          </div>
+
+          {/* Optional items toggle */}
+          {optionalItems.length > 0 && (
+            <>
+              <button
+                onClick={() => setShowOptional(!showOptional)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 8, marginBottom: showOptional ? 12 : 0,
+                  background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "var(--font-body)"
+                }}
+              >
+                <span style={{ fontSize: 11, fontWeight: 700, color: "var(--sage)", textTransform: "uppercase", letterSpacing: 1 }}>Optional ({optionalItems.length})</span>
+                <span style={{ fontSize: 13, color: "var(--sage)", transform: showOptional ? "rotate(180deg)" : "none", transition: "transform 0.2s", display: "inline-block" }}>⌄</span>
+              </button>
+              {showOptional && optionalItems.map(item => (
+                <div key={item.id} className={!checked[item.id] ? "optional-hidden" : ""}>
+                  <ItemRow item={item} checked={checked} onToggle={onToggle} />
+                </div>
+              ))}
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Progress ring ───────────────────────────────────────────────────────────
+function ProgressRing({ pct, size = 80 }) {
+  const r = (size - 10) / 2;
+  const circ = 2 * Math.PI * r;
+  const dash = circ * (pct / 100);
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ transform: "rotate(-90deg)" }}>
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="var(--cream-dark)" strokeWidth="8" />
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="var(--terracotta)" strokeWidth="8"
+        strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
+        style={{ transition: "stroke-dasharray 0.6s ease" }} />
+      <text x={size/2} y={size/2} textAnchor="middle" dominantBaseline="middle"
+        fill="var(--charcoal)" fontSize={size * 0.22} fontWeight="700"
+        fontFamily="var(--font-display)" style={{ transform: `rotate(90deg) translate(0, 0)` }}>
+      </text>
+    </svg>
+  );
+}
+
+// ── Export modal ────────────────────────────────────────────────────────────
+function ExportModal({ onClose, project, checked, allItems }) {
+  const checkedItems = allItems.filter(i => checked[i.id]);
+  const uncheckedItems = allItems.filter(i => !checked[i.id]);
+  const uncheckedRequired = uncheckedItems.filter(i => i.required);
+  const uncheckedOptional = uncheckedItems.filter(i => !i.required);
+  const requiredBudget = uncheckedRequired.reduce((s, i) => s + pMid(i) * (i._multiplier || 1), 0);
+  const optionalBudget = uncheckedOptional.reduce((s, i) => s + pMid(i) * (i._multiplier || 1), 0);
+  const totalBudget = requiredBudget + optionalBudget;
+  const fmt = n => "$" + Math.round(n).toLocaleString();
+
+  function copyList() {
+    const lines = [
+      `CoLivingFurnish — ${project.address}`,
+      `${project.beds} private tenant${project.beds > 1 ? "s" : ""} · ${project.baths} bath · ${project.tenantType} · ${project.climate} climate`,
+      "",
+      "=== STILL NEEDED ===",
+      ...uncheckedItems.map(i => `[ ] ${i.name}${i._multiplier > 1 ? ` ×${i._multiplier}` : ""} (${fmt(i.price_low * i._multiplier)}–${fmt(pH(i) * i._multiplier)}) → ${i.link}`),
+      "",
+      "=== COMPLETED ===",
+      ...checkedItems.map(i => `[x] ${i.name}`),
+      "",
+      `Estimated minimum still needed: ${fmt(requiredBudget)}`,
+      `Optional upgrades remaining: ${fmt(optionalBudget)}`,
+      `Total if all items acquired: ${fmt(totalBudget)}`
+    ];
+    navigator.clipboard && navigator.clipboard.writeText(lines.join("\n"));
+    alert("Copied to clipboard!");
+  }
+
+  return (
+    <div style={{
+      position: "fixed", inset: 0, background: "rgba(30,28,24,0.6)", backdropFilter: "blur(4px)",
+      zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 24
+    }} onClick={onClose}>
+      <div style={{
+        background: "white", borderRadius: 24, padding: 36, maxWidth: 520, width: "100%",
+        maxHeight: "80vh", overflow: "auto", boxShadow: "0 32px 80px rgba(30,28,24,0.3)"
+      }} onClick={e => e.stopPropagation()}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+          <h2 style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 700 }}>Export Checklist</h2>
+          <button onClick={onClose} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "var(--text-muted)" }}>✕</button>
+        </div>
+        <div style={{ background: "var(--cream)", borderRadius: 12, padding: "14px 18px", marginBottom: 20, fontSize: 14 }}>
+          <strong>{project.address}</strong><br />
+          <span style={{ color: "var(--text-muted)" }}>{project.beds} private tenant{project.beds > 1 ? "s" : ""} · {project.baths} bath · {project.tenantType} · {project.climate} climate</span>
+        </div>
+        <div style={{ display: "flex", gap: 16, marginBottom: 24 }}>
+          <div style={{ flex: 1, background: "rgba(192,96,58,0.08)", borderRadius: 12, padding: "16px", textAlign: "center" }}>
+            <div style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 700, color: "var(--terracotta)" }}>{uncheckedRequired.length}</div>
+            <div style={{ fontSize: 12, color: "var(--text-muted)" }}>Required left</div>
+          </div>
+          <div style={{ flex: 1, background: "rgba(107,140,110,0.08)", borderRadius: 12, padding: "16px", textAlign: "center" }}>
+            <div style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 700, color: "var(--sage)" }}>{checkedItems.length}</div>
+            <div style={{ fontSize: 12, color: "var(--text-muted)" }}>Acquired</div>
+          </div>
+          <div style={{ flex: 1, background: "var(--cream)", borderRadius: 12, padding: "16px", textAlign: "center" }}>
+            <div style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 700, color: "var(--charcoal)" }}>{fmt(requiredBudget)}</div>
+            <div style={{ fontSize: 12, color: "var(--text-muted)" }}>Min. still needed</div>
+          </div>
+        </div>
+        <button onClick={copyList} style={{
+          width: "100%", padding: "16px", background: "var(--terracotta)", color: "white",
+          border: "none", borderRadius: 14, fontSize: 15, fontWeight: 600, cursor: "pointer",
+          fontFamily: "var(--font-body)", marginBottom: 10
+        }}>📋 Copy to Clipboard</button>
+        <button onClick={onClose} style={{
+          width: "100%", padding: "14px", background: "var(--cream)", color: "var(--charcoal)",
+          border: "none", borderRadius: 14, fontSize: 14, fontWeight: 500, cursor: "pointer", fontFamily: "var(--font-body)"
+        }}>Done</button>
+      </div>
+    </div>
+  );
+}
+
+// ── Mobile tab strip ────────────────────────────────────────────────────────
+function MobileTabs({ rooms, activeRoom, onSelect, project, checked }) {
+  return (
+    <div className="dash-tabs" style={{
+      display: "none",
+      overflowX: "auto", gap: 8, padding: "12px 16px",
+      background: "white", borderBottom: "1px solid var(--border)"
+    }}>
+      {rooms.map(room => {
+        const roomItems = room.items.filter(item =>
+          isItemVisible(item, project.tenantType, project.climate)
+        );
+        const roomChecked = roomItems.filter(i => checked[i.id]).length;
+        const pct = roomItems.length > 0 ? Math.round((roomChecked / roomItems.length) * 100) : 0;
+        const isAct = activeRoom === room.id;
+        return (
+          <button key={room.id} onClick={() => onSelect(room.id)} style={{
+            flexShrink: 0, padding: "8px 14px", borderRadius: 20,
+            border: `1.5px solid ${isAct ? "var(--terracotta)" : "var(--border)"}`,
+            background: isAct ? "rgba(192,96,58,0.08)" : "white",
+            fontFamily: "var(--font-body)", fontSize: 13, fontWeight: 600,
+            color: isAct ? "var(--terracotta)" : "var(--charcoal)", cursor: "pointer",
+            whiteSpace: "nowrap", minHeight: 44
+          }}>
+            {room.icon} {room.name} <span style={{ color: "var(--text-muted)", fontWeight: 400, fontSize: 11 }}>{pct}%</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Main Dashboard ──────────────────────────────────────────────────────────
+function Dashboard({ project, onReset }) {
+  const [checked, setChecked] = useState(() => {
+    const saved = localStorage.getItem(`clf-checked-${project.address}`);
+    return saved ? JSON.parse(saved) : {};
+  });
+  const [activeRoom, setActiveRoom] = useState("bedroom");
+  const [showExport, setShowExport] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const rooms = window.FURNISHINGS_DATA.rooms;
+
+  // Persist checked state
+  useEffect(() => {
+    localStorage.setItem(`clf-checked-${project.address}`, JSON.stringify(checked));
+  }, [checked, project.address]);
+
+  // Room multipliers: bedroom items × beds, bathroom items × baths, all others × 1
+  const roomMultiplier = (roomId) => {
+    if (roomId === "bedroom") return project.beds;
+    if (roomId === "bathroom") return project.baths;
+    return 1;
+  };
+
+  const allItems = useMemo(() => {
+    const rooms = window.FURNISHINGS_DATA.rooms;
+    return rooms.flatMap(r =>
+      r.items
+        .filter(item => isItemVisible(item, project.tenantType, project.climate))
+        .map(item => ({
+          ...item,
+          _roomId: r.id,
+          _multiplier: computeMultiplier(item, project.beds, project.baths)
+        }))
+    );
+  }, [project.tenantType, project.climate, project.beds, project.baths]);
+
+  const totalChecked = allItems.filter(i => checked[i.id]).length;
+  const overallPct = allItems.length > 0 ? Math.round((totalChecked / allItems.length) * 100) : 0;
+
+  function toggleItem(id) {
+    setChecked(prev => ({ ...prev, [id]: !prev[id] }));
+  }
+
+  const tenantLabel = window.FURNISHINGS_DATA.tenantTypes.find(t => t.id === project.tenantType)?.label || project.tenantType;
+  const climateLabel = window.FURNISHINGS_DATA.climateZones.find(z => z.id === project.climate)?.label || project.climate;
+  const requiredItems = allItems.filter(i => i.required);
+  const totalBudgetLow = requiredItems.filter(i => !checked[i.id]).reduce((s, i) => s + i.price_low * i._multiplier, 0);
+  const totalBudgetHigh = requiredItems.filter(i => !checked[i.id]).reduce((s, i) => s + pH(i) * i._multiplier, 0);
+  const fmt = n => "$" + Math.round(n).toLocaleString();
+
+  return (
+    <div style={{ minHeight: "100vh", background: "var(--cream)", display: "flex", flexDirection: "column" }}>
+      {/* Top nav */}
+      <nav className="dash-nav no-print" style={{
+        background: "white", borderBottom: "1px solid var(--border)",
+        padding: "0 clamp(16px, 4vw, 48px)", height: 64,
+        display: "flex", alignItems: "center", gap: 20, position: "sticky", top: 0, zIndex: 100
+      }}>
+        <Logo size={22} />
+        <div style={{ flex: 1 }} />
+        {/* Address pill */}
+        <div className="dash-nav-address" style={{ fontSize: 12, color: "var(--text-muted)", background: "var(--cream)", padding: "6px 14px", borderRadius: 20, border: "1px solid var(--border)", maxWidth: 260, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          📍 {project.address}
+        </div>
+        <button
+          className="no-print"
+          onClick={() => window.print()}
+          style={{
+            padding: "8px 18px", background: "white",
+            color: "var(--charcoal)", border: "1px solid var(--border)",
+            borderRadius: 20, fontSize: 13, fontWeight: 600,
+            cursor: "pointer", fontFamily: "var(--font-body)"
+          }}
+        >🖨 Print</button>
+        <button className="no-print" onClick={() => setShowExport(true)} style={{
+          padding: "8px 18px", background: "var(--terracotta)", color: "white",
+          border: "none", borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "var(--font-body)"
+        }}>Export</button>
+        <button className="no-print" onClick={onReset} style={{
+          padding: "8px 14px", background: "none", color: "var(--text-muted)",
+          border: "1px solid var(--border)", borderRadius: 20, fontSize: 12, cursor: "pointer", fontFamily: "var(--font-body)"
+        }}>New Project</button>
+      </nav>
+
+      <PrintHeader project={project} />
+
+      {/* Hero summary bar */}
+      <div style={{
+        background: "linear-gradient(135deg, #1e1c18 0%, #3a3830 100%)",
+        padding: "32px clamp(16px, 4vw, 48px)"
+      }}>
+        <div className="hero-inner" style={{ maxWidth: 1100, margin: "0 auto", display: "flex", flexWrap: "wrap", gap: 32, alignItems: "center" }}>
+          <div style={{ flex: "1 1 300px" }}>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Your Furnishing Plan</div>
+            <h1 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(22px, 3vw, 32px)", fontWeight: 700, color: "white", marginBottom: 6 }}>
+              {project.beds} Tenant Home · {project.baths} Bath
+            </h1>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
+              {[tenantLabel, climateLabel + " Climate", `${project.beds} private bedroom${project.beds > 1 ? "s" : ""}`].map(tag => (
+                <span key={tag} style={{ fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.7)", background: "rgba(255,255,255,0.08)", padding: "4px 12px", borderRadius: 20, border: "1px solid rgba(255,255,255,0.12)" }}>{tag}</span>
+              ))}
+            </div>
+          </div>
+          <div className="hero-stats" style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ position: "relative", display: "inline-block" }}>
+                <ProgressRing pct={overallPct} size={88} />
+                <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <span style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 700, color: "var(--terracotta-light)" }}>{overallPct}%</span>
+                </div>
+              </div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginTop: 6 }}>complete</div>
+            </div>
+            {[
+              { label: `Items (${project.beds} tenant${project.beds > 1 ? "s" : ""})`, val: `${totalChecked}/${allItems.length}` },
+              { label: "Min. Required Left", val: `${fmt(totalBudgetLow)}–${fmt(totalBudgetHigh)}` }
+            ].map(s => (
+              <div key={s.label} style={{ background: "rgba(255,255,255,0.07)", borderRadius: 14, padding: "16px 20px", textAlign: "center", border: "1px solid rgba(255,255,255,0.1)" }}>
+                <div style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 700, color: "white" }}>{s.val}</div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 4 }}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <MobileTabs
+        rooms={window.FURNISHINGS_DATA.rooms}
+        activeRoom={activeRoom}
+        onSelect={setActiveRoom}
+        project={project}
+        checked={checked}
+      />
+
+      {/* Main content */}
+      <div className="dash-layout" style={{ flex: 1, maxWidth: 1100, margin: "0 auto", width: "100%", padding: "32px clamp(16px, 4vw, 48px)", display: "grid", gridTemplateColumns: "240px 1fr", gap: 32, alignItems: "start" }}>
+
+        {/* Sidebar nav */}
+        <div className="dash-sidebar" style={{ position: "sticky", top: 80 }}>
+          <div style={{ background: "white", borderRadius: 20, padding: 16, boxShadow: "0 2px 16px rgba(30,28,24,0.07)" }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 12, padding: "0 8px" }}>Rooms</div>
+            {rooms.map(room => {
+              const roomItems = room.items.filter(item =>
+                isItemVisible(item, project.tenantType, project.climate)
+              );
+              const roomChecked = roomItems.filter(i => checked[i.id]).length;
+              const roomPct = roomItems.length > 0 ? Math.round((roomChecked / roomItems.length) * 100) : 0;
+              const isAct = activeRoom === room.id;
+              return (
+                <button key={room.id} onClick={() => setActiveRoom(room.id)} style={{
+                  width: "100%", padding: "10px 12px", borderRadius: 12, border: "none",
+                  background: isAct ? "rgba(192,96,58,0.08)" : "transparent",
+                  cursor: "pointer", display: "flex", alignItems: "center", gap: 10,
+                  fontFamily: "var(--font-body)", marginBottom: 4, transition: "all 0.15s ease"
+                }}>
+                  <span style={{ fontSize: 18 }}>{room.icon}</span>
+                  <div style={{ flex: 1, textAlign: "left" }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: isAct ? "var(--terracotta)" : "var(--charcoal)" }}>{room.name}</div>
+                    <div style={{ height: 3, background: "var(--cream-dark)", borderRadius: 2, marginTop: 4, overflow: "hidden" }}>
+                      <div style={{ height: "100%", width: `${roomPct}%`, background: isAct ? "var(--terracotta)" : "var(--sage-light)", borderRadius: 2 }} />
+                    </div>
+                  </div>
+                  <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{roomPct}%</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Budget summary in sidebar */}
+          <div style={{ marginTop: 16 }}>
+            <BudgetBar items={allItems} checked={checked} />
+          </div>
+        </div>
+
+        {/* Room detail */}
+        <div>
+          {rooms.map(room => (
+            <RoomSection
+              key={room.id}
+              room={room}
+              tenantType={project.tenantType}
+              climate={project.climate}
+              beds={project.beds}
+              baths={project.baths}
+              checked={checked}
+              onToggle={toggleItem}
+              isActive={activeRoom === room.id}
+              onActivate={() => setActiveRoom(activeRoom === room.id ? null : room.id)}
+            />
+          ))}
+          <div className="mobile-budget" style={{ display: "none" }}>
+            <BudgetBar items={allItems} checked={checked} />
+          </div>
+        </div>
+      </div>
+
+      {showExport && (
+        <ExportModal
+          onClose={() => setShowExport(false)}
+          project={project}
+          checked={checked}
+          allItems={allItems}
+        />
+      )}
+    </div>
+  );
+}
+
+
+
+
+// ══════════════════════════════════════════════════════════════════════════════
+// APP ROOT
+// ══════════════════════════════════════════════════════════════════════════════
+// App.jsx — root component, state machine
+
+
+const STORAGE_KEY = "clf-project-v1";
+
+function App() {
+  const [project, setProject] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      return saved ? JSON.parse(saved) : null;
+    } catch { return null; }
+  });
+  const [dataReady, setDataReady] = useState(false);
+  const [dataError, setDataError] = useState(null);
+
+  useEffect(() => {
+    if (project) localStorage.setItem(STORAGE_KEY, JSON.stringify(project));
+    else localStorage.removeItem(STORAGE_KEY);
+  }, [project]);
+
+  useEffect(() => {
+    Papa.parse("furnishings.csv", {
+      download: true,
+      header: true,
+      skipEmptyLines: true,
+      transformHeader: h => h.trim(),
+      complete: (results) => {
+        window.FURNISHINGS_DATA = buildFurnishingsData(results.data);
+        setDataReady(true);
+      },
+      error: (err) => {
+        setDataError(err.message);
+      }
+    });
+  }, []);
+
+  function handleComplete(data) { setProject(data); }
+  function handleReset() {
+    if (window.confirm("Start a new project? Your current checklist will be cleared.")) {
+      setProject(null);
+    }
+  }
+
+  if (dataError) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--cream)", flexDirection: "column", gap: 16 }}>
+        <Logo />
+        <p style={{ color: "var(--terracotta)", fontSize: 15 }}>Could not load furnishings data: {dataError}</p>
+        <p style={{ color: "var(--text-muted)", fontSize: 13 }}>Ensure <code>furnishings.csv</code> is in the same folder as <code>index.html</code> and you are serving via a local server (not opening the file directly).</p>
+      </div>
+    );
+  }
+
+  if (!dataReady) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--cream)", flexDirection: "column", gap: 24 }}>
+        <Logo size={32} />
+        <div style={{ fontSize: 14, color: "var(--text-muted)" }}>Loading furnishing data…</div>
+        <div style={{
+          width: 40, height: 40, borderRadius: "50%",
+          border: "3px solid rgba(30,28,24,0.1)",
+          borderTop: "3px solid var(--terracotta)",
+          animation: "spin 0.8s linear infinite"
+        }} />
+      </div>
+    );
+  }
+
+  if (!project) return <Wizard onComplete={handleComplete} />;
+  return <Dashboard project={project} onReset={handleReset} />;
+}
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<App />);
+
+
+</script>
+</body>
+</html>
