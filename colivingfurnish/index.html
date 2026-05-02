@@ -828,9 +828,10 @@ function ItemRow({ item, checked, onToggle, qty, onQtyChange }) {
   const [hovered, setHovered] = useState(false);
   const isChecked = checked[item.id];
   const priceLow = item.price_low;
-  const unitPrice = `$${Math.round(priceLow)} each`;
+  const priceHigh = Math.round(priceLow * 1.3);
+  const unitPrice = `$${Math.round(priceLow)}–$${priceHigh} each`;
   const totalPrice = qty > 1 ? `$${Math.round(priceLow * qty)} total` : null;
-  const perWindowPrice = item.per_window ? `$${Math.round(priceLow)} per window` : null;
+  const perWindowPrice = item.per_window ? `$${Math.round(priceLow)}–$${priceHigh} per window` : null;
 
   return (
     <div
