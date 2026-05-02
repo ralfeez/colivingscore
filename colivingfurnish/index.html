@@ -1016,80 +1016,6 @@ function ProgressRing({ pct, size = 80 }) {
   );
 }
 
-// ── Export modal ────────────────────────────────────────────────────────────
-function ExportModal({ onClose, project, checked, allItems }) {
-  const checkedItems = allItems.filter(i => checked[i.id]);
-  const uncheckedItems = allItems.filter(i => !checked[i.id]);
-  const uncheckedRequired = uncheckedItems.filter(i => i.required);
-  const uncheckedOptional = uncheckedItems.filter(i => !i.required);
-  const requiredBudget = uncheckedRequired.reduce((s, i) => s + pMid(i) * (i._multiplier || 1), 0);
-  const optionalBudget = uncheckedOptional.reduce((s, i) => s + pMid(i) * (i._multiplier || 1), 0);
-  const totalBudget = requiredBudget + optionalBudget;
-  const fmt = n => "$" + Math.round(n).toLocaleString();
-
-  function copyList() {
-    const lines = [
-      `CoLivingFurnish — ${project.address}`,
-      `${project.beds} private tenant${project.beds > 1 ? "s" : ""} · ${project.baths} bath · ${project.tenantType} · ${project.climate} climate`,
-      "",
-      "=== STILL NEEDED ===",
-      ...uncheckedItems.map(i => `[ ] ${i.name}${i._multiplier > 1 ? ` ×${i._multiplier}` : ""} (${fmt(i.price_low * i._multiplier)}–${fmt(pH(i) * i._multiplier)}) → ${i.link}`),
-      "",
-      "=== COMPLETED ===",
-      ...checkedItems.map(i => `[x] ${i.name}`),
-      "",
-      `Estimated minimum still needed: ${fmt(requiredBudget)}`,
-      `Optional upgrades remaining: ${fmt(optionalBudget)}`,
-      `Total if all items acquired: ${fmt(totalBudget)}`
-    ];
-    navigator.clipboard && navigator.clipboard.writeText(lines.join("\n"));
-    alert("Copied to clipboard!");
-  }
-
-  return (
-    <div style={{
-      position: "fixed", inset: 0, background: "rgba(30,28,24,0.6)", backdropFilter: "blur(4px)",
-      zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 24
-    }} onClick={onClose}>
-      <div style={{
-        background: "white", borderRadius: 24, padding: 36, maxWidth: 520, width: "100%",
-        maxHeight: "80vh", overflow: "auto", boxShadow: "0 32px 80px rgba(30,28,24,0.3)"
-      }} onClick={e => e.stopPropagation()}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-          <h2 style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 700 }}>Export Checklist</h2>
-          <button onClick={onClose} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "var(--text-muted)" }}>✕</button>
-        </div>
-        <div style={{ background: "var(--cream)", borderRadius: 12, padding: "14px 18px", marginBottom: 20, fontSize: 14 }}>
-          <strong>{project.address}</strong><br />
-          <span style={{ color: "var(--text-muted)" }}>{project.beds} private tenant{project.beds > 1 ? "s" : ""} · {project.baths} bath · {project.tenantType} · {project.climate} climate</span>
-        </div>
-        <div style={{ display: "flex", gap: 16, marginBottom: 24 }}>
-          <div style={{ flex: 1, background: "rgba(192,96,58,0.08)", borderRadius: 12, padding: "16px", textAlign: "center" }}>
-            <div style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 700, color: "var(--terracotta)" }}>{uncheckedRequired.length}</div>
-            <div style={{ fontSize: 12, color: "var(--text-muted)" }}>Required left</div>
-          </div>
-          <div style={{ flex: 1, background: "rgba(107,140,110,0.08)", borderRadius: 12, padding: "16px", textAlign: "center" }}>
-            <div style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 700, color: "var(--sage)" }}>{checkedItems.length}</div>
-            <div style={{ fontSize: 12, color: "var(--text-muted)" }}>Acquired</div>
-          </div>
-          <div style={{ flex: 1, background: "var(--cream)", borderRadius: 12, padding: "16px", textAlign: "center" }}>
-            <div style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 700, color: "var(--charcoal)" }}>{fmt(requiredBudget)}</div>
-            <div style={{ fontSize: 12, color: "var(--text-muted)" }}>Min. still needed</div>
-          </div>
-        </div>
-        <button onClick={copyList} style={{
-          width: "100%", padding: "16px", background: "var(--terracotta)", color: "white",
-          border: "none", borderRadius: 14, fontSize: 15, fontWeight: 600, cursor: "pointer",
-          fontFamily: "var(--font-body)", marginBottom: 10
-        }}>📋 Copy to Clipboard</button>
-        <button onClick={onClose} style={{
-          width: "100%", padding: "14px", background: "var(--cream)", color: "var(--charcoal)",
-          border: "none", borderRadius: 14, fontSize: 14, fontWeight: 500, cursor: "pointer", fontFamily: "var(--font-body)"
-        }}>Done</button>
-      </div>
-    </div>
-  );
-}
 
 // ── Mobile tab strip ────────────────────────────────────────────────────────
 function MobileTabs({ rooms, activeRoom, onSelect, project, checked }) {
@@ -1134,7 +1060,6 @@ function Dashboard({ project, onReset }) {
     return saved ? JSON.parse(saved) : {};
   });
   const [activeRoom, setActiveRoom] = useState("bedroom");
-  const [showExport, setShowExport] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const rooms = window.FURNISHINGS_DATA.rooms;
@@ -1232,6 +1157,84 @@ function Dashboard({ project, onReset }) {
     w.print();
   }
 
+  function downloadList() {
+    const tenantLabel = window.FURNISHINGS_DATA.tenantTypes.find(t => t.id === project.tenantType)?.label || project.tenantType;
+    const climateLabel = window.FURNISHINGS_DATA.climateZones.find(z => z.id === project.climate)?.label || project.climate;
+    const today = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+
+    const checkedItems = [];
+    rooms.forEach(room => {
+      room.items
+        .filter(item => isItemVisible(item, project.tenantType, project.climate) && checked[item.id])
+        .forEach(item => {
+          const qty = quantities[item.id] ?? computeMultiplier(item, project.beds, project.baths);
+          checkedItems.push({ room: room.name, item, qty });
+        });
+    });
+
+    if (!checkedItems.length) {
+      alert("No items checked yet. Check off items in the dashboard first, then download your cost summary.");
+      return;
+    }
+
+    const grandTotal = checkedItems.reduce((s, { item, qty }) => s + item.price_low * qty, 0);
+    const fmt = n => "$" + Math.round(n).toLocaleString();
+
+    let rows = "";
+    let lastRoom = "";
+    checkedItems.forEach(({ room, item, qty }, i) => {
+      const isEven = i % 2 === 0;
+      const bg = isEven ? "#ffffff" : "#f5f5f5";
+      const roomCell = room !== lastRoom ? `<td style="font-weight:700;color:#1e1c18">${room}</td>` : `<td style="color:#aaa">↳</td>`;
+      lastRoom = room;
+      rows += `<tr style="background:${bg}">
+        ${roomCell}
+        <td>${item.name}</td>
+        <td style="color:#555;font-size:10px">${item.notes || ""}</td>
+        <td style="text-align:center">${qty}</td>
+        <td style="text-align:right">${fmt(item.price_low)}</td>
+        <td style="text-align:right;font-weight:600">${fmt(item.price_low * qty)}</td>
+      </tr>`;
+    });
+
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>CoLivingFurnish — Cost Summary</title>
+<style>
+  body { font-family: Arial, sans-serif; font-size: 11px; margin: 24px 32px; color: #111; }
+  h1 { font-size: 15px; margin: 0 0 2px 0; }
+  .meta { font-size: 10px; color: #555; margin-bottom: 20px; }
+  table { width: 100%; border-collapse: collapse; }
+  th { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; background: #1e1c18; color: white; padding: 6px 8px; text-align: left; }
+  th.r { text-align: right; }
+  th.c { text-align: center; }
+  td { padding: 5px 8px; border-bottom: 1px solid #e8e8e8; vertical-align: top; }
+  .total-row { background: #1e1c18 !important; color: white; font-weight: 700; font-size: 13px; }
+  .total-row td { border: none; padding: 8px; }
+  @media print { body { margin: 12px 24px; } }
+</style></head><body>
+<h1>CoLivingFurnish — Purchase Cost Summary</h1>
+<div class="meta">${project.address} &nbsp;·&nbsp; ${project.beds} bed / ${project.baths} bath &nbsp;·&nbsp; ${tenantLabel} &nbsp;·&nbsp; ${climateLabel} Climate &nbsp;·&nbsp; ${today}</div>
+<table>
+  <thead><tr>
+    <th>Room</th><th>Item</th><th>Description</th>
+    <th class="c">Qty</th><th class="r">Unit Price</th><th class="r">Total</th>
+  </tr></thead>
+  <tbody>${rows}
+  <tr class="total-row">
+    <td colspan="5">Total Cost</td>
+    <td style="text-align:right">${fmt(grandTotal)}</td>
+  </tr>
+  </tbody>
+</table>
+</body></html>`;
+
+    const w = window.open("", "_blank");
+    w.document.write(html);
+    w.document.close();
+    w.focus();
+    w.print();
+  }
+
   return (
     <div style={{ minHeight: "100vh", background: "var(--cream)", display: "flex", flexDirection: "column" }}>
       {/* Top nav */}
@@ -1248,21 +1251,30 @@ function Dashboard({ project, onReset }) {
         </div>
         <button
           onClick={printList}
+          title="Opens a room-by-room shopping checklist you can print and take to the store"
           style={{
             padding: "8px 18px", background: "white",
             color: "var(--charcoal)", border: "1px solid var(--border)",
             borderRadius: 20, fontSize: 13, fontWeight: 600,
             cursor: "pointer", fontFamily: "var(--font-body)"
           }}
-        >🖨 Print List</button>
-        <button className="no-print" onClick={() => setShowExport(true)} style={{
-          padding: "8px 18px", background: "var(--terracotta)", color: "white",
-          border: "none", borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "var(--font-body)"
-        }}>Export</button>
-        <button className="no-print" onClick={onReset} style={{
-          padding: "8px 14px", background: "none", color: "var(--text-muted)",
-          border: "1px solid var(--border)", borderRadius: 20, fontSize: 12, cursor: "pointer", fontFamily: "var(--font-body)"
-        }}>New Project</button>
+        >🖨 Shopping List</button>
+        <button
+          onClick={downloadList}
+          title="Opens a printable cost summary of all checked items — your final purchase list with totals"
+          style={{
+            padding: "8px 18px", background: "var(--terracotta)", color: "white",
+            border: "none", borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "var(--font-body)"
+          }}
+        >⬇ Download</button>
+        <button
+          onClick={onReset}
+          title="Clear all selections and start a new property from scratch"
+          style={{
+            padding: "8px 14px", background: "none", color: "var(--text-muted)",
+            border: "1px solid var(--border)", borderRadius: 20, fontSize: 12, cursor: "pointer", fontFamily: "var(--font-body)"
+          }}
+        >New Project</button>
       </nav>
 
 
@@ -1378,14 +1390,6 @@ function Dashboard({ project, onReset }) {
         </div>
       </div>
 
-      {showExport && (
-        <ExportModal
-          onClose={() => setShowExport(false)}
-          project={project}
-          checked={checked}
-          allItems={allItems}
-        />
-      )}
     </div>
   );
 }
