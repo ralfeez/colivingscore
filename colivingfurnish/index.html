@@ -4,6 +4,8 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>CoLivingFurnish — Furnish Your Co-Living Home, Room by Room</title>
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
@@ -85,20 +87,6 @@
     .mobile-budget { display: block !important; }
   }
 
-  /* ── Print styles ──────────────────────────────────── */
-  @media print {
-    .no-print     { display: none !important; }
-    .print-header { display: block !important; }
-    body          { background: white; font-size: 12px; }
-    nav, .dash-sidebar, .dash-tabs, .mobile-budget,
-    .wizard-right, .hero-bar, .export-modal-overlay { display: none !important; }
-    .dash-layout  { display: block !important; padding: 0 !important; }
-    .print-header { margin-bottom: 24px; border-bottom: 2px solid #1e1c18; padding-bottom: 12px; }
-    .room-section { page-break-inside: avoid; margin-bottom: 24px; }
-    .item-row     { padding: 6px 0 !important; border-bottom: 1px solid #eee !important; background: transparent !important; border-radius: 0 !important; }
-    .find-link    { font-size: 10px; color: #555 !important; background: transparent !important; }
-    .optional-hidden { display: none !important; }
-  }
 </style>
 </head>
 <body>
@@ -717,24 +705,6 @@ function Wizard({ onComplete }) {
 // ══════════════════════════════════════════════════════════════════════════════
 // Dashboard.jsx — main furnishing checklist interface
 
-function PrintHeader({ project }) {
-  const tenantLabel = window.FURNISHINGS_DATA.tenantTypes.find(t => t.id === project.tenantType)?.label || project.tenantType;
-  const climateLabel = window.FURNISHINGS_DATA.climateZones.find(z => z.id === project.climate)?.label || project.climate;
-  const today = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
-  return (
-    <div className="print-header" style={{ display: "none" }}>
-      <div style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 700, marginBottom: 6 }}>
-        CoLivingFurnish — Furnishing Checklist
-      </div>
-      <div style={{ fontSize: 13, color: "#555", marginBottom: 4 }}>
-        <strong>{project.address}</strong>
-      </div>
-      <div style={{ fontSize: 12, color: "#777" }}>
-        {project.beds} private bedroom{project.beds > 1 ? "s" : ""} · {project.baths} bathroom{project.baths > 1 ? "s" : ""} · {tenantLabel} · {climateLabel} Climate · Generated {today}
-      </div>
-    </div>
-  );
-}
 
 
 // ── Image placeholder for items ─────────────────────────────────────────────
@@ -757,21 +727,22 @@ const pH = i => Math.round(i.price_low * 1.3);
 const pMid = i => (i.price_low + pH(i)) / 2;
 
 // ── Budget bar ──────────────────────────────────────────────────────────────
-function BudgetBar({ items, checked }) {
+function BudgetBar({ items, checked, quantities }) {
   const fmt = n => "$" + Math.round(n).toLocaleString();
+  const q = (i) => (quantities && quantities[i.id] != null) ? quantities[i.id] : (i._multiplier || 1);
 
   const requiredTotal = useMemo(() =>
-    items.filter(i => i.required).reduce((s, i) => s + pMid(i) * (i._multiplier || 1), 0),
-  [items]);
+    items.filter(i => i.required).reduce((s, i) => s + pMid(i) * q(i), 0),
+  [items, quantities]);
   const optionalTotal = useMemo(() =>
-    items.filter(i => !i.required).reduce((s, i) => s + pMid(i) * (i._multiplier || 1), 0),
-  [items]);
+    items.filter(i => !i.required).reduce((s, i) => s + pMid(i) * q(i), 0),
+  [items, quantities]);
   const requiredSpent = useMemo(() =>
-    items.filter(i => i.required && checked[i.id]).reduce((s, i) => s + pMid(i) * (i._multiplier || 1), 0),
-  [items, checked]);
+    items.filter(i => i.required && checked[i.id]).reduce((s, i) => s + pMid(i) * q(i), 0),
+  [items, checked, quantities]);
   const optionalSpent = useMemo(() =>
-    items.filter(i => !i.required && checked[i.id]).reduce((s, i) => s + pMid(i) * (i._multiplier || 1), 0),
-  [items, checked]);
+    items.filter(i => !i.required && checked[i.id]).reduce((s, i) => s + pMid(i) * q(i), 0),
+  [items, checked, quantities]);
 
   const requiredPct = requiredTotal > 0 ? Math.min(100, Math.round((requiredSpent / requiredTotal) * 100)) : 0;
   const optionalPct = optionalTotal > 0 ? Math.min(100, Math.round((optionalSpent / optionalTotal) * 100)) : 0;
@@ -834,8 +805,8 @@ function StoryCard({ room, tenantType }) {
         <span style={{ color: "rgba(255,255,255,0.6)", fontSize: 12, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase" }}>Room Notes</span>
       </div>
       <p style={{
-        fontFamily: "var(--font-display)", fontStyle: "italic",
-        fontSize: 17, color: "rgba(255,255,255,0.92)", lineHeight: 1.8,
+        fontFamily: "var(--font-body)", fontStyle: "normal",
+        fontSize: 15, color: "rgba(255,255,255,0.92)", lineHeight: 1.8,
         marginBottom: story.length > 280 ? 14 : 0
       }}>
         {open ? story : preview}
@@ -853,18 +824,13 @@ function StoryCard({ room, tenantType }) {
 }
 
 // ── Item row ────────────────────────────────────────────────────────────────
-function ItemRow({ item, checked, onToggle }) {
+function ItemRow({ item, checked, onToggle, qty, onQtyChange }) {
   const [hovered, setHovered] = useState(false);
   const isChecked = checked[item.id];
-  const mult = item._multiplier || 1;
   const priceLow = item.price_low;
-  const priceHigh = pH(item);
-
-  const priceRange = item.per_window
-    ? `$${Math.round(priceLow)}–$${Math.round(priceHigh)} per window`
-    : mult > 1
-      ? `$${Math.round(priceLow * mult)}–$${Math.round(priceHigh * mult)} (×${mult})`
-      : `$${Math.round(priceLow)}–$${Math.round(priceHigh)}`;
+  const unitPrice = `$${Math.round(priceLow)} each`;
+  const totalPrice = qty > 1 ? `$${Math.round(priceLow * qty)} total` : null;
+  const perWindowPrice = item.per_window ? `$${Math.round(priceLow)} per window` : null;
 
   return (
     <div
@@ -904,12 +870,28 @@ function ItemRow({ item, checked, onToggle }) {
         {item.notes && <div style={{ fontSize: 12, color: "var(--text-muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.notes}</div>}
       </div>
 
-      {/* Price + link */}
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, flexShrink: 0 }}>
-        <span style={{ fontSize: 13, fontWeight: 600, color: "var(--charcoal)" }}>{priceRange}</span>
+      {/* Qty + Price + link */}
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
+        {!item.per_window && (
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <label style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 500 }}>Qty</label>
+            <input
+              type="number" min="1" value={qty}
+              onChange={e => onQtyChange(item.id, Math.max(1, parseInt(e.target.value) || 1))}
+              style={{
+                width: 48, height: 28, border: "1px solid var(--border)", borderRadius: 8,
+                textAlign: "center", fontSize: 13, fontWeight: 600,
+                fontFamily: "var(--font-body)", color: "var(--charcoal)", background: "white"
+              }}
+            />
+          </div>
+        )}
+        <span style={{ fontSize: 13, fontWeight: 600, color: "var(--charcoal)" }}>
+          {perWindowPrice || unitPrice}
+        </span>
+        {totalPrice && <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{totalPrice}</span>}
         <a
           href={item.link} target="_blank" rel="noopener noreferrer"
-          onClick={e => e.stopPropagation()}
           className="find-link"
           style={{
             fontSize: 11, fontWeight: 600, color: "var(--terracotta)", textDecoration: "none",
@@ -923,7 +905,7 @@ function ItemRow({ item, checked, onToggle }) {
 }
 
 // ── Room section ────────────────────────────────────────────────────────────
-function RoomSection({ room, tenantType, climate, beds, baths, checked, onToggle, isActive, onActivate }) {
+function RoomSection({ room, tenantType, climate, beds, baths, checked, onToggle, isActive, onActivate, quantities, onQtyChange }) {
   // Filter items by tenant type and climate, required always visible
   const visibleItems = useMemo(() => {
     return room.items
@@ -983,7 +965,8 @@ function RoomSection({ room, tenantType, climate, beds, baths, checked, onToggle
           </div>
           <div style={{ marginBottom: 20 }}>
             {requiredItems.map(item => (
-              <ItemRow key={item.id} item={item} checked={checked} onToggle={onToggle} />
+              <ItemRow key={item.id} item={item} checked={checked} onToggle={onToggle}
+                qty={quantities[item.id] ?? item._multiplier} onQtyChange={onQtyChange} />
             ))}
           </div>
 
@@ -1002,7 +985,8 @@ function RoomSection({ room, tenantType, climate, beds, baths, checked, onToggle
               </button>
               {showOptional && optionalItems.map(item => (
                 <div key={item.id} className={!checked[item.id] ? "optional-hidden" : ""}>
-                  <ItemRow item={item} checked={checked} onToggle={onToggle} />
+                  <ItemRow key={item.id} item={item} checked={checked} onToggle={onToggle}
+                    qty={quantities[item.id] ?? item._multiplier} onQtyChange={onQtyChange} />
                 </div>
               ))}
             </>
@@ -1145,6 +1129,10 @@ function Dashboard({ project, onReset }) {
     const saved = localStorage.getItem(`clf-checked-${project.address}`);
     return saved ? JSON.parse(saved) : {};
   });
+  const [quantities, setQuantities] = useState(() => {
+    const saved = localStorage.getItem(`clf-qty-${project.address}`);
+    return saved ? JSON.parse(saved) : {};
+  });
   const [activeRoom, setActiveRoom] = useState("bedroom");
   const [showExport, setShowExport] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -1155,6 +1143,14 @@ function Dashboard({ project, onReset }) {
   useEffect(() => {
     localStorage.setItem(`clf-checked-${project.address}`, JSON.stringify(checked));
   }, [checked, project.address]);
+
+  // Persist quantities
+  useEffect(() => {
+    localStorage.setItem(`clf-qty-${project.address}`, JSON.stringify(quantities));
+  }, [quantities, project.address]);
+
+  const onQtyChange = (itemId, val) => setQuantities(q => ({ ...q, [itemId]: val }));
+  const getQty = (item) => quantities[item.id] ?? item._multiplier;
 
   // Room multipliers: bedroom items × beds, bathroom items × baths, all others × 1
   const roomMultiplier = (roomId) => {
@@ -1186,9 +1182,53 @@ function Dashboard({ project, onReset }) {
   const tenantLabel = window.FURNISHINGS_DATA.tenantTypes.find(t => t.id === project.tenantType)?.label || project.tenantType;
   const climateLabel = window.FURNISHINGS_DATA.climateZones.find(z => z.id === project.climate)?.label || project.climate;
   const requiredItems = allItems.filter(i => i.required);
-  const totalBudgetLow = requiredItems.filter(i => !checked[i.id]).reduce((s, i) => s + i.price_low * i._multiplier, 0);
-  const totalBudgetHigh = requiredItems.filter(i => !checked[i.id]).reduce((s, i) => s + pH(i) * i._multiplier, 0);
+  const totalBudgetLow = requiredItems.filter(i => !checked[i.id]).reduce((s, i) => s + i.price_low * getQty(i), 0);
+  const totalBudgetHigh = requiredItems.filter(i => !checked[i.id]).reduce((s, i) => s + pH(i) * getQty(i), 0);
   const fmt = n => "$" + Math.round(n).toLocaleString();
+
+  function printList() {
+    const tenantLabel = window.FURNISHINGS_DATA.tenantTypes.find(t => t.id === project.tenantType)?.label || project.tenantType;
+    const climateLabel = window.FURNISHINGS_DATA.climateZones.find(z => z.id === project.climate)?.label || project.climate;
+    const today = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+    let html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>CoLivingFurnish — Shopping List</title>
+<style>
+  body { font-family: Arial, sans-serif; font-size: 11px; margin: 24px 32px; color: #111; }
+  h1 { font-size: 15px; margin: 0 0 2px 0; }
+  .meta { font-size: 10px; color: #555; margin-bottom: 16px; }
+  h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #ccc; padding-bottom: 4px; margin: 18px 0 8px 0; }
+  .item { display: flex; align-items: flex-start; gap: 8px; padding: 3px 0; }
+  .cb { width: 12px; height: 12px; border: 1px solid #333; flex-shrink: 0; margin-top: 1px; display: inline-block; text-align: center; line-height: 11px; font-size: 10px; }
+  .name { flex: 1; }
+  .qty { color: #555; white-space: nowrap; }
+  .blank { border-bottom: 1px dashed #ccc; height: 18px; margin: 2px 0; }
+  @media print { body { margin: 12px 24px; } }
+</style></head><body>
+<h1>CoLivingFurnish — Shopping List</h1>
+<div class="meta">${project.address} &nbsp;·&nbsp; ${project.beds} bed / ${project.baths} bath &nbsp;·&nbsp; ${tenantLabel} &nbsp;·&nbsp; ${climateLabel} Climate &nbsp;·&nbsp; ${today}</div>`;
+
+    rooms.forEach(room => {
+      const visibleItems = room.items
+        .filter(item => isItemVisible(item, project.tenantType, project.climate))
+        .sort((a, b) => (b.required ? 1 : 0) - (a.required ? 1 : 0));
+      if (!visibleItems.length) return;
+      html += `<h2>${room.icon} ${room.name}</h2>`;
+      visibleItems.forEach(item => {
+        const qty = quantities[item.id] ?? computeMultiplier(item, project.beds, project.baths);
+        const isChecked = !!checked[item.id];
+        const qtyLabel = item.per_window ? " (per window)" : qty > 1 ? ` ×${qty}` : "";
+        html += `<div class="item"><span class="cb">${isChecked ? "✓" : ""}</span><span class="name">${item.name}</span><span class="qty">${qtyLabel}</span></div>`;
+      });
+      for (let i = 0; i < 4; i++) html += `<div class="item"><span class="cb"></span><div class="blank" style="flex:1"></div></div>`;
+    });
+
+    html += `</body></html>`;
+    const w = window.open("", "_blank");
+    w.document.write(html);
+    w.document.close();
+    w.focus();
+    w.print();
+  }
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--cream)", display: "flex", flexDirection: "column" }}>
@@ -1205,15 +1245,14 @@ function Dashboard({ project, onReset }) {
           📍 {project.address}
         </div>
         <button
-          className="no-print"
-          onClick={() => window.print()}
+          onClick={printList}
           style={{
             padding: "8px 18px", background: "white",
             color: "var(--charcoal)", border: "1px solid var(--border)",
             borderRadius: 20, fontSize: 13, fontWeight: 600,
             cursor: "pointer", fontFamily: "var(--font-body)"
           }}
-        >🖨 Print</button>
+        >🖨 Print List</button>
         <button className="no-print" onClick={() => setShowExport(true)} style={{
           padding: "8px 18px", background: "var(--terracotta)", color: "white",
           border: "none", borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "var(--font-body)"
@@ -1224,7 +1263,6 @@ function Dashboard({ project, onReset }) {
         }}>New Project</button>
       </nav>
 
-      <PrintHeader project={project} />
 
       {/* Hero summary bar */}
       <div style={{
@@ -1310,7 +1348,7 @@ function Dashboard({ project, onReset }) {
 
           {/* Budget summary in sidebar */}
           <div style={{ marginTop: 16 }}>
-            <BudgetBar items={allItems} checked={checked} />
+            <BudgetBar items={allItems} checked={checked} quantities={quantities} />
           </div>
         </div>
 
@@ -1328,10 +1366,12 @@ function Dashboard({ project, onReset }) {
               onToggle={toggleItem}
               isActive={activeRoom === room.id}
               onActivate={() => setActiveRoom(activeRoom === room.id ? null : room.id)}
+              quantities={quantities}
+              onQtyChange={onQtyChange}
             />
           ))}
           <div className="mobile-budget" style={{ display: "none" }}>
-            <BudgetBar items={allItems} checked={checked} />
+            <BudgetBar items={allItems} checked={checked} quantities={quantities} />
           </div>
         </div>
       </div>
