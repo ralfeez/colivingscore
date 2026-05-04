@@ -640,7 +640,7 @@ function Wizard({ onComplete }) {
       <div className="wizard-right" style={{
         background: "#1e1c18",
         position: "relative", overflow: "hidden",
-        display: "flex", flexDirection: "column", justifyContent: "flex-end",
+        display: "flex", flexDirection: "column", justifyContent: "center",
         padding: 48
       }}>
         {/* Pattern overlay */}
@@ -1487,7 +1487,15 @@ function Dashboard({ project, onReset }) {
               checked={checked}
               onToggle={toggleItem}
               isActive={activeRoom === room.id}
-              onActivate={() => setActiveRoom(activeRoom === room.id ? null : room.id)}
+              onActivate={() => {
+                const newRoom = activeRoom === room.id ? null : room.id;
+                setActiveRoom(newRoom);
+                if (newRoom) {
+                  setTimeout(() => {
+                    document.getElementById(`room-${newRoom}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }, 50);
+                }
+              }}
               quantities={quantities}
               onQtyChange={onQtyChange}
             />
