@@ -491,7 +491,7 @@ function StepBedsAndBaths({ value, onChange, onNext, onBack }) {
         How big is<br /><em style={{ color: "var(--terracotta)" }}>the home?</em>
       </h1>
       <p style={{ color: "var(--text-muted)", fontSize: 16, marginBottom: 36 }}>Each bedroom is a private room for one tenant. This determines the furnishing list and estimated budget range.</p>
-      <div style={{ display: "flex", gap: 16, marginBottom: 36 }}>
+      <div style={{ display: "flex", gap: 16, marginBottom: 36, flexWrap: "wrap" }}>
         <Counter label="Bedrooms" value={beds} onChange={v => onChange({ ...value, beds: v })} />
         <Counter label="Bathrooms" value={baths} onChange={v => onChange({ ...value, baths: v })} />
       </div>
