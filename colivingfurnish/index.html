@@ -70,8 +70,9 @@
     /* Dashboard nav: compact */
     .dash-nav-address { display: none !important; }
     .dash-nav         { padding: 0 16px !important; gap: 10px !important; }
-    .nav-btn-primary  { padding: 6px 12px !important; font-size: 12px !important; }
+    .nav-btn-primary  { padding: 8px 14px !important; font-size: 20px !important; line-height: 1; }
     .nav-btn-secondary { display: none !important; }
+    .nav-help-label   { display: none !important; }
 
     /* Dashboard layout: single column */
     .dash-layout   { grid-template-columns: 1fr !important; padding: 16px !important; }
@@ -81,6 +82,7 @@
     /* Hero bar: stack */
     .hero-inner    { flex-direction: column !important; gap: 16px !important; }
     .hero-stats    { flex-wrap: wrap !important; gap: 12px !important; }
+    .hero-left     { flex-basis: auto !important; }
 
     /* Items: make touch targets larger, allow right side to wrap below */
     .item-row        { padding: 16px !important; min-height: 56px; flex-wrap: wrap; }
@@ -1061,6 +1063,82 @@ function MobileTabs({ rooms, activeRoom, onSelect, project, checked }) {
   );
 }
 
+// ── Help Modal ──────────────────────────────────────────────────────────────
+function HelpModal({ onClose }) {
+  const Section = ({ icon, title, children }) => (
+    <div style={{ marginBottom: 24 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+        <span style={{ fontSize: 20 }}>{icon}</span>
+        <span style={{ fontFamily: "var(--font-display)", fontSize: 16, fontWeight: 700, color: "var(--charcoal)" }}>{title}</span>
+      </div>
+      <p style={{ fontSize: 14, color: "var(--text-muted)", lineHeight: 1.7, margin: 0 }}>{children}</p>
+    </div>
+  );
+
+  return (
+    <div className="no-print" style={{
+      position: "fixed", inset: 0, zIndex: 9999,
+      background: "rgba(30,28,24,0.55)", display: "flex",
+      alignItems: "center", justifyContent: "center", padding: "24px 16px"
+    }} onClick={onClose}>
+      <div style={{
+        background: "white", borderRadius: 24, padding: "36px 32px",
+        maxWidth: 560, width: "100%", maxHeight: "85vh", overflowY: "auto",
+        boxShadow: "0 24px 64px rgba(30,28,24,0.2)", position: "relative"
+      }} onClick={e => e.stopPropagation()}>
+
+        {/* Header */}
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 28 }}>
+          <div>
+            <h2 style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 700, color: "var(--charcoal)", margin: "0 0 4px 0" }}>How This Tool Works</h2>
+            <p style={{ fontSize: 13, color: "var(--text-muted)", margin: 0 }}>Everything you need to know</p>
+          </div>
+          <button onClick={onClose} style={{
+            background: "var(--cream-dark)", border: "none", borderRadius: "50%",
+            width: 36, height: 36, cursor: "pointer", fontSize: 18, color: "var(--text-muted)",
+            display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+          }}>✕</button>
+        </div>
+
+        <div style={{ height: 1, background: "var(--border)", marginBottom: 28 }} />
+
+        <Section icon="🏠" title="About This Tool">
+          CoLivingFurnish is a planning tool to help you build a furnishing list for any co-living home.
+          Prices shown are suggested estimates only — actual costs will vary. The items displayed are
+          tailored to your selected tenant type and climate zone, so your list is relevant to your property.
+        </Section>
+
+        <Section icon="🖨" title="Room Checklist">
+          Generates a simple room-by-room checklist you can print and take with you when shopping.
+          It shows item names and quantities — no prices — so you can check items off as you go.
+        </Section>
+
+        <Section icon="⬇" title="Download">
+          Downloads a budget estimate of all items you have currently selected (checked off).
+          Note: your selections are <strong>not saved</strong> — they will be lost as soon as you close this tool.
+          Download your list before you close the page if you want to keep it.
+        </Section>
+
+        <Section icon="✅" title="Required Items">
+          Items we suggest every co-living home should have. These are always shown regardless of tenant
+          type or climate, and represent the essential furnishings for a well-run property.
+        </Section>
+
+        <Section icon="💡" title="Optional Items">
+          Items that aren't essential, but may add comfort and convenience for your tenants.
+          These vary based on the tenant type and climate zone you selected during setup.
+        </Section>
+
+        <button onClick={onClose} style={{
+          width: "100%", padding: "14px", background: "var(--terracotta)", color: "white",
+          border: "none", borderRadius: 14, fontSize: 15, fontWeight: 600,
+          cursor: "pointer", fontFamily: "var(--font-body)", marginTop: 8
+        }}>Got it</button>
+      </div>
+    </div>
+  );
+}
+
 // ── Main Dashboard ──────────────────────────────────────────────────────────
 function Dashboard({ project, onReset }) {
   const [checked, setChecked] = useState(() => {
@@ -1073,6 +1151,7 @@ function Dashboard({ project, onReset }) {
   });
   const [activeRoom, setActiveRoom] = useState("bedroom");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
 
   const rooms = window.FURNISHINGS_DATA.rooms;
 
@@ -1252,6 +1331,7 @@ function Dashboard({ project, onReset }) {
   return (
     <div style={{ minHeight: "100vh", background: "var(--cream)", display: "flex", flexDirection: "column" }}>
       {/* Top nav */}
+      {helpOpen && <HelpModal onClose={() => setHelpOpen(false)} />}
       <nav className="dash-nav no-print" style={{
         background: "white", borderBottom: "1px solid var(--border)",
         padding: "0 clamp(16px, 4vw, 48px)", height: 64,
@@ -1264,25 +1344,36 @@ function Dashboard({ project, onReset }) {
           📍 {project.address}
         </div>
         <button
-          onClick={printList}
+          onClick={() => setHelpOpen(true)}
           className="nav-btn-primary"
-          title="Opens a room-by-room shopping checklist you can print and take to the store"
+          title="How to use this tool"
           style={{
             padding: "8px 18px", background: "white",
             color: "var(--charcoal)", border: "1px solid var(--border)",
             borderRadius: 20, fontSize: 13, fontWeight: 600,
             cursor: "pointer", fontFamily: "var(--font-body)"
           }}
-        >🖨 Room Checklist</button>
+        >❓<span className="nav-help-label"> Help</span></button>
+        <button
+          onClick={printList}
+          className="nav-btn-primary"
+          title="Print a room-by-room checklist"
+          style={{
+            padding: "8px 18px", background: "white",
+            color: "var(--charcoal)", border: "1px solid var(--border)",
+            borderRadius: 20, fontSize: 13, fontWeight: 600,
+            cursor: "pointer", fontFamily: "var(--font-body)"
+          }}
+        >🖨<span className="nav-help-label"> Room Checklist</span></button>
         <button
           onClick={downloadList}
           className="nav-btn-primary"
-          title="Opens a printable cost summary of all checked items — your final purchase list with totals"
+          title="Download selected items as a budget estimate"
           style={{
             padding: "8px 18px", background: "var(--terracotta)", color: "white",
             border: "none", borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "var(--font-body)"
           }}
-        >⬇ Download</button>
+        >⬇<span className="nav-help-label"> Download</span></button>
         <button
           onClick={onReset}
           className="nav-btn-secondary"
@@ -1301,7 +1392,7 @@ function Dashboard({ project, onReset }) {
         padding: "32px clamp(16px, 4vw, 48px)"
       }}>
         <div className="hero-inner" style={{ maxWidth: 1100, margin: "0 auto", display: "flex", flexWrap: "wrap", gap: 32, alignItems: "center" }}>
-          <div style={{ flex: "1 1 300px" }}>
+          <div className="hero-left" style={{ flex: "1 1 300px" }}>
             <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Your Furnishing Plan</div>
             <h1 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(22px, 3vw, 32px)", fontWeight: 700, color: "white", marginBottom: 6 }}>
               {project.beds} Tenant Home · {project.baths} Bath
