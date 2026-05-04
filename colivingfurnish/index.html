@@ -70,6 +70,8 @@
     /* Dashboard nav: compact */
     .dash-nav-address { display: none !important; }
     .dash-nav         { padding: 0 16px !important; gap: 10px !important; }
+    .nav-btn-primary  { padding: 6px 12px !important; font-size: 12px !important; }
+    .nav-btn-secondary { display: none !important; }
 
     /* Dashboard layout: single column */
     .dash-layout   { grid-template-columns: 1fr !important; padding: 16px !important; }
@@ -1255,6 +1257,7 @@ function Dashboard({ project, onReset }) {
         </div>
         <button
           onClick={printList}
+          className="nav-btn-primary"
           title="Opens a room-by-room shopping checklist you can print and take to the store"
           style={{
             padding: "8px 18px", background: "white",
@@ -1265,6 +1268,7 @@ function Dashboard({ project, onReset }) {
         >🖨 Shopping List</button>
         <button
           onClick={downloadList}
+          className="nav-btn-primary"
           title="Opens a printable cost summary of all checked items — your final purchase list with totals"
           style={{
             padding: "8px 18px", background: "var(--terracotta)", color: "white",
@@ -1273,6 +1277,7 @@ function Dashboard({ project, onReset }) {
         >⬇ Download</button>
         <button
           onClick={onReset}
+          className="nav-btn-secondary"
           title="Clear all selections and start a new property from scratch"
           style={{
             padding: "8px 14px", background: "none", color: "var(--text-muted)",
