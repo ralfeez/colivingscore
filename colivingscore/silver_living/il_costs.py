@@ -58,7 +58,7 @@ IL_COSTS = {
 _SOURCE = "SeniorLiving.org, 2026"
 
 
-def get_il_cost(state_abbr: str):
+def get_il_cost(state_abbr: str) -> dict | None:
     """Return IL cost info for a state abbreviation, or None if unknown."""
     entry = IL_COSTS.get(state_abbr.upper())
     if entry is None:

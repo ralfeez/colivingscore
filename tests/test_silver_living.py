@@ -8,6 +8,8 @@ def test_known_state_returns_range():
     assert "range" in result
     assert "source" in result
     assert result["source"] == "SeniorLiving.org, 2026"
+    assert result["state"] == "Texas"
+    assert result["range"] == "$2,400–$3,800/mo"
 
 
 def test_unknown_state_returns_none():
@@ -19,3 +21,8 @@ def test_all_50_states_plus_dc_present():
     assert len(IL_COSTS) == 51
     assert "DC" in IL_COSTS
     assert "CA" in IL_COSTS
+    # Spot-check a few values
+    ca = get_il_cost("CA")
+    assert ca["state"] == "California"
+    dc = get_il_cost("DC")
+    assert dc["state"] == "District of Columbia"
