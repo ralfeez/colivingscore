@@ -282,3 +282,116 @@ def test_lookup_endpoint_returns_demographics():
     assert data["pop65"] == 219430
     assert "il_cost" in data
     assert data["il_cost"]["range"] is not None
+
+
+# ============================================================================
+# Security Hardening Tests (Tasks 1-13)
+# ============================================================================
+
+# Input injection / traversal on counties endpoint
+def test_counties_invalid_state_empty():
+    """Empty state parameter should return 400."""
+    client = _get_app().test_client()
+    resp = client.get("/api/silver-living/counties?state=")
+    assert resp.status_code == 400
+
+
+def test_counties_sql_injection():
+    """SQL injection attempt in state parameter should return 400."""
+    client = _get_app().test_client()
+    resp = client.get("/api/silver-living/counties?state=TX'; DROP TABLE--")
+    assert resp.status_code == 400
+
+
+def test_counties_path_traversal():
+    """Path traversal attempt in state parameter should return 400."""
+    client = _get_app().test_client()
+    resp = client.get("/api/silver-living/counties?state=../../etc")
+    assert resp.status_code == 400
+
+
+def test_counties_xss_attempt():
+    """XSS attempt in state parameter should return 400."""
+    client = _get_app().test_client()
+    resp = client.get("/api/silver-living/counties?state=<script>alert(1)</script>")
+    assert resp.status_code == 400
+
+
+def test_counties_numeric_state():
+    """FIPS number instead of state abbreviation should return 400."""
+    client = _get_app().test_client()
+    resp = client.get("/api/silver-living/counties?state=48")
+    assert resp.status_code == 400
+
+
+# Input injection on lookup endpoint
+def test_lookup_invalid_state_fips():
+    """Invalid state FIPS (99) should return 400."""
+    client = _get_app().test_client()
+    resp = client.get("/api/silver-living/lookup?state=99&county=001")
+    assert resp.status_code == 400
+
+
+def test_lookup_sql_injection_state():
+    """SQL injection attempt in state parameter should return 400."""
+    client = _get_app().test_client()
+    resp = client.get("/api/silver-living/lookup?state=48'; DROP--&county=113")
+    assert resp.status_code == 400
+
+
+def test_lookup_path_traversal_county():
+    """Path traversal attempt in county parameter should return 400."""
+    client = _get_app().test_client()
+    resp = client.get("/api/silver-living/lookup?state=48&county=../../etc")
+    assert resp.status_code == 400
+
+
+def test_lookup_xss_county():
+    """XSS attempt in county parameter should return 400."""
+    client = _get_app().test_client()
+    resp = client.get("/api/silver-living/lookup?state=48&county=<img src=x>")
+    assert resp.status_code == 400
+
+
+def test_lookup_empty_params():
+    """No parameters should return 400."""
+    client = _get_app().test_client()
+    resp = client.get("/api/silver-living/lookup")
+    assert resp.status_code == 400
+
+
+def test_lookup_missing_county():
+    """Missing county parameter should return 400."""
+    client = _get_app().test_client()
+    resp = client.get("/api/silver-living/lookup?state=48")
+    assert resp.status_code == 400
+
+
+# Response safety
+def test_lookup_response_is_json():
+    """Valid lookup should return application/json content type."""
+    _MOCK_DEMO = {
+        "pop65": 219430, "living_alone": 67024, "living_alone_pct": 30.5,
+        "growth_pct": 31.2,
+        "age_brackets": [{"label": "55–59", "count": 112000, "target": False}],
+        "citizenship": {"citizen_pct": 89.0, "noncitizen_pct": 11.0},
+    }
+    with patch("colivingscore.silver_living.routes.get_demographics", return_value=_MOCK_DEMO), \
+         patch("colivingscore.silver_living.routes.is_valid_county_fips", return_value=True):
+        client = _get_app().test_client()
+        resp = client.get("/api/silver-living/lookup?state=48&county=113")
+    assert resp.status_code == 200
+    assert resp.content_type == "application/json"
+
+
+def test_counties_response_is_json():
+    """Valid counties endpoint should return application/json content type."""
+    _mock_counties = [
+        {"name": "Dallas County", "fips": "113"},
+        {"name": "Harris County", "fips": "201"},
+    ]
+    with patch("colivingscore.silver_living.routes.get_counties", return_value=_mock_counties):
+        client = _get_app().test_client()
+        resp = client.get("/api/silver-living/counties?state=TX")
+    assert resp.status_code == 200
+    assert resp.content_type == "application/json"
