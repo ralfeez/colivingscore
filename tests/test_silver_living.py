@@ -52,10 +52,6 @@ def test_is_valid_state_fips_unknown():
     assert is_valid_state_fips("99") is False
 
 
-@pytest.mark.skipif(
-    not os.getenv("CENSUS_API_KEY"),
-    reason="CENSUS_API_KEY not set — skipping live Census API test"
-)
 def test_is_valid_county_fips_dallas():
     # Dallas County, TX = FIPS 48113 — makes a live Census API call
     assert is_valid_county_fips("48", "113") is True

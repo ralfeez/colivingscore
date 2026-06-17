@@ -1,6 +1,5 @@
 import threading
 import requests
-import os
 
 # Maps 2-letter state abbreviation → 2-digit Census FIPS code
 STATE_FIPS = {
@@ -24,7 +23,6 @@ _county_cache: dict[str, list[dict]] = {}
 _cache_lock = threading.Lock()
 
 _CENSUS_BASE = "https://api.census.gov/data/2023/acs/acs5"
-_CENSUS_API_KEY = os.getenv("CENSUS_API_KEY", "")
 
 
 def is_valid_state_fips(state_fips: str) -> bool:
@@ -35,18 +33,15 @@ def get_counties(state_fips: str) -> list[dict]:
     """
     Return list of {"name": "Dallas County", "fips": "113"} for a state.
     Results cached in memory for the process lifetime.
-    Requires CENSUS_API_KEY environment variable.
-    Returns empty list if API key is missing or API call fails.
+    Fetches data from the free U.S. Census API (no authentication required).
+    Returns empty list if API call fails.
     """
     if not is_valid_state_fips(state_fips):
         return []
     with _cache_lock:
         if state_fips not in _county_cache:
-            if not _CENSUS_API_KEY:
-                _county_cache[state_fips] = []
-                return []
             try:
-                url = f"{_CENSUS_BASE}?get=NAME&for=county:*&in=state:{state_fips}&key={_CENSUS_API_KEY}"
+                url = f"{_CENSUS_BASE}?get=NAME&for=county:*&in=state:{state_fips}"
                 resp = requests.get(url, timeout=10)
                 resp.raise_for_status()
                 rows = resp.json()
