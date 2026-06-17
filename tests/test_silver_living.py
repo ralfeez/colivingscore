@@ -213,3 +213,72 @@ def test_get_demographics_cached():
         get_demographics("48", "113")
         get_demographics("48", "113")  # second call
     assert mock_get.call_count == 4  # only 4 calls, not 8
+
+
+import json
+from unittest.mock import patch
+
+
+def _get_app():
+    from colivingscore.app import app
+    app.config["TESTING"] = True
+    return app
+
+
+def test_silver_living_page_loads():
+    client = _get_app().test_client()
+    resp = client.get("/silver-living")
+    assert resp.status_code == 200
+    assert b"Silver Living" in resp.data
+
+
+def test_counties_endpoint_texas():
+    _mock_counties = [
+        {"name": "Dallas County", "fips": "113"},
+        {"name": "Harris County", "fips": "201"},
+    ]
+    with patch("colivingscore.silver_living.routes.get_counties", return_value=_mock_counties):
+        client = _get_app().test_client()
+        resp = client.get("/api/silver-living/counties?state=TX")
+    assert resp.status_code == 200
+    data = json.loads(resp.data)
+    assert "counties" in data
+    names = [c["name"] for c in data["counties"]]
+    assert "Dallas County" in names
+
+
+def test_counties_endpoint_invalid_state():
+    client = _get_app().test_client()
+    resp = client.get("/api/silver-living/counties?state=XX")
+    assert resp.status_code == 400
+
+
+def test_lookup_endpoint_validates_fips():
+    with patch("colivingscore.silver_living.routes.is_valid_county_fips", return_value=False):
+        client = _get_app().test_client()
+        resp = client.get("/api/silver-living/lookup?state=48&county=000")
+    assert resp.status_code == 400
+
+
+def test_lookup_endpoint_invalid_state_fips():
+    client = _get_app().test_client()
+    resp = client.get("/api/silver-living/lookup?state=99&county=113")
+    assert resp.status_code == 400
+
+
+def test_lookup_endpoint_returns_demographics():
+    _MOCK_DEMO = {
+        "pop65": 219430, "living_alone": 67024, "living_alone_pct": 30.5,
+        "growth_pct": 31.2,
+        "age_brackets": [{"label": "55–59", "count": 112000, "target": False}],
+        "citizenship": {"citizen_pct": 89.0, "noncitizen_pct": 11.0},
+    }
+    with patch("colivingscore.silver_living.routes.get_demographics", return_value=_MOCK_DEMO), \
+         patch("colivingscore.silver_living.routes.is_valid_county_fips", return_value=True):
+        client = _get_app().test_client()
+        resp = client.get("/api/silver-living/lookup?state=48&county=113")
+    assert resp.status_code == 200
+    data = json.loads(resp.data)
+    assert data["pop65"] == 219430
+    assert "il_cost" in data
+    assert data["il_cost"]["range"] is not None
