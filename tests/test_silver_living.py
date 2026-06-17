@@ -8,9 +8,9 @@ def test_known_state_returns_range():
     assert result is not None
     assert "range" in result
     assert "source" in result
-    assert result["source"] == "SeniorLiving.org, 2026"
+    assert result["source"] == "SeniorTruth.com, 2026"
     assert result["state"] == "Texas"
-    assert result["range"] == "$2,400–$3,800/mo"
+    assert result["range"] == "avg. $3,000/mo"
 
 
 def test_unknown_state_returns_none():
