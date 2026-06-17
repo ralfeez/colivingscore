@@ -16,7 +16,7 @@ from flask import Flask, send_from_directory, request, send_file, jsonify, redir
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from pdf.generate_report import build_pdf_from_data
-from colivingscore.silver_living import blueprint as silver_living_blueprint
+from silver_living import blueprint as silver_living_blueprint
 
 app = Flask(__name__, static_folder="static")
 app.config['MAX_CONTENT_LENGTH'] = 1 * 1024 * 1024  # 1 MB max request body
