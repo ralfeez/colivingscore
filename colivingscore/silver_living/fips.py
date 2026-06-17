@@ -1,7 +1,7 @@
+import os
 import threading
 import requests
 
-# Maps 2-letter state abbreviation → 2-digit Census FIPS code
 STATE_FIPS = {
     "AL":"01","AK":"02","AZ":"04","AR":"05","CA":"06","CO":"08","CT":"09",
     "DE":"10","DC":"11","FL":"12","GA":"13","HI":"15","ID":"16","IL":"17",
@@ -13,16 +13,19 @@ STATE_FIPS = {
     "WI":"55","WY":"56",
 }
 
-# Reverse map: FIPS → abbreviation
 FIPS_STATE = {v: k for k, v in STATE_FIPS.items()}
-
 _VALID_STATE_FIPS = set(STATE_FIPS.values())
 
-# Cache: state_fips → list of county dicts
 _county_cache: dict[str, list[dict]] = {}
 _cache_lock = threading.Lock()
 
 _CENSUS_BASE = "https://api.census.gov/data/2023/acs/acs5"
+
+
+def _census_url(path: str) -> str:
+    key = os.environ.get("CENSUS_API_KEY", "")
+    suffix = f"&key={key}" if key else ""
+    return f"{_CENSUS_BASE}{path}{suffix}"
 
 
 def is_valid_state_fips(state_fips: str) -> bool:
@@ -30,29 +33,21 @@ def is_valid_state_fips(state_fips: str) -> bool:
 
 
 def get_counties(state_fips: str) -> list[dict]:
-    """
-    Return list of {"name": "Dallas County", "fips": "113"} for a state.
-    Results cached in memory for the process lifetime.
-    Fetches data from the free U.S. Census API (no authentication required).
-    Returns empty list if API call fails.
-    """
+    """Return list of {"name": "Dallas County", "fips": "113"} for a state. Cached."""
     if not is_valid_state_fips(state_fips):
         return []
     with _cache_lock:
         if state_fips not in _county_cache:
-            try:
-                url = f"{_CENSUS_BASE}?get=NAME&for=county:*&in=state:{state_fips}"
-                resp = requests.get(url, timeout=10)
-                resp.raise_for_status()
-                rows = resp.json()
-                counties = [
-                    {"name": row[0].split(",")[0].strip(), "fips": row[2]}
-                    for row in rows[1:]
-                ]
-                counties.sort(key=lambda c: c["name"])
-                _county_cache[state_fips] = counties
-            except Exception:
-                _county_cache[state_fips] = []
+            url = _census_url(f"?get=NAME&for=county:*&in=state:{state_fips}")
+            resp = requests.get(url, timeout=10)
+            resp.raise_for_status()
+            rows = resp.json()
+            counties = [
+                {"name": row[0].split(",")[0].strip(), "fips": row[2]}
+                for row in rows[1:]
+            ]
+            counties.sort(key=lambda c: c["name"])
+            _county_cache[state_fips] = counties
         return _county_cache[state_fips]
 
 

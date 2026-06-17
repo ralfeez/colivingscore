@@ -34,6 +34,7 @@ from colivingscore.silver_living.fips import (
     is_valid_state_fips,
     is_valid_county_fips,
 )
+from unittest.mock import patch as _patch, MagicMock as _MagicMock
 
 
 def test_state_fips_texas():
@@ -52,10 +53,28 @@ def test_is_valid_state_fips_unknown():
     assert is_valid_state_fips("99") is False
 
 
+def _mock_county_response():
+    m = _MagicMock()
+    m.raise_for_status.return_value = None
+    m.json.return_value = [
+        ["NAME", "state", "county"],
+        ["Dallas County, Texas", "48", "113"],
+        ["Tarrant County, Texas", "48", "439"],
+        ["Harris County, Texas", "48", "201"],
+    ]
+    return m
+
+
 def test_is_valid_county_fips_dallas():
-    # Dallas County, TX = FIPS 48113 — makes a live Census API call
-    assert is_valid_county_fips("48", "113") is True
+    with _patch("colivingscore.silver_living.fips.requests.get", return_value=_mock_county_response()):
+        # Clear cache so mock is used
+        from colivingscore.silver_living import fips as _fips
+        _fips._county_cache.clear()
+        assert is_valid_county_fips("48", "113") is True
 
 
 def test_is_valid_county_fips_bad():
-    assert is_valid_county_fips("48", "000") is False
+    with _patch("colivingscore.silver_living.fips.requests.get", return_value=_mock_county_response()):
+        from colivingscore.silver_living import fips as _fips
+        _fips._county_cache.clear()
+        assert is_valid_county_fips("48", "000") is False
