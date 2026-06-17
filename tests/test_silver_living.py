@@ -78,3 +78,138 @@ def test_is_valid_county_fips_bad():
         from colivingscore.silver_living import fips as _fips
         _fips._county_cache.clear()
         assert is_valid_county_fips("48", "000") is False
+
+
+from unittest.mock import patch, MagicMock
+from colivingscore.silver_living.census import get_demographics
+
+_MOCK_B09020_CURRENT = [
+    ["B09020_001E", "B09020_021E", "state", "county"],
+    ["142810", "44271", "48", "113"]
+]
+_MOCK_B09020_PRIOR = [
+    ["B09020_001E", "B09020_021E", "state", "county"],
+    ["108855", "33700", "48", "113"]
+]
+_MOCK_S0101 = [
+    ["S0101_C01_008E","S0101_C01_009E","S0101_C01_010E",
+     "S0101_C01_011E","S0101_C01_012E","S0101_C01_013E",
+     "S0101_C01_014E","state","county"],
+    ["112000","98000","88000","140000","98000","72000","52000","48","113"]
+]
+_MOCK_PUMS = [
+    ["CIT", "PWGTP", "AGEP", "state"],
+    ["1", "500", "70", "48"],
+    ["2", "300", "68", "48"],
+    ["3", "100", "72", "48"],
+    ["4", "50",  "66", "48"],
+    ["5", "60",  "67", "48"],
+    ["1", "200", "40", "48"],  # under 65, should be excluded
+]
+
+
+def _mock_resp(data):
+    m = MagicMock()
+    m.json.return_value = data
+    m.raise_for_status.return_value = None
+    return m
+
+
+def test_get_demographics_structure():
+    from colivingscore.silver_living import census as _census
+    _census._cache.clear()
+    with patch("colivingscore.silver_living.census.requests.get") as mock_get:
+        mock_get.side_effect = [
+            _mock_resp(_MOCK_B09020_CURRENT),
+            _mock_resp(_MOCK_B09020_PRIOR),
+            _mock_resp(_MOCK_S0101),
+            _mock_resp(_MOCK_PUMS),
+        ]
+        result = get_demographics("48", "113")
+    assert "pop65" in result
+    assert "living_alone" in result
+    assert "living_alone_pct" in result
+    assert "growth_pct" in result
+    assert "age_brackets" in result
+    assert "citizenship" in result
+
+
+def test_get_demographics_pop65():
+    from colivingscore.silver_living import census as _census
+    _census._cache.clear()
+    with patch("colivingscore.silver_living.census.requests.get") as mock_get:
+        mock_get.side_effect = [
+            _mock_resp(_MOCK_B09020_CURRENT),
+            _mock_resp(_MOCK_B09020_PRIOR),
+            _mock_resp(_MOCK_S0101),
+            _mock_resp(_MOCK_PUMS),
+        ]
+        result = get_demographics("48", "113")
+    assert result["pop65"] == 142810
+    assert result["living_alone"] == 44271
+    assert result["living_alone_pct"] == round(44271 / 142810 * 100, 1)
+
+
+def test_get_demographics_growth():
+    from colivingscore.silver_living import census as _census
+    _census._cache.clear()
+    with patch("colivingscore.silver_living.census.requests.get") as mock_get:
+        mock_get.side_effect = [
+            _mock_resp(_MOCK_B09020_CURRENT),
+            _mock_resp(_MOCK_B09020_PRIOR),
+            _mock_resp(_MOCK_S0101),
+            _mock_resp(_MOCK_PUMS),
+        ]
+        result = get_demographics("48", "113")
+    assert result["growth_pct"] == round((142810 - 108855) / 108855 * 100, 1)
+
+
+def test_get_demographics_age_brackets():
+    from colivingscore.silver_living import census as _census
+    _census._cache.clear()
+    with patch("colivingscore.silver_living.census.requests.get") as mock_get:
+        mock_get.side_effect = [
+            _mock_resp(_MOCK_B09020_CURRENT),
+            _mock_resp(_MOCK_B09020_PRIOR),
+            _mock_resp(_MOCK_S0101),
+            _mock_resp(_MOCK_PUMS),
+        ]
+        result = get_demographics("48", "113")
+    brackets = result["age_brackets"]
+    assert len(brackets) == 7
+    assert brackets[0] == {"label": "55–59", "count": 112000, "target": False}
+    assert brackets[2] == {"label": "65–69", "count": 88000, "target": True}
+
+
+def test_get_demographics_citizenship():
+    from colivingscore.silver_living import census as _census
+    _census._cache.clear()
+    with patch("colivingscore.silver_living.census.requests.get") as mock_get:
+        mock_get.side_effect = [
+            _mock_resp(_MOCK_B09020_CURRENT),
+            _mock_resp(_MOCK_B09020_PRIOR),
+            _mock_resp(_MOCK_S0101),
+            _mock_resp(_MOCK_PUMS),
+        ]
+        result = get_demographics("48", "113")
+    cit = result["citizenship"]
+    assert "citizen_pct" in cit
+    assert "noncitizen_pct" in cit
+    # citizen weight = 500+300+100+50=950, non-citizen=60, under-65 (200) excluded
+    assert cit["citizen_pct"] == round(950 / 1010 * 100, 1)
+
+
+def test_get_demographics_cached():
+    """Second call with same FIPS returns cached result without extra API calls."""
+    from colivingscore.silver_living import census as _census
+    _census._cache.clear()
+    with patch("colivingscore.silver_living.census.requests.get") as mock_get:
+        mock_get.side_effect = [
+            _mock_resp(_MOCK_B09020_CURRENT),
+            _mock_resp(_MOCK_B09020_PRIOR),
+            _mock_resp(_MOCK_S0101),
+            _mock_resp(_MOCK_PUMS),
+        ]
+        get_demographics("48", "113")
+        get_demographics("48", "113")  # second call
+    assert mock_get.call_count == 4  # only 4 calls, not 8
