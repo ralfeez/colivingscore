@@ -1,4 +1,5 @@
 import pytest
+import os
 from colivingscore.silver_living.il_costs import get_il_cost
 
 
@@ -26,3 +27,39 @@ def test_all_50_states_plus_dc_present():
     assert ca["state"] == "California"
     dc = get_il_cost("DC")
     assert dc["state"] == "District of Columbia"
+
+
+from colivingscore.silver_living.fips import (
+    STATE_FIPS,
+    is_valid_state_fips,
+    is_valid_county_fips,
+)
+
+
+def test_state_fips_texas():
+    assert STATE_FIPS["TX"] == "48"
+
+
+def test_state_fips_dc():
+    assert STATE_FIPS["DC"] == "11"
+
+
+def test_is_valid_state_fips_known():
+    assert is_valid_state_fips("48") is True
+
+
+def test_is_valid_state_fips_unknown():
+    assert is_valid_state_fips("99") is False
+
+
+@pytest.mark.skipif(
+    not os.getenv("CENSUS_API_KEY"),
+    reason="CENSUS_API_KEY not set — skipping live Census API test"
+)
+def test_is_valid_county_fips_dallas():
+    # Dallas County, TX = FIPS 48113 — makes a live Census API call
+    assert is_valid_county_fips("48", "113") is True
+
+
+def test_is_valid_county_fips_bad():
+    assert is_valid_county_fips("48", "000") is False
