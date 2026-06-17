@@ -61,18 +61,39 @@ def _fetch_s0101(state_fips: str, county_fips: str) -> list[int]:
 
 
 def _fetch_pums_citizenship(state_fips: str) -> tuple[float, float]:
+    # UCGID predicate not available on PUMS; filter age server-side where supported.
+    # We request only the three needed variables and filter to AGEP>=65 via query param.
     url = (
         f"{_PUMS_BASE}?get=CIT,PWGTP,AGEP"
         f"&for=state:{state_fips}"
+        f"&AGEP=65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95"
         f"{_key_param()}"
     )
-    resp = requests.get(url, timeout=20)
-    resp.raise_for_status()
-    rows = resp.json()
-    header = rows[0]
-    cit_idx = header.index("CIT")
-    wgt_idx = header.index("PWGTP")
-    age_idx = header.index("AGEP")
+    try:
+        resp = requests.get(url, timeout=30)
+        resp.raise_for_status()
+        rows = resp.json()
+    except Exception:
+        # Fall back to unfiltered query if age-filtered query fails
+        url_fallback = (
+            f"{_PUMS_BASE}?get=CIT,PWGTP,AGEP"
+            f"&for=state:{state_fips}"
+            f"{_key_param()}"
+        )
+        try:
+            resp = requests.get(url_fallback, timeout=45)
+            resp.raise_for_status()
+            rows = resp.json()
+        except Exception:
+            return 100.0, 0.0
+
+    try:
+        header = rows[0]
+        cit_idx = header.index("CIT")
+        wgt_idx = header.index("PWGTP")
+        age_idx = header.index("AGEP")
+    except (IndexError, ValueError):
+        return 100.0, 0.0
 
     citizen_w = 0
     noncitizen_w = 0

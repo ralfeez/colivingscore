@@ -34,7 +34,13 @@ def lookup() -> object:
     if not is_valid_state_fips(state_fips):
         return jsonify({"error": "Invalid state FIPS"}), 400
 
-    if not is_valid_county_fips(state_fips, county_fips):
+    try:
+        valid_county = is_valid_county_fips(state_fips, county_fips)
+    except Exception as e:
+        current_app.logger.error(f"County FIPS validation error: {e}")
+        return jsonify({"error": "Census data unavailable"}), 502
+
+    if not valid_county:
         return jsonify({"error": "Invalid county FIPS"}), 400
 
     try:
