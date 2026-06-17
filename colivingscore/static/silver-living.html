@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Silver Living Market Dashboard — CoLivingScore</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #faf7f2;
+    --cream-dark: #f2ede4;
+    --charcoal: #1e1c18;
+    --terracotta: #c0603a;
+    --sage: #6b8c6e;
+    --amber: #e8a84a;
+    --text-muted: #7a7570;
+    --border: #e4ddd4;
+    --font: 'DM Sans', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font); background: var(--cream); color: var(--charcoal); min-height: 100vh; }
+  .page { max-width: 860px; margin: 0 auto; padding: 28px 20px 48px; }
+
+  .dash-header { background: var(--charcoal); border-radius: 14px; padding: 16px 22px; color: white; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; }
+  .dash-title { font-size: 18px; font-weight: 700; letter-spacing: -.3px; }
+  .dash-title span { color: var(--terracotta); }
+  .dash-sub { font-size: 12px; opacity: .55; }
+
+  .picker { background: white; border: 1.5px solid var(--border); border-radius: 12px; padding: 12px 16px; margin-bottom: 18px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .picker select { flex: 1; min-width: 150px; border: 1.5px solid var(--border); border-radius: 8px; padding: 8px 10px; font-family: var(--font); font-size: 14px; color: var(--charcoal); background: white; cursor: pointer; }
+  .picker select:focus { outline: none; border-color: var(--terracotta); }
+  .picker button { background: var(--terracotta); color: white; border: none; border-radius: 8px; padding: 9px 20px; font-family: var(--font); font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: opacity .15s; }
+  .picker button:hover { opacity: .88; }
+  .picker button:disabled { opacity: .5; cursor: not-allowed; }
+
+  .error-msg { display: none; background: #fdf2f2; border: 1px solid #f5c6c6; border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #b94040; margin-bottom: 14px; }
+  .error-msg.visible { display: block; }
+
+  .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+  @media (max-width: 560px) { .stat-row { grid-template-columns: 1fr; } }
+  .stat-card { background: white; border-radius: 12px; padding: 16px; }
+  .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: .6px; color: var(--text-muted); margin-bottom: 6px; }
+  .stat-value { font-size: 28px; font-weight: 700; line-height: 1; margin-bottom: 3px; }
+  .stat-sub { font-size: 12px; color: var(--text-muted); }
+  .stat-src { font-size: 10px; color: #b0aaa4; margin-top: 5px; }
+
+  .two-col { display: grid; grid-template-columns: 1.6fr 1fr; gap: 14px; margin-bottom: 20px; }
+  @media (max-width: 680px) { .two-col { grid-template-columns: 1fr; } }
+
+  .chart-card { background: white; border-radius: 12px; padding: 18px; }
+  .card-title { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+  .card-sub { font-size: 11px; color: var(--text-muted); margin-bottom: 12px; }
+  .chart-legend { display: flex; gap: 16px; margin-bottom: 14px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-muted); }
+  .legend-swatch { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+  .chart-body { display: flex; align-items: flex-end; height: 140px; border-bottom: 1.5px solid var(--border); gap: 0; }
+  .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; padding: 0 3px; }
+  .bar-count { font-size: 9px; color: var(--text-muted); margin-bottom: 3px; text-align: center; white-space: nowrap; }
+  .bar-rect { width: 100%; border-radius: 4px 4px 0 0; transition: height .4s ease; }
+  .bar-labels { display: flex; margin-top: 6px; }
+  .bar-age { flex: 1; font-size: 9.5px; color: var(--text-muted); text-align: center; line-height: 1.25; }
+  .chart-note { font-size: 10px; color: #b0aaa4; margin-top: 8px; line-height: 1.4; }
+
+  .right-col { display: flex; flex-direction: column; gap: 12px; }
+  .citizen-card, .cost-card { background: white; border-radius: 12px; padding: 14px 16px; }
+  .caveat-box { background: #fdf8ee; border-radius: 8px; padding: 7px 10px; font-size: 11px; color: #8a7530; margin-bottom: 10px; line-height: 1.4; }
+  .cit-row { margin-bottom: 8px; }
+  .cit-name { font-size: 11px; color: var(--text-muted); margin-bottom: 3px; }
+  .cit-bar-row { display: flex; align-items: center; gap: 8px; }
+  .cit-track { flex: 1; height: 10px; background: var(--cream-dark); border-radius: 5px; overflow: hidden; }
+  .cit-fill { height: 100%; border-radius: 5px; transition: width .4s ease; }
+  .cit-pct { font-size: 13px; font-weight: 700; width: 38px; text-align: right; flex-shrink: 0; }
+  .cost-value { font-size: 21px; font-weight: 700; margin: 6px 0 4px; }
+  .cost-context { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
+  .cost-source { font-size: 10px; color: #b0aaa4; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
+
+  .loading { display: none; font-size: 13px; color: var(--text-muted); padding: 8px 0; }
+  .loading.visible { display: block; }
+
+  .explainer { background: white; border-radius: 14px; padding: 24px; border-left: 4px solid var(--terracotta); }
+  .explainer-title { font-size: 14px; font-weight: 700; margin-bottom: 16px; }
+  .explainer-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+  @media (max-width: 680px) { .explainer-grid { grid-template-columns: 1fr; } }
+  .explainer-section h4 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: var(--terracotta); margin-bottom: 7px; }
+  .explainer-section p { font-size: 12px; color: var(--text-muted); line-height: 1.65; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="dash-header">
+    <div class="dash-title">Silver Living <span>Market Dashboard</span></div>
+    <div class="dash-sub">65+ demand screening tool</div>
+  </div>
+
+  <div class="picker">
+    <select id="state-select" aria-label="State">
+      <option value="">Select state…</option>
+    </select>
+    <select id="county-select" aria-label="County" disabled>
+      <option value="">Select county…</option>
+    </select>
+    <button id="lookup-btn" disabled>Look up →</button>
+  </div>
+
+  <div class="error-msg" id="error-msg"></div>
+  <div class="loading" id="loading-msg">Loading Census data…</div>
+
+  <div class="stat-row">
+    <div class="stat-card">
+      <div class="stat-label">65+ Population</div>
+      <div class="stat-value" id="val-pop65" style="color:var(--terracotta)">—</div>
+      <div class="stat-sub" id="sub-pop65">select a county to begin</div>
+      <div class="stat-src">ACS 5-Year · Table B09020</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Living Alone (65+)</div>
+      <div class="stat-value" id="val-alone">—</div>
+      <div class="stat-sub" id="sub-alone">—</div>
+      <div class="stat-src">ACS 5-Year · same table</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">10-Year Growth</div>
+      <div class="stat-value" id="val-growth">—</div>
+      <div class="stat-sub">65+ pop. change</div>
+      <div class="stat-src">2015–19 vs 2020–24 ACS</div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="chart-card">
+      <div class="card-title" id="chart-title">Age Distribution</div>
+      <div class="card-sub">ACS 5-Year · Table S0101 · Total persons by age bracket</div>
+      <div class="chart-legend">
+        <div class="legend-item">
+          <div class="legend-swatch" style="background:#c4bdb4"></div>
+          Near-term pipeline (55–64)
+        </div>
+        <div class="legend-item">
+          <div class="legend-swatch" style="background:var(--terracotta)"></div>
+          Target demographic (65+)
+        </div>
+      </div>
+      <div class="chart-body" id="chart-body"></div>
+      <div class="bar-labels" id="bar-labels"></div>
+      <div class="chart-note">Counts above bars are loaded from U.S. Census Bureau ACS on each lookup.</div>
+    </div>
+
+    <div class="right-col">
+      <div class="citizen-card">
+        <div class="card-title">Citizenship — 65+ Seniors</div>
+        <div class="caveat-box">⚠ Reflects the broader Census PUMA statistical area, not the exact county boundary. See How to use this dashboard below.</div>
+        <div class="cit-row">
+          <div class="cit-name">U.S. Citizen</div>
+          <div class="cit-bar-row">
+            <div class="cit-track"><div class="cit-fill" id="cit-bar-citizen" style="width:0%;background:var(--sage)"></div></div>
+            <div class="cit-pct" id="cit-pct-citizen" style="color:var(--sage)">—</div>
+          </div>
+        </div>
+        <div class="cit-row">
+          <div class="cit-name">Non-citizen</div>
+          <div class="cit-bar-row">
+            <div class="cit-track"><div class="cit-fill" id="cit-bar-noncitizen" style="width:0%;background:var(--amber)"></div></div>
+            <div class="cit-pct" id="cit-pct-noncitizen" style="color:var(--amber)">—</div>
+          </div>
+        </div>
+        <div style="font-size:10px;color:#b0aaa4;margin-top:6px">Source: ACS PUMS · CIT variable, AGEP ≥ 65</div>
+      </div>
+
+      <div class="cost-card">
+        <div class="card-title">Independent Living Benchmark</div>
+        <div class="card-sub" id="cost-sub">State-level median</div>
+        <div class="cost-value" id="cost-value">—</div>
+        <div class="cost-context">Median monthly cost for independent living communities. Silver Living coliving typically prices below this range.</div>
+        <div class="cost-source" id="cost-source">Source: SeniorLiving.org · State median only — no county or MSA data available</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="explainer">
+    <div class="explainer-title">How to use this dashboard</div>
+    <div class="explainer-grid">
+      <div class="explainer-section">
+        <h4>Screening a market</h4>
+        <p>The three headline numbers — 65+ population, how many live alone, and 10-year growth — tell you whether a county has enough seniors, whether those seniors are socially isolated (the core Silver Living guest profile), and whether that pool is expanding or contracting. Run the same lookup across several counties to compare markets side by side before committing to a location.</p>
+      </div>
+      <div class="explainer-section">
+        <h4>Reading the age chart</h4>
+        <p>All demographic metrics on this dashboard measure the 65+ population — that is your current addressable guest. The gray 55–64 bars are shown for context only: seniors in that bracket will cross into your target demographic over the next decade. Counties with large 55–64 cohorts today represent stronger long-term bets even if their current 65+ numbers look modest.</p>
+      </div>
+      <div class="explainer-section">
+        <h4>The IL cost benchmark</h4>
+        <p>Independent living communities are the most direct alternative a Silver Living guest would consider — same age group, similar social motivation, but a very different price point and level of service. The state median shown here tells you what that alternative costs. A Silver Living home priced meaningfully below this range has a clear value proposition to the market; one priced above it does not.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script src="/static/silver-living.js"></script>
+</body>
+</html>

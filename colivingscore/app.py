@@ -13,10 +13,17 @@ from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from flask import Flask, send_from_directory, request, send_file, jsonify, redirect, make_response
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from pdf.generate_report import build_pdf_from_data
+from colivingscore.silver_living import blueprint as silver_living_blueprint
 
 app = Flask(__name__, static_folder="static")
 app.config['MAX_CONTENT_LENGTH'] = 1 * 1024 * 1024  # 1 MB max request body
+
+limiter = Limiter(get_remote_address, app=app, default_limits=[])
+limiter.limit("30 per minute")(silver_living_blueprint)
+app.register_blueprint(silver_living_blueprint)
 
 stripe.api_key = os.environ.get("STRIPE_SECRET_KEY")
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET")
