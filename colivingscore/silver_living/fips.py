@@ -1,6 +1,9 @@
+import logging
 import os
 import threading
 import requests
+
+_log = logging.getLogger(__name__)
 
 STATE_FIPS = {
     "AL":"01","AK":"02","AZ":"04","AR":"05","CA":"06","CO":"08","CT":"09",
@@ -40,7 +43,9 @@ def get_counties(state_fips: str) -> list[dict]:
         if state_fips not in _county_cache:
             url = _census_url(f"?get=NAME&for=county:*&in=state:{state_fips}")
             resp = requests.get(url, timeout=10)
-            resp.raise_for_status()
+            if not resp.ok or not resp.text.strip():
+                _log.error("Census counties API bad response: status=%s body=%r", resp.status_code, resp.text[:200])
+                resp.raise_for_status()
             rows = resp.json()
             counties = [
                 {"name": row[0].split(",")[0].strip(), "fips": row[2]}
