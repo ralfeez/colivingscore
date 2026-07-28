@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "colivingfurnish",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8081", "--directory", "colivingfurnish"],
+      "port": 8081
+    },
+    {
+      "name": "fortsonhouse",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8090", "--directory", "fortsonhouse"],
+      "port": 8090
+    }
+  ]
+}
