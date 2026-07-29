@@ -550,9 +550,13 @@ def _fetch_demographics(zip_code):
         "B19013_001E",
         "B25064_001E",
     ])
+    params = {"get": variables, "for": f"zip code tabulation area:{zip_code}"}
+    census_key = os.environ.get("CENSUS_API_KEY", "")
+    if census_key:
+        params["key"] = census_key
     resp = requests.get(
         "https://api.census.gov/data/2023/acs/acs5",
-        params={"get": variables, "for": f"zip code tabulation area:{zip_code}"},
+        params=params,
         timeout=10,
     )
     if resp.status_code != 200:
