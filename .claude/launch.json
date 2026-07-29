@@ -12,6 +12,13 @@
       "runtimeExecutable": "python",
       "runtimeArgs": ["-m", "http.server", "8090", "--directory", "fortsonhouse"],
       "port": 8090
+    },
+    {
+      "name": "colivingscore",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["app.py"],
+      "cwd": "colivingscore",
+      "port": 5000
     }
   ]
 }
