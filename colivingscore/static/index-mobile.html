@@ -1604,7 +1604,7 @@ function fetchRegulatoryCheck(){
     try {
       if(window._configReady) await window._configReady;
       const ctrl = new AbortController();
-      const t = setTimeout(()=>ctrl.abort(), 45000);
+      const t = setTimeout(()=>ctrl.abort(), 170000);
       const res = await fetch(_apiUrl('/api/regulatory-check'), {
         method:'POST',
         headers:{'Content-Type':'application/json', 'X-API-Key': window._apiKey||''},
