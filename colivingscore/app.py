@@ -654,23 +654,28 @@ TENANT_LABELS = {
 
 SECTION_KEYS = [
     "executive_summary", "housing_market", "tenant_profile", "demand_drivers",
-    "supply_analysis",   "rent_pricing",   "regulatory",     "occupancy_turnover",
+    "supply_analysis",   "rent_pricing",   "occupancy_turnover",
     "swot",              "risk_analysis",  "employer_mapping","platform_strategy",
     "exit_strategy",
 ]
 
+# Regulatory deep-dive is fetched separately (see /api/regulatory-check) so it can
+# run first, use live web search, and not compete with the other 12 sections for
+# token budget or risk blowing the Gunicorn worker timeout (see that route for why).
+REGULATORY_KEYS = ["verdict", "summary", "state_level", "county_level", "city_level", "verify"]
 
-def _parse_market_sections(text):
+
+def _parse_sections(text, keys, fallback_key=None):
     """Split Claude's response into a dict keyed by section name.
 
     Tries case-insensitive matching for the exact section headers first.
-    Falls back to putting the full text in executive_summary so the
+    Falls back to putting the full text in `fallback_key` (if given) so the
     user always sees something rather than a blank page.
     """
-    result = {k: "" for k in SECTION_KEYS}
+    result = {k: "" for k in keys}
     text_upper = text.upper()
 
-    for i, key in enumerate(SECTION_KEYS):
+    for i, key in enumerate(keys):
         # Match both underscore and space variants (e.g. PLATFORM_STRATEGY or PLATFORM STRATEGY)
         header_underscore = f"## {key.upper()}"
         header_space = f"## {key.upper().replace('_', ' ')}"
@@ -681,7 +686,7 @@ def _parse_market_sections(text):
             continue
         start = text.find("\n", start) + 1
         end = len(text)
-        for next_key in SECTION_KEYS[i + 1:]:
+        for next_key in keys[i + 1:]:
             pos = text_upper.find(f"## {next_key.upper()}")
             if pos != -1 and pos < end:
                 end = pos
@@ -689,9 +694,9 @@ def _parse_market_sections(text):
         result[key] = text[start:end].strip()
 
     # If every section is empty, Claude didn't follow the format.
-    # Put the full response into executive_summary so it's visible.
-    if not any(result.values()):
-        result["executive_summary"] = text.strip()
+    # Put the full response into fallback_key so it's visible.
+    if fallback_key and not any(result.values()):
+        result[fallback_key] = text.strip()
 
     return result
 
@@ -789,9 +794,6 @@ Return your analysis using EXACTLY these section headers in this order. Be conci
 ## RENT_PRICING
 [Use your training data to provide per-room co-living rent analysis for {city}, {state}. If room-specific rates are available (Furnished Finder, Craigslist, Facebook Marketplace), list actual ranges. If room-rate data is unavailable for this market, state the local 1-bedroom rental rate and calculate 65% of that as the estimated per-room co-living rate — explain this methodology clearly. Include: utilities-included vs. excluded pricing difference, weekly vs. monthly rate comparison if relevant, how {tenant_label} rent tolerance compares to market rates, recommended per-room rate for this property and why. End with: Total estimated gross monthly income = recommended rate × {beds} rooms.]
 
-## REGULATORY
-[Local rules on room rentals in {city} / {state}. Occupancy limits (unrelated persons per unit). Any known permit requirements or enforcement actions for shared housing. Risk level: Low / Moderate / High. What to verify before purchasing.]
-
 ## OCCUPANCY_TURNOVER
 [Typical stabilized occupancy for {tenant_label} in this type of market (range). Average length of stay for this tenant type. Turnover frequency and cost per turnover estimate. Seasonal vacancy patterns. How {tenant_label} compares to other tenant types on stability.]
 
@@ -818,6 +820,129 @@ Threats:
 [Can this property convert back to single-family rental or owner-occupied? How does co-living configuration affect resale appeal and buyer pool in {city}? Long-term appreciation vs. cash flow — which play is stronger here? Estimated timeline to recoup initial investment at the projected revenue figures.]"""
 
 
+# ── Regulatory deep-dive — Claude AI + live web search ───────────────────────
+#
+# Kept as its own small, tightly-scoped call (rather than folded into the big
+# market-analysis prompt above) for two reasons: it needs live web search to be
+# meaningful — Claude's training data goes stale on local ordinances — and a
+# focused single-question call reliably finishes inside Render's Gunicorn worker
+# timeout, where a 13-section prompt + web search previously did not (see
+# known_bugs.md — that's why web search was pulled from /api/market-analysis).
+
+def _build_regulatory_prompt(address, city, county, state, zip_code, tenant_label):
+    return f"""You are a co-living regulatory research analyst. Research CURRENT, REAL regulations that could affect room rentals / co-living (shared housing with unrelated occupants) at the property below. Use live web search — do not rely on general assumptions or outdated training knowledge. Cite the actual ordinance, code section, or statute name/number wherever you find one.
+
+## PROPERTY
+- Address: {address}
+- City: {city}
+- County: {county}
+- State: {state}
+- ZIP: {zip_code}
+- Intended tenant type: {tenant_label}
+
+## WHAT TO RESEARCH
+1. State-level law governing room rentals, boarding/rooming houses, or shared housing with unrelated occupants.
+2. County-level ordinances or health/safety code that could apply (unincorporated-area rules, county licensing, etc.) — note if the address is inside city limits and county rules don't apply.
+3. City/municipal zoning and occupancy code — specifically: any limit on the number of unrelated persons who may occupy one dwelling unit, permit/license requirements for room rentals or boarding/group housing, and any known recent enforcement actions or policy changes affecting shared or co-living housing in this city.
+
+## RESPONSE FORMAT
+Return your findings using EXACTLY these section headers in this order. If you cannot find a specific rule after searching, say so explicitly rather than guessing.
+
+## VERDICT
+[Exactly one word: CLEAR, CAUTION, or RED_FLAG. RED_FLAG = you found an explicit unrelated-occupant limit, a rental/boarding-house prohibition, or a licensing requirement co-living properties commonly run afoul of. CAUTION = rules exist but are ambiguous, rarely enforced, or manageable with a permit. CLEAR = no meaningful restriction found after a genuine search.]
+
+## SUMMARY
+[1-2 plain-English sentences: the bottom-line takeaway for this investor.]
+
+## STATE_LEVEL
+[State law findings, or "No state-level restriction found" if genuinely none.]
+
+## COUNTY_LEVEL
+[County-level findings, or "No county-level restriction found" / "Not applicable — inside city limits" as appropriate.]
+
+## CITY_LEVEL
+[City/municipal findings — this is usually where occupancy limits live. Be as specific as possible: cite the code section if found.]
+
+## VERIFY
+[2-4 bullet points: exactly what the investor should verify directly with the city/county before proceeding, and which office to contact (planning department, code enforcement, business licensing, etc.)]"""
+
+
+@app.route("/api/regulatory-check", methods=["POST"])
+def api_regulatory_check():
+    if not _check_api_key():
+        return jsonify({"error": "Forbidden"}), 403
+    ip = request.headers.get("X-Forwarded-For", request.remote_addr or "").split(",")[0].strip()
+    if not _check_rate_limit(ip, limit=20):
+        return jsonify({"error": "Too many requests"}), 429
+    try:
+        data       = request.get_json(force=True)
+        address    = data.get("address", "")
+        city       = data.get("city", "")
+        county     = data.get("county", "")
+        state      = data.get("state", "")
+        zip_code   = data.get("zip", "")
+        tenant_key = data.get("tenant_key", "workforce")
+        tenant_label = TENANT_LABELS.get(tenant_key, "General Workforce")
+
+        prompt = _build_regulatory_prompt(address, city, county, state, zip_code, tenant_label)
+        client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+
+        # Try with web search first; fall back to training-data-only if it fails
+        # (same resilience pattern as /api/competitive).
+        analysis = ""
+        used_web_search = True
+        try:
+            response = client.messages.create(
+                model="claude-sonnet-4-6",
+                max_tokens=2048,
+                extra_headers={"anthropic-beta": "web-search-2025-03-05"},
+                tools=[{"type": "web_search_20250305", "name": "web_search", "max_uses": 6}],
+                messages=[{"role": "user", "content": prompt}],
+            )
+            for block in response.content:
+                if hasattr(block, "text"):
+                    analysis += block.text
+        except Exception as ws_err:
+            print(f"regulatory-check web-search attempt failed: {ws_err} — retrying without tools")
+            used_web_search = False
+            response = client.messages.create(
+                model="claude-sonnet-4-6",
+                max_tokens=2048,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            for block in response.content:
+                if hasattr(block, "text"):
+                    analysis += block.text
+
+        sections = _parse_sections(analysis, REGULATORY_KEYS)
+
+        verdict_raw = (sections.get("verdict") or "").strip().upper()
+        if "RED_FLAG" in verdict_raw or "RED FLAG" in verdict_raw:
+            verdict = "red_flag"
+        elif "CAUTION" in verdict_raw:
+            verdict = "caution"
+        elif "CLEAR" in verdict_raw:
+            verdict = "clear"
+        else:
+            # Unparsed/unexpected model output — treat as needs-review rather
+            # than silently claiming "clear".
+            verdict = "caution"
+
+        return jsonify({
+            "verdict":         verdict,
+            "verdict_raw":     sections.get("verdict", ""),
+            "summary":         sections.get("summary", ""),
+            "state_level":     sections.get("state_level", ""),
+            "county_level":    sections.get("county_level", ""),
+            "city_level":      sections.get("city_level", ""),
+            "verify":          sections.get("verify", ""),
+            "used_web_search": used_web_search,
+        })
+    except Exception as e:
+        print(f"regulatory-check error: {e}")
+        return jsonify({"error": "Internal error"}), 500
+
+
 @app.route("/api/market-analysis", methods=["POST"])
 def api_market_analysis():
     """13-section market analysis powered by Claude training data + provided property/market context."""
@@ -842,7 +967,7 @@ def api_market_analysis():
             if hasattr(block, "text"):
                 full_text += block.text
 
-        sections = _parse_market_sections(full_text)
+        sections = _parse_sections(full_text, SECTION_KEYS, fallback_key="executive_summary")
         sections["tenant_key"] = tenant_key
         sections["city"]       = city
         sections["raw"]        = full_text

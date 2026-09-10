@@ -307,7 +307,7 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
 @page{
   size:letter;
   margin:.7in .65in .9in;
-  @bottom-left{content:"CoLivingScore Pro Analysis";font-size:7.5pt;color:#718096;font-family:sans-serif}
+  @bottom-left{content:"CoLivingScore Detailed Review";font-size:7.5pt;color:#718096;font-family:sans-serif}
   @bottom-center{content:"colivingscore.com";font-size:7.5pt;color:#b0b8c4;font-family:sans-serif}
   @bottom-right{content:"Page " counter(page);font-size:7.5pt;color:#718096;font-family:sans-serif}
 }
@@ -547,9 +547,9 @@ input, select, button { font-size: 16px !important; } /* prevent iOS zoom on foc
     <div class="step-line"></div>
     <div class="step" id="step2" onclick="goToStep(2)"><div class="step-dot">2</div>Property Details</div>
     <div class="step-line"></div>
-    <div class="step" id="step3" onclick="goToStep(3)"><div class="step-dot">3</div>Free Score</div>
+    <div class="step" id="step3" onclick="goToStep(3)"><div class="step-dot">3</div>Quick Review</div>
     <div class="step-line"></div>
-    <div class="step" id="step4"><div class="step-dot">4</div>Pro Analysis</div>
+    <div class="step" id="step4"><div class="step-dot">4</div>Detailed Review</div>
   </div>
 
   <!-- ══ SCREEN 0: ADDRESS ENTRY ══ -->
@@ -774,7 +774,7 @@ input, select, button { font-size: 16px !important; } /* prevent iOS zoom on foc
       <div class="card-title" style="margin-bottom:16px">Property Audit</div>
       <div id="r-flags"></div>
       <div style="margin-top:14px;padding:10px 12px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius);font-size:11.5px;color:var(--gray-500);line-height:1.5">
-        <strong style="color:var(--gray-700)">Estimate assumptions:</strong> This score uses default expense values (reserves $350/mo, management rate 10%). The next step lets you enter your actual figures — the more accurate your inputs, the more reliable your Pro Analysis will be.
+        <strong style="color:var(--gray-700)">Estimate assumptions:</strong> This score uses default expense values (reserves $350/mo, management rate 10%). The Detailed Review lets you enter your actual figures — the more accurate your inputs, the more reliable your report will be.
       </div>
     </div>
 
@@ -809,8 +809,14 @@ input, select, button { font-size: 16px !important; } /* prevent iOS zoom on foc
   <div class="screen" id="s-pro-form">
 
     <div class="addr-strip">
-      <div class="addr-text">Pro Analysis — Financial Inputs &nbsp;·&nbsp; <span id="addr-pro-form" style="color:#4DBF8F"></span></div>
+      <div class="addr-text">Detailed Review — Financial Inputs &nbsp;·&nbsp; <span id="addr-pro-form" style="color:#4DBF8F"></span></div>
       <button style="height:28px;font-size:12px;padding:0 12px;background:transparent;color:var(--white);border:1px solid rgba(255,255,255,0.4);border-radius:var(--radius);cursor:pointer;font-family:var(--font);font-weight:500" onclick="showScreen('s-result')">← Back</button>
+    </div>
+
+    <div class="card" style="padding:16px 20px">
+      <div class="card-title" style="margin-bottom:6px">Step 1 — Live Regulatory & Zoning Check</div>
+      <div class="card-sub" style="margin-bottom:10px">Started automatically — searching state, county, and city rules on room rentals and unrelated-occupant limits for this address. Usually finishes while you fill out the form below.</div>
+      <div id="reg-check-proform"></div>
     </div>
 
     <div class="card">
@@ -963,7 +969,7 @@ input, select, button { font-size: 16px !important; } /* prevent iOS zoom on foc
 
       <div class="btn-row">
         <button class="btn-outline" onclick="showScreen('s-result')">Cancel</button>
-        <button class="btn-primary" id="btn-pro-generate">Generate Pro Analysis →</button>
+        <button class="btn-primary" id="btn-pro-generate">Review Before Generating →</button>
       </div>
     </div>
   </div>
@@ -972,15 +978,17 @@ input, select, button { font-size: 16px !important; } /* prevent iOS zoom on foc
   <div class="screen" id="s-review">
 
     <div class="addr-strip">
-      <div class="addr-text">Review Your Inputs Before Payment &nbsp;·&nbsp; <span id="addr-review" style="color:#4DBF8F"></span></div>
+      <div class="addr-text">Review Your Inputs &nbsp;·&nbsp; <span id="addr-review" style="color:#4DBF8F"></span></div>
       <button style="height:28px;font-size:12px;padding:0 12px;background:transparent;color:var(--white);border:1px solid rgba(255,255,255,0.4);border-radius:var(--radius);cursor:pointer;font-family:var(--font);font-weight:500" onclick="showScreen('s-pro-form')">← Edit Inputs</button>
     </div>
+
+    <div id="reg-check-review"></div>
 
     <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:var(--radius);padding:14px 18px;margin-bottom:4px;display:flex;align-items:flex-start;gap:12px">
       <span style="font-size:22px;line-height:1.2">📋</span>
       <div>
-        <div style="font-size:14px;font-weight:700;color:#92400e;margin-bottom:3px">Review your inputs before paying</div>
-        <div style="font-size:13px;color:#78350f;line-height:1.5">Confirm the details below are correct. When ready, click <strong>Looks Good — Pay $29</strong> at the bottom of this page to unlock your full Pro Analysis report.</div>
+        <div style="font-size:14px;font-weight:700;color:#92400e;margin-bottom:3px">Review your inputs</div>
+        <div style="font-size:13px;color:#78350f;line-height:1.5">Confirm the details below are correct. When ready, click <strong>Get My Full Report</strong> at the bottom of this page to generate your full Detailed Review report.</div>
       </div>
     </div>
 
@@ -994,18 +1002,9 @@ input, select, button { font-size: 16px !important; } /* prevent iOS zoom on foc
       <div id="rv-financials" style="margin-top:4px"></div>
     </div>
 
-    <div class="card" style="padding:20px">
-      <div class="card-title">Where should we send your report?</div>
-      <div style="margin-top:10px">
-        <input type="email" id="rv-email" placeholder="your@email.com" class="input-required" style="width:100%;box-sizing:border-box">
-        <div style="font-size:11.5px;color:var(--gray-500);margin-top:6px">We'll email you a link to re-access your report from any device.</div>
-      </div>
-    </div>
-
     <div class="card" style="text-align:center;padding:28px;background:linear-gradient(135deg,#0D2818 0%,#0D6B52 100%)">
-      <div style="font-size:13px;color:rgba(255,255,255,0.75);margin-bottom:6px">One-time payment</div>
-      <div style="font-size:36px;font-weight:700;color:var(--white);margin-bottom:6px">$29</div>
-      <div style="font-size:13px;color:rgba(255,255,255,0.75);margin-bottom:20px">Full 16-Page Pro Analysis + Downloadable PDF</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.75);margin-bottom:6px">Full 16-Page Detailed Review</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.75);margin-bottom:20px">+ Downloadable PDF</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px;text-align:left;max-width:420px;margin-left:auto;margin-right:auto">
         <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--green-mid)">✓</span>Executive Summary & Market Overview</div>
         <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--green-mid)">✓</span>Rent Pricing Analysis</div>
@@ -1016,13 +1015,10 @@ input, select, button { font-size: 16px !important; } /* prevent iOS zoom on foc
         <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--green-mid)">✓</span>Platform vs. Self-Managed</div>
         <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.85)"><span style="color:var(--green-mid)">✓</span>Downloadable PDF Report</div>
       </div>
-      <button class="btn-pro" style="height:50px;font-size:16px;padding:0 40px" id="btn-pay" disabled>
-        Looks Good — Pay $29 →
+      <button class="btn-pro" style="height:50px;font-size:16px;padding:0 40px" id="btn-pay">
+        Get My Full Report →
       </button>
-      <div style="font-size:12px;color:rgba(255,255,255,0.55);margin-top:8px">Report takes 2–4 minutes to build after payment</div>
-      <div style="margin-top:12px">
-        <a href="/static/sample-pro-report.pdf" target="_blank" style="color:rgba(255,255,255,0.75);font-size:13px;text-decoration:underline;text-underline-offset:3px">👁 View a sample report before you buy</a>
-      </div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.55);margin-top:8px">Report takes 2–4 minutes to build</div>
       <div class="text-xs mt-4" style="color:rgba(255,255,255,0.5)" id="pay-status"></div>
     </div>
 
@@ -1035,7 +1031,7 @@ input, select, button { font-size: 16px !important; } /* prevent iOS zoom on foc
   <!-- ══ SCREEN 4: PRO ANALYSIS RESULTS ══ -->  <div class="screen" id="s-pro-result">
 
     <div class="addr-strip">
-      <div class="addr-text">Pro Analysis — <span id="pr-addr" style="color:#4DBF8F"></span></div>
+      <div class="addr-text">Detailed Review — <span id="pr-addr" style="color:#4DBF8F"></span></div>
     </div>
 
     <!-- P&L Summary -->
@@ -1138,7 +1134,7 @@ input, select, button { font-size: 16px !important; } /* prevent iOS zoom on foc
     </div>
     <div class="mobile-rpt-swipe-hint">swipe left or right to navigate</div>
     <div class="addr-strip">
-      <div class="addr-text">Pro Analysis — <span id="rpt-addr" style="color:#4DBF8F"></span></div>
+      <div class="addr-text">Detailed Review — <span id="rpt-addr" style="color:#4DBF8F"></span></div>
       <div style="display:flex;gap:8px;align-items:center">
         <button id="btn-pdf-hdr" style="height:28px;font-size:12px;padding:0 12px;background:transparent;color:var(--white);border:1px solid rgba(255,255,255,0.4);border-radius:var(--radius);cursor:pointer;font-family:var(--font);font-weight:500">🖨 Print Report</button>
       </div>
@@ -1147,7 +1143,7 @@ input, select, button { font-size: 16px !important; } /* prevent iOS zoom on foc
     <div id="print-cover">
       <div class="pcv-top">
         <div class="pcv-wordmark">CoLiving<span>Score</span>.com</div>
-        <div class="pcv-report-type">Pro Analysis Report</div>
+        <div class="pcv-report-type">Detailed Review Report</div>
         <div class="pcv-address" id="pc-address"></div>
         <div class="pcv-city" id="pc-city"></div>
         <div class="pcv-rule"></div>
@@ -1247,7 +1243,7 @@ function scoreProperty(inp, tenantKey){
     return {score:20, band:'No Go', hoaFlag:'prohibits',
       topFlags:[{factor:'HOA prohibits rentals', deduction:80,
         message:'This HOA does not allow rental activity. This is a legal barrier that prevents co-living use until formally resolved with the HOA board.'}],
-      gross:0, noi:0, total:0, be:0, dscr:0};
+      allSortedFlags:[], gross:0, noi:0, net:0, be:0, dscr:0};
   }
 
   const factors = [];
@@ -1449,7 +1445,7 @@ function buildReferral(score, inp){
   } else if(score >= 65){
     html = `<div class="referral-card">
       <div class="ref-title">Moderate candidate — worth a closer look</div>
-      <div class="ref-desc">This property has potential with the right improvements. A Pro Analysis will show you exactly what to fix and the ROI on each change.</div>
+      <div class="ref-desc">This property has potential with the right improvements. A Detailed Review will show you exactly what to fix and the ROI on each change.</div>
     </div>`;
   } else {
     html = `<div class="referral-card">
@@ -1464,24 +1460,24 @@ function buildReferral(score, inp){
 
 function buildProGate(score, inp){
   const headline = score < 50
-    ? 'Pro Analysis — Understand Why & What It Would Take to Fix It'
-    : 'Pro Analysis — Full 16-Page Financial Report';
+    ? 'Detailed Review — Understand Why & What It Would Take to Fix It'
+    : 'Detailed Review — Full 16-Page Financial Report';
   const html = `<div class="pro-gate">
     <h3>${headline}</h3>
-    <p>Get the complete picture: 16-page market analysis, itemized P&amp;L, financial ratios, location intelligence, SWOT, risk analysis, and a downloadable PDF.</p>
+    <p>This Quick Review is just the start. The Detailed Review adds a live regulatory check, itemized P&amp;L, financial ratios, location intelligence, SWOT, risk analysis, and a downloadable/printable report — using the details you already entered above, no re-entry needed.</p>
     <div class="pro-features">
-      <div class="pro-feature">Executive Summary & Market Overview</div>
+      <div class="pro-feature">Live Regulatory & Zoning Check</div>
       <div class="pro-feature">Rent Pricing Analysis</div>
       <div class="pro-feature">P&L, DSCR & Key Ratios</div>
       <div class="pro-feature">Location Intelligence</div>
       <div class="pro-feature">SWOT & Risk Analysis</div>
       <div class="pro-feature">Capital Improvement ROI</div>
       <div class="pro-feature">Platform vs. Self-Managed</div>
-      <div class="pro-feature">Downloadable PDF Report</div>
+      <div class="pro-feature">Printable / Downloadable Report</div>
     </div>
-    <button class="btn-pro" onclick="startProAnalysis()">Get My Pro Analysis →</button>
+    <button class="btn-pro" onclick="startProAnalysis()">Continue to Detailed Review →</button>
     <div style="margin-top:14px">
-      <a href="/static/sample-pro-report.pdf" target="_blank" style="color:rgba(255,255,255,0.75);font-size:13px;text-decoration:underline;text-underline-offset:3px">👁 View a sample report before you buy</a>
+      <a href="/static/sample-pro-report.pdf" target="_blank" style="color:rgba(255,255,255,0.75);font-size:13px;text-decoration:underline;text-underline-offset:3px">👁 View a sample report</a>
     </div>
   </div>`;
   document.getElementById('r-pro-gate').innerHTML = html;
@@ -1557,72 +1553,82 @@ function showReviewScreen(){
   setStep(4);
 }
 
-async function initiatePayment(){
-  const btn = document.getElementById('btn-pay');
-  if(btn.disabled) return;
-  btn.disabled = true;
-  const statusEl = document.getElementById('pay-status');
-  const emailVal = (document.getElementById('rv-email').value || '').trim();
-  if(!emailVal || !emailVal.includes('@')){
-    statusEl.textContent = 'Please enter a valid email address above.';
-    btn.disabled = false;
-    return;
+function initiatePayment(){
+  window._proInputs = window._pendingProInputs || {};
+  runFullProAnalysis(window._proInputs);
+}
+
+// ── REGULATORY DEEP-DIVE — step 1 of the Detailed Review ─────────────────────
+// Fired the moment the user enters the Detailed Review (startProAnalysis) so it
+// runs live-search in the background while they fill out the financial inputs
+// form — by the time they reach the review screen it has usually already
+// resolved. Non-blocking: a slow/failed check never stops the rest of the flow.
+function escText(s){
+  return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function regBannerHTML(data, pending){
+  if(pending){
+    return `<div class="banner" style="background:var(--gray-50);border:1px solid var(--gray-200);color:var(--gray-600)">
+      <div class="banner-icon" style="background:var(--gray-400);color:var(--white)">🔍</div>
+      <div class="banner-text"><strong>Checking local regulations…</strong> Live search of state, county, and city rules on room rentals and occupancy limits.</div>
+    </div>`;
   }
-  btn.disabled = true;
-  btn.textContent = 'Connecting to payment...';
-  statusEl.textContent = '';
+  if(!data){
+    return `<div class="banner caution"><div class="banner-icon">!</div><div class="banner-text"><strong>Regulatory check unavailable.</strong> The live lookup didn't complete — verify local rules directly with the city or county before proceeding.</div></div>`;
+  }
+  const cfg = {
+    clear:    {type:'success',  icon:'✓', title:'No red flags found'},
+    caution:  {type:'caution',  icon:'!', title:'Caution — review before proceeding'},
+    red_flag: {type:'critical', icon:'✕', title:'Red Flag — potential regulatory barrier'},
+  }[data.verdict] || {type:'caution', icon:'!', title:'Review needed'};
+  return `<div class="banner ${cfg.type}"><div class="banner-icon">${cfg.icon}</div><div class="banner-text"><strong>${cfg.title}.</strong> ${escText(data.summary)}</div></div>`;
+}
 
-  // Save inputs to sessionStorage so we can recover them after Stripe redirect
-  sessionStorage.setItem('cls_pending_pro', JSON.stringify(window._pendingProInputs || {}));
-  sessionStorage.setItem('cls_free_inputs', JSON.stringify({
-    ...(window._inputs || {}),
-    _address: window._address || '',
-    _place:   window._place   || null,
-  }));
-  if(window._score != null) sessionStorage.setItem('cls_free_score', String(window._score));
-  if(window._fin   != null) sessionStorage.setItem('cls_fin',        JSON.stringify(window._fin));
+function renderRegBanners(){
+  const html = window._regPending ? regBannerHTML(null, true) : regBannerHTML(window._regData, false);
+  ['reg-check-proform','reg-check-review'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.innerHTML = html;
+  });
+}
 
-  try {
-    const res = await fetch(_apiUrl('/create-checkout-session'), {
-      method: 'POST',
-      headers: {'Content-Type':'application/json', 'X-API-Key': window._apiKey||''},
-      body: JSON.stringify({
-        ...(window._pendingProInputs || {}),
-        _email:    emailVal,
-        _score:    window._score || 0,
-        _addr:     window._address || '',
-        _city:     (window._place || {}).city    || '',
-        _state:    (window._place || {}).state   || '',
-        _zip:      (window._place || {}).zip     || '',
-        _lat:      (window._place || {}).lat     || 0,
-        _lng:      (window._place || {}).lng     || 0,
-        _beds:     (window._inputs || {}).beds     || 4,
-        _baths:    (window._inputs || {}).baths    || 2,
-        _sqft:     (window._inputs || {}).sqft     || 0,
-        _tenant:   (window._inputs || {}).tenant   || 'workforce',
-        _floors:   (window._inputs || {}).floors   || 1,
-        _garage:   (window._inputs || {}).garage   || 0,
-        _transit:   (window._inputs || {}).transit   || 'walkable',
-        _hospital:  (window._inputs || {}).hospital  || 'close',
-        _laundry:   (window._inputs || {}).laundry   || 'provided',
-        _carport:   (window._inputs || {}).carport   || 0,
-        _uncovered: (window._inputs || {}).uncovered || 0,
-        _hoa:       (window._inputs || {}).hoa       || 'none',
-      })
-    });
-    const data = await res.json();
-    if(data.url){
-      window.location.href = data.url;
-    } else {
-      statusEl.textContent = 'Payment error: ' + (data.error || 'Unknown error');
-      btn.disabled = false;
-      btn.textContent = 'Looks Good — Pay $29 →';
+function fetchRegulatoryCheck(){
+  const inp   = window._inputs || {};
+  const place = window._place  || {};
+  window._regData    = null;
+  window._regPending  = true;
+  renderRegBanners();
+
+  window._regPromise = (async () => {
+    try {
+      if(window._configReady) await window._configReady;
+      const ctrl = new AbortController();
+      const t = setTimeout(()=>ctrl.abort(), 45000);
+      const res = await fetch(_apiUrl('/api/regulatory-check'), {
+        method:'POST',
+        headers:{'Content-Type':'application/json', 'X-API-Key': window._apiKey||''},
+        signal: ctrl.signal,
+        body: JSON.stringify({
+          address:    window._address || '',
+          city:       place.city   || '',
+          county:     place.county || '',
+          state:      place.state  || '',
+          zip:        place.zip    || '',
+          tenant_key: inp.tenant   || 'workforce',
+        })
+      });
+      clearTimeout(t);
+      const data = await res.json();
+      window._regData = data && !data.error ? data : null;
+    } catch(e){
+      console.warn('regulatory-check failed:', e);
+      window._regData = null;
     }
-  } catch(err){
-    statusEl.textContent = 'Connection error. Please try again.';
-    btn.disabled = false;
-    btn.textContent = 'Looks Good — Pay $29 →';
-  }
+    window._regPending = false;
+    renderRegBanners();
+    return window._regData;
+  })();
 }
 
 // ── POST-PAYMENT SCORECARD ────────────────────────────────────────────────────
@@ -1926,6 +1932,7 @@ function startProAnalysis(){
   document.getElementById('p-rent-display').textContent = '$' + rentVal.toLocaleString();
   showScreen('s-pro-form');
   setStep(4);
+  fetchRegulatoryCheck();
 }
 
 function generateProAnalysis(overrideInputs){
@@ -2072,7 +2079,7 @@ function generateProAnalysis(overrideInputs){
 function downloadPDF(){
   var addr = ((window._address || (window._inputs && window._inputs.address) || 'Property')).split(',')[0].trim();
   var prev = document.title;
-  document.title = 'CoLivingScore Pro Analysis \u2014 ' + addr;
+  document.title = 'CoLivingScore Detailed Review \u2014 ' + addr;
   window.print();
   document.title = prev;
 }
@@ -2305,11 +2312,6 @@ document.addEventListener('DOMContentLoaded', function(){
   wire('btn-pdf-hdr',     downloadPDF);
   wire('btn-back-pro',    function(){ showScreen('s-result'); });
   wire('btn-pay',         initiatePayment);
-  document.getElementById('rv-email').addEventListener('input', function(){
-    const valid = this.value.trim().includes('@') && this.value.trim().length > 3;
-    this.classList.toggle('input-required', !valid);
-    document.getElementById('btn-pay').disabled = !valid;
-  });
   document.getElementById('p-mortgage').addEventListener('input', function(){
     this.classList.toggle('input-required', !this.value.trim());
   });
@@ -2376,7 +2378,7 @@ document.addEventListener('DOMContentLoaded', function(){
       if(c.score) window._score = c.score;
       buildReportShell();
       generateProAnalysis(window._proInputs);
-      renderPagedReport(window._fastData, window._aiData);
+      renderPagedReport(window._fastData, window._aiData, window._regData || null);
       window._reportPreloaded = true;
     }
     showScorecardScreen(window._proInputs);
@@ -2610,6 +2612,11 @@ async function runFullProAnalysis(overrideInputs){
   const inp   = window._inputs || {};
   const place = window._place  || {};
 
+  // Step 0 — Regulatory deep-dive was kicked off when the user entered the
+  // Detailed Review (startProAnalysis); it's usually already done by now.
+  if(!window._regPromise) fetchRegulatoryCheck();
+  await window._regPromise;
+
   // Step 1 — Fast data: RentCast, WalkScore, Nearby, Demographics
   let fastData = {};
   try {
@@ -2663,7 +2670,7 @@ async function runFullProAnalysis(overrideInputs){
 
   stopLoadingScreen();
   generateProAnalysis(overrideInputs);
-  renderPagedReport(fastData, aiData);
+  renderPagedReport(fastData, aiData, window._regData);
   showScreen('s-pro-report');
   showReportPage(1);
   saveReportToLocalStorage();
@@ -2687,7 +2694,7 @@ async function runFullProAnalysis(overrideInputs){
 }
 
 // ── PAGE-BY-PAGE RENDERER ─────────────────────────────────────────────────────
-function renderPagedReport(md, ai){
+function renderPagedReport(md, ai, rg){
   const inp  = window._inputs || {};
   const fin  = window._fin   || {};
   const pf   = window._proFin || {};
@@ -2714,6 +2721,7 @@ function renderPagedReport(md, ai){
   const dscr   = pf.dscr   || 0;
   const fmt    = n => n!=null ? '$'+Math.abs(Math.round(n)).toLocaleString() : '—';
   set('rpt-pg-1',`
+    ${regBannerHTML(rg, false)}
     <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--gray-100)">
       <div style="text-align:center;min-width:90px">
         <div style="font-size:60px;font-weight:800;color:${bColor};line-height:1">${score}</div>
@@ -2905,7 +2913,13 @@ function renderPagedReport(md, ai){
         <p><strong>Furnishing costs:</strong> Most co-living tenants expect a furnished room. Budget furnishing as a one-time capital expense before your first tenant.</p>
       </div>
     </div>`;
-  set('rpt-pg-8', renderAIContent(ai.regulatory) + beAware);
+  const regBody = rg ? [
+    rg.state_level  ? `## State-Level\n${rg.state_level}`    : '',
+    rg.county_level ? `## County-Level\n${rg.county_level}`  : '',
+    rg.city_level   ? `## City / Municipal\n${rg.city_level}` : '',
+    rg.verify       ? `## What To Verify\n${rg.verify}`      : '',
+  ].filter(Boolean).join('\n\n') : '';
+  set('rpt-pg-8', regBannerHTML(rg, false) + renderAIContent(regBody) + beAware);
 
   // ── PAGE 9: P&L Waterfall + Occupancy Sensitivity ────────────────────
   {
@@ -3108,6 +3122,7 @@ function saveReportToLocalStorage(){
       proFin:    window._proFin    || {},
       fastData:  window._fastData  || {},
       aiData:    window._aiData    || {},
+      regData:   window._regData   || null,
       score:     window._score     || 0,
       fin:       window._fin       || {},
     }));
@@ -3146,11 +3161,12 @@ function restoreReport(){
     window._proFin    = data.proFin;
     window._fastData  = data.fastData;
     window._aiData    = data.aiData;
+    window._regData   = data.regData || null;
     window._score     = data.score;
     window._fin       = data.fin;
     buildReportShell();
     generateProAnalysis(data.proInputs);
-    renderPagedReport(data.fastData || {}, data.aiData || {});
+    renderPagedReport(data.fastData || {}, data.aiData || {}, window._regData);
     showScreen('s-pro-report');
     showReportPage(1);
   } catch(e){ alert('Could not restore report. Please try re-running the analysis.'); }
