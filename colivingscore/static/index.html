@@ -437,7 +437,7 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
       <div class="field-grid">
         <div class="field">
           <label>Bedrooms <span class="req">*</span><span class="tip" data-tip="Minimum recommended bedroom size: 70 sq ft with a 7 ft or higher ceiling and a legal egress window. Local regulations may also apply — verify requirements in your area before converting or adding bedrooms. This tool cannot verify individual room sizes from total square footage alone.">?</span></label>
-          <select id="f-beds">
+          <select id="f-beds" onchange="updateEnsuiteOptions()">
             <option value="1">1</option>
             <option value="2">2</option>
             <option value="3">3</option>
@@ -454,7 +454,7 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
         </div>
         <div class="field">
           <label>Bathrooms <span class="req">*</span></label>
-          <select id="f-baths">
+          <select id="f-baths" onchange="updateEnsuiteOptions()">
             <option value="1">1</option>
             <option value="2">2</option>
             <option value="3" selected>3</option>
@@ -468,6 +468,13 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
             <option value="11">11</option>
             <option value="12">12</option>
           </select>
+        </div>
+        <div class="field">
+          <label>En Suite Bedrooms <span class="tip" data-tip="A bedroom with its own private, attached bathroom used only by that bedroom's occupant. An en suite bathroom is not available to the rest of the household, so it does not count toward the shared bathrooms the co-living score is based on.">?</span></label>
+          <select id="f-ensuites">
+            <option value="0" selected>0</option>
+          </select>
+          <div class="field-hint">Bedrooms with a private bath — reduces shared bathrooms available to the rest of the home</div>
         </div>
         <div class="field">
           <label>Half Baths</label>
@@ -1012,10 +1019,21 @@ function parkingScore(inp){
   return q / (beds * 100);
 }
 
+function updateEnsuiteOptions(){
+  const beds = parseInt(document.getElementById('f-beds').value)||1;
+  const baths = parseInt(document.getElementById('f-baths').value)||1;
+  const max = Math.min(beds, baths);
+  const sel = document.getElementById('f-ensuites');
+  const current = Math.min(parseInt(sel.value)||0, max);
+  sel.innerHTML = Array.from({length:max+1}, (_,i)=>
+    `<option value="${i}"${i===current?' selected':''}>${i}</option>`).join('');
+}
+
 function getInputs(){
   return {
     beds:      parseInt(document.getElementById('f-beds').value),
     baths:     parseInt(document.getElementById('f-baths').value),
+    ensuites:  parseInt(document.getElementById('f-ensuites').value)||0,
     halfbaths: parseInt(document.getElementById('f-halfbaths').value),
     sqft:      parseInt(document.getElementById('f-sqft').value),
     floors:    document.getElementById('f-floors').value,
@@ -1059,17 +1077,32 @@ function scoreProperty(inp, tenantKey){
     return {score:20, band:'No Go', hoaFlag:'prohibits',
       topFlags:[{factor:'HOA prohibits rentals', deduction:80,
         message:'This HOA does not allow rental activity. This is a legal barrier that prevents co-living use until formally resolved with the HOA board.'}],
-      allSortedFlags:[], gross:0, noi:0, net:0, be:0, dscr:0};
+      allSortedFlags:[], gross:0, noi:0, net:0, be:0, dscr:0, noSharedBath:false};
   }
 
   const factors = [];
 
-  // 1. Bathroom ratio
-  const fullBaths = inp.baths || 1;
-  const ratio = inp.beds / fullBaths;
-  const bathPct = ratio > 2.5 ? 1.0 : ratio > 2.0 ? 0.67 : ratio > 1.5 ? 0.33 : 0;
+  // 1. Bathroom ratio — en suite bedrooms have a private bath that isn't
+  // available to the rest of the household, so both the bedroom and its
+  // bathroom drop out of the shared-bathroom calculation entirely.
+  const fullBaths   = inp.baths || 1;
+  const ensuites    = Math.min(inp.ensuites||0, inp.beds, fullBaths);
+  const sharedBeds   = inp.beds - ensuites;
+  const sharedBaths  = fullBaths - ensuites;
+  const noSharedBath = sharedBeds > 0 && sharedBaths <= 0;
+  let bathPct;
+  if(sharedBeds <= 0){
+    bathPct = 0; // every bedroom is en suite — nobody needs to share a bathroom
+  } else if(noSharedBath){
+    bathPct = 1.0; // shared bedrooms remain but zero shared bathrooms are left
+  } else {
+    const ratio = sharedBeds / sharedBaths;
+    bathPct = ratio > 2.5 ? 1.0 : ratio > 2.0 ? 0.67 : ratio > 1.5 ? 0.33 : 0;
+  }
   factors.push({factor:'Bathroom ratio', deduction:Math.round(p.bathW * bathPct),
-    message:'Additional bathrooms will improve the score, increase rent values, and make the home a better fit for this tenant type.'});
+    message: noSharedBath
+      ? 'Every bathroom is assigned as an en suite, leaving the remaining bedroom(s) with no shared bathroom at all.'
+      : 'Additional bathrooms will improve the score, increase rent values, and make the home a better fit for this tenant type.'});
 
   // 2. Sqft per bed
   const sqpp = inp.sqft / inp.beds;
@@ -1163,7 +1196,7 @@ function scoreProperty(inp, tenantKey){
 
   const topFlags = allSortedFlags.slice(0,3);
 
-  return {score, band, hoaFlag, topFlags, allSortedFlags, gross, noi, net, be, dscr};
+  return {score, band, hoaFlag, topFlags, allSortedFlags, gross, noi, net, be, dscr, noSharedBath};
 }
 
 // ── CALCULATE & SHOW SCORE ────────────────────────────────────────────────────
@@ -1225,6 +1258,10 @@ function buildAuditFlags(inp, res){
   const html = [];
   const flag = (type, title, body) =>
     `<div class="banner ${type}"><div class="banner-icon">${type==='success'?'✓':type==='caution'?'!':'✕'}</div><div class="banner-text"><strong>${title}</strong> ${body}</div></div>`;
+
+  // No shared bathroom — always shown, this is a dealbreaker regardless of score
+  if(res.noSharedBath)
+    html.push(flag('critical','No shared bathroom available','Every bathroom in this property is assigned as an en suite, leaving the remaining bedroom(s) with no shared bathroom at all. Shared bathrooms may be too low for this property to work as a co-living home — add a shared bathroom or reduce the en suite count.'));
 
   // HOA — always shown
   if(inp.hoa==='prohibits')
@@ -1341,6 +1378,8 @@ function showReviewScreen(){
   document.getElementById('rv-property').innerHTML =
     row('Bedrooms', beds) +
     row('Bathrooms', (inp.baths || '—') + (inp.halfbaths ? ' full / '+inp.halfbaths+' half' : '')) +
+    row('En Suite Bedrooms', inp.ensuites || 0) +
+    row('Shared Bathrooms', Math.max(0, (inp.baths||0) - (inp.ensuites||0))) +
     row('Square Footage', inp.sqft ? inp.sqft.toLocaleString() + ' sq ft' : '—') +
     row('Stories', floorsLabel(inp.floors)) +
     row('Parking', (inp.garage||0) + ' garage · ' + (inp.carport||0) + ' carport · ' + (inp.uncovered||0) + ' uncovered') +
@@ -1932,6 +1971,8 @@ window.initAutocomplete = function(){
 // ── WIRE BUTTONS ─────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function(){
   const wire = (id, fn) => { const el = document.getElementById(id); if(el) el.addEventListener('click', fn); };
+
+  updateEnsuiteOptions();
 
   // Load Google Maps JS API dynamically using key from /config
   window._configReady = fetch('/config').then(r=>r.json()).then(cfg=>{
