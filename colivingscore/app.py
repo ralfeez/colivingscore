@@ -606,13 +606,13 @@ def _haversine_miles(lat1, lng1, lat2, lng2):
 
 
 TENANT_AMENITY_TYPES = {
-    "nurses":    ["pharmacy", "grocery_or_supermarket", "cafe"],
-    "tech":      ["cafe", "gym", "grocery_or_supermarket", "park"],
-    "trades":    ["hardware_store", "gas_station", "restaurant", "convenience_store"],
-    "students":  ["cafe", "grocery_or_supermarket", "gym", "restaurant", "university"],
-    "seniors":   ["pharmacy", "grocery_or_supermarket", "restaurant", "park"],
-    "sober":     ["pharmacy", "grocery_or_supermarket", "park", "cafe"],
-    "workforce": ["grocery_or_supermarket", "gas_station", "gym", "restaurant"],
+    "nurses":              ["pharmacy", "grocery_or_supermarket", "cafe"],
+    "young_professionals": ["cafe", "restaurant", "gym", "bar"],
+    "digital_nomads":      ["cafe", "park", "grocery_or_supermarket", "gym"],
+    "students":            ["cafe", "grocery_or_supermarket", "gym", "restaurant", "university"],
+    "seniors":             ["pharmacy", "grocery_or_supermarket", "restaurant", "park"],
+    "sober":               ["pharmacy", "grocery_or_supermarket", "park", "cafe"],
+    "workforce":           ["grocery_or_supermarket", "gas_station", "gym", "restaurant"],
 }
 
 
@@ -643,13 +643,13 @@ def api_demographics():
 # ── Full market analysis — Claude AI + web search (15-page report) ───────────
 
 TENANT_LABELS = {
-    "nurses":    "Travel Nurses",
-    "tech":      "Tech / Remote Workers",
-    "trades":    "Construction / Trades Workers",
-    "students":  "Students",
-    "seniors":   "Seniors 55+",
-    "sober":     "Sober Living",
-    "workforce": "General Workforce",
+    "nurses":              "Travel Nurses",
+    "young_professionals": "Young Professionals",
+    "digital_nomads":      "Digital Nomads / Remote Workers",
+    "students":            "Students",
+    "seniors":             "Seniors 55+",
+    "sober":               "Sober Living",
+    "workforce":           "Workforce & Essential Workers",
 }
 
 SECTION_KEYS = [
@@ -714,7 +714,7 @@ def _build_market_analysis_prompt(data):
     mortgage   = data.get("mortgage", 0)
     mgmt_model = data.get("mgmt_model", "self")
 
-    tenant_label = TENANT_LABELS.get(tenant_key, "General Workforce")
+    tenant_label = TENANT_LABELS.get(tenant_key, "Workforce & Essential Workers")
 
     # Gathered API data provided as context
     ws  = data.get("walkscore", {})
@@ -882,7 +882,7 @@ def api_regulatory_check():
         state      = data.get("state", "")
         zip_code   = data.get("zip", "")
         tenant_key = data.get("tenant_key", "workforce")
-        tenant_label = TENANT_LABELS.get(tenant_key, "General Workforce")
+        tenant_label = TENANT_LABELS.get(tenant_key, "Workforce & Essential Workers")
 
         prompt = _build_regulatory_prompt(address, city, county, state, zip_code, tenant_label)
         client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
@@ -995,11 +995,11 @@ TENANT_SEARCH_PROMPTS = {
     "nurses": (
         "travel nurse housing, furnished rooms for rent, co-living, nurse housing, short-term rentals"
     ),
-    "tech": (
-        "co-living, coliving, shared housing, furnished rooms for rent, remote worker housing"
+    "young_professionals": (
+        "co-living, coliving, shared housing, furnished rooms for rent, young professional housing, roommate matching"
     ),
-    "trades": (
-        "worker housing, rooms for rent, weekly rentals, shared housing, construction worker housing"
+    "digital_nomads": (
+        "co-living, coliving, digital nomad housing, remote worker housing, furnished rooms for rent, coworking"
     ),
     "students": (
         "student housing, rooms for rent near university, shared student housing, off-campus housing"

@@ -22,27 +22,46 @@ Scores are clamped to a minimum of 0.
 
 ## Factor Penalty Weights (max points deducted per factor)
 
-| Factor           | Nurses | Tech | Trades | Students | Seniors | Sober | Workforce |
-|------------------|--------|------|--------|----------|---------|-------|-----------|
-| Bathroom ratio   | 25     | 18   | 18     | 18       | 25      | 18    | 18        |
-| Sqft per bed     | 12     | 12   | 12     | 12       | 12      | 12    | 12        |
-| Parking          | 12     | 12   | 12     | 6        | 12      | 6     | 12        |
-| Transit          | 10     | 8    | 8      | 25       | 15      | 8     | 8         |
-| Hospital         | 20     | 4    | 4      | 4        | 14      | 10    | 6         |
-| Laundry          | 10     | 10   | 10     | 10       | 10      | 10    | 10        |
-| Tenant churn     | 8      | 4    | 5      | 3        | 0       | 2     | 5         |
+| Factor         | Nurses | Young Pros | Digital Nomads | Students | Seniors | Sober | Workforce |
+|----------------|--------|------------|-----------------|----------|---------|-------|-----------|
+| Bathroom ratio | 25     | 18         | 18              | 18       | 25      | 18    | 18        |
+| Sqft per bed   | 12     | 12         | 12              | 12       | 12      | 12    | 12        |
+| Parking        | 12     | 8          | 8               | 6        | 12      | 6     | 12        |
+| Transit        | 10     | 15         | 5               | 25       | 15      | 8     | 8         |
+| Hospital       | 20     | 4          | 2               | 4        | 14      | 10    | 6         |
+| Laundry        | 10     | 10         | 10              | 10       | 10      | 10    | 10        |
+| Tenant churn   | 8      | 4          | 6               | 3        | 0       | 2     | 5         |
+
+Tenant types follow the seven guest types defined in
+`CoLiving_Guest_Types_WhitePaper.docx`. "Tech / Remote Workers" was split into
+**Young Professionals** and **Digital Nomads / Remote Workers** — the
+whitepaper treats these as distinct guest types with different needs (young
+professionals: walkable neighborhoods, aesthetics, moderate transit reliance;
+digital nomads: internet/workspace quality, low reliance on local transit or
+parking, frequent travel). "Construction / Trades" was folded into
+**Workforce & Essential Workers**, matching the whitepaper's broader
+definition of that segment.
 
 Notes:
-- Parking max penalty is halved for Students and Sober Living — these tenant
-  types are less likely to own vehicles.
-- Hospital weight is highest for Nurses (commute) and Seniors (medical access).
-- Transit weight is highest for Students, who most commonly rely on public transit.
+- Parking max penalty is reduced for Students, Sober Living, Young
+  Professionals, and Digital Nomads — these tenant types are less likely to
+  be car-dependent (whitepaper: "many in this segment are car-light").
+- Hospital weight is highest for Nurses (commute) and Seniors (medical
+  access); lowest for Digital Nomads (not mentioned as a factor at all in
+  the whitepaper).
+- Transit weight is highest for Students, who most commonly rely on public
+  transit. Young Professionals also weight transit relatively high (walkable/
+  transit-corridor markets are an explicit green flag in the whitepaper).
+  Digital Nomads weight it low — the whitepaper's mobility concern for this
+  segment is airport access, not local transit.
 - Laundry is a flat penalty regardless of tenant type — all midterm renters
   expect in-home laundry as a baseline amenity.
 - Tenant churn penalty reflects the real operational cost of frequent tenant
   turnover: cleaning, re-listing, gap weeks, and management burden. Seniors
-  receive no penalty as the most stable tenant type. Nurses receive the highest
-  penalty due to standard 3-month travel contracts.
+  receive no penalty as the most stable tenant type. Nurses receive the
+  highest penalty due to standard 3-month travel contracts. Digital Nomads
+  are weighted above Young Professionals — the whitepaper describes typical
+  nomad stays as 3-6 months versus a young professional's longer tenure.
 
 ---
 
@@ -140,16 +159,16 @@ factors are present, this might be an expensive addition.
 
 ### Tenant Churn / Turnover (flat penalty by tenant type)
 
-| Tenant Type         | Penalty | Rationale                                              |
-|---------------------|---------|--------------------------------------------------------|
-| Seniors 55+         | 0       | Most stable, long stays, very low churn                |
-| Sober Living        | −2      | Program-structured, medium stay, reliable income       |
-| Students            | −3      | Long academic-year stays, but seasonal vacancy risk    |
-| Tech / Remote       | −4      | Medium stay, market-driven, moderate churn             |
-| General Workforce   | −5      | Variable stay length, job-dependent instability        |
-| Construction/Trades | −5      | Project-based work, variable duration                  |
-| Travel Nurses       | −8      | Highest churn — 3-month contracts standard; turnover   |
-|                     |         | cost is real and frequent                              |
+| Tenant Type               | Penalty | Rationale                                              |
+|---------------------------|---------|--------------------------------------------------------|
+| Seniors 55+               | 0       | Most stable, long stays, very low churn                |
+| Sober Living              | −2      | Program-structured, medium stay, reliable income       |
+| Students                  | −3      | Long academic-year stays, but seasonal vacancy risk    |
+| Young Professionals       | −4      | Longer tenures, but in career/life transition          |
+| Workforce & Essential Wkrs| −5      | Variable stay length, job-dependent instability        |
+| Digital Nomads            | −6      | Typical 3–6 month stays, though some extend or return  |
+| Travel Nurses             | −8      | Highest churn — 3-month contracts standard; turnover   |
+|                           |         | cost is real and frequent                              |
 
 Rationale: Churn affects profitability beyond rent rate. Frequent turnover means
 cleaning costs, re-listing time, gap weeks between tenants, and higher management
@@ -261,15 +280,20 @@ taxes, insurance, utilities, management rate) rather than the free score default
 
 Used when no rent is entered. Users should override with local market rates.
 
-| Tenant Type         | Default Rent/Room |
-|---------------------|-------------------|
-| Travel Nurses       | $1,100            |
-| Tech / Remote       | $1,000            |
-| Construction/Trades | $950              |
-| Students            | $800              |
-| Seniors 55+         | $900              |
-| Sober Living        | $850              |
-| General Workforce   | $875              |
+| Tenant Type                 | Default Rent/Room |
+|------------------------------|-------------------|
+| Travel Nurses                | $1,100            |
+| Young Professionals          | $1,150            |
+| Digital Nomads / Remote Wkrs | $1,100            |
+| Students                     | $800              |
+| Seniors 55+                  | $900              |
+| Sober Living                 | $850              |
+| Workforce & Essential Wkrs   | $875              |
+
+Young Professionals and Digital Nomads defaults come from the whitepaper's
+own cited figures: young professionals "$950 to $1,300/month all-inclusive"
+(midpoint-ish, rounded), and the whitepaper's own nomad marketing example
+("Live in [City] for $1,100/month all-inclusive").
 
 ---
 
@@ -290,6 +314,14 @@ The free score uses a fixed 15% assumption.
 ---
 
 ## Changelog
+
+### 2026-09-11
+- **Changed:** Tenant types now match the seven guest types in
+  `CoLiving_Guest_Types_WhitePaper.docx`. "Tech / Remote Workers" split into
+  "Young Professionals" and "Digital Nomads / Remote Workers" (distinct
+  weights, default rents, and copy per the whitepaper). "Construction /
+  Trades" removed and folded into "Workforce" (relabeled "Workforce &
+  Essential Workers" to reflect the broader scope).
 
 ### 2026-09-10
 - **Changed:** Bathroom ratio factor now subtracts en suite bedrooms (and an

@@ -712,12 +712,12 @@ input, select, button { font-size: 16px !important; } /* prevent iOS zoom on foc
           <label>Target Tenant Type <span class="req">*</span></label>
           <select id="f-tenant" onchange="updateRentDefault()">
             <option value="nurses" selected>Travel Nurses</option>
-            <option value="tech">Tech / Remote Workers</option>
-            <option value="trades">Construction / Trades</option>
+            <option value="young_professionals">Young Professionals</option>
+            <option value="digital_nomads">Digital Nomads / Remote Workers</option>
             <option value="students">Students</option>
             <option value="seniors">Seniors 55+</option>
             <option value="sober">Sober Living</option>
-            <option value="workforce">General Workforce</option>
+            <option value="workforce">Workforce &amp; Essential Workers</option>
           </select>
         </div>
         <div class="step-field full">
@@ -1183,13 +1183,13 @@ function floorsNum(f){ return f==='split'?2:parseInt(f)||1; }
 function floorsLabel(f){ return {1:'1 story','1':'1 story',2:'2 stories','2':'2 stories',3:'3 stories','3':'3 stories',split:'Split level'}[f]||f; }
 
 const TENANT_PROFILES = {
-  nurses:    {label:'Travel Nurses',         bathW:25, sqftW:12, parkW:12, transitW:10, hospitalW:20, floorPenalty:4,  churnPenalty:8, rent:1100},
-  tech:      {label:'Tech / Remote Workers', bathW:18, sqftW:12, parkW:12, transitW:8,  hospitalW:4,  floorPenalty:4,  churnPenalty:4, rent:1000},
-  trades:    {label:'Construction / Trades', bathW:18, sqftW:12, parkW:12, transitW:8,  hospitalW:4,  floorPenalty:4,  churnPenalty:5, rent:950},
-  students:  {label:'Students',              bathW:18, sqftW:12, parkW:6,  transitW:25, hospitalW:4,  floorPenalty:4,  churnPenalty:3, rent:800},
-  seniors:   {label:'Seniors 55+',           bathW:25, sqftW:12, parkW:12, transitW:15, hospitalW:14, floorPenalty:15, churnPenalty:0, rent:900},
-  sober:     {label:'Sober Living',          bathW:18, sqftW:12, parkW:6,  transitW:8,  hospitalW:10, floorPenalty:8,  churnPenalty:2, rent:850},
-  workforce: {label:'General Workforce',     bathW:18, sqftW:12, parkW:12, transitW:8,  hospitalW:6,  floorPenalty:4,  churnPenalty:5, rent:875},
+  nurses:              {label:'Travel Nurses',                    bathW:25, sqftW:12, parkW:12, transitW:10, hospitalW:20, floorPenalty:4,  churnPenalty:8, rent:1100},
+  young_professionals: {label:'Young Professionals',               bathW:18, sqftW:12, parkW:8,  transitW:15, hospitalW:4,  floorPenalty:4,  churnPenalty:4, rent:1150},
+  digital_nomads:      {label:'Digital Nomads / Remote Workers',   bathW:18, sqftW:12, parkW:8,  transitW:5,  hospitalW:2,  floorPenalty:4,  churnPenalty:6, rent:1100},
+  students:            {label:'Students',                          bathW:18, sqftW:12, parkW:6,  transitW:25, hospitalW:4,  floorPenalty:4,  churnPenalty:3, rent:800},
+  seniors:             {label:'Seniors 55+',                       bathW:25, sqftW:12, parkW:12, transitW:15, hospitalW:14, floorPenalty:15, churnPenalty:0, rent:900},
+  sober:               {label:'Sober Living',                      bathW:18, sqftW:12, parkW:6,  transitW:8,  hospitalW:10, floorPenalty:8,  churnPenalty:2, rent:850},
+  workforce:           {label:'Workforce & Essential Workers',     bathW:18, sqftW:12, parkW:12, transitW:8,  hospitalW:6,  floorPenalty:4,  churnPenalty:5, rent:875},
 };
 
 function defaultUtilities(sqft){
@@ -1857,23 +1857,22 @@ function computeTenantSuitability(inp, fd) {
       else             signals.push(sig('neg','No parking — travel nurses typically have vehicles'));
       return {fit, signals};
     }},
-    tech: { label:'Tech / Remote Workers', eval(){
+    young_professionals: { label:'Young Professionals', eval(){
       const signals=[]; let pos=0;
-      if(walkHigh){      signals.push(sig('pos','Walkable area — appealing to remote workers')); pos++; }
-      else if(!walkMed){ signals.push(sig('neg','Low walkability — remote workers prefer walkable neighborhoods')); }
-      if(transitAvail){  signals.push(sig('pos','Transit accessible')); pos++; }
+      if(walkHigh){      signals.push(sig('pos','Walkable area — coffee, restaurants, and nightlife within reach')); pos++; }
+      else if(!walkMed){ signals.push(sig('neg','Low walkability — young professionals prefer walkable neighborhoods')); }
+      if(transitAvail){  signals.push(sig('pos','Transit accessible — many in this segment are car-light')); pos++; }
       else{              signals.push(sig('note','Limited transit access')); }
-      signals.push(sig('note','Internet quality not assessed — verify fiber/cable availability'));
+      signals.push(sig('note','Aesthetic/design quality not assessed — this segment has high standards'));
       return {fit: pos>=2?'good':'marginal', signals};
     }},
-    trades: { label:'Construction / Trades', eval(){
-      const signals=[]; let fit='marginal';
-      if(coveredParking){    signals.push(sig('strong-pos','Covered parking — trades workers need secure vehicle and tool storage')); fit='good'; }
-      else if(parkingAvail){ signals.push(sig('pos','Parking available')); }
-      else{                  signals.push(sig('strong-neg','No parking — dealbreaker for most trades workers')); fit='poor'; }
-      if(walkHigh) signals.push(sig('neg','Highly walkable urban area — typically not proximate to trades job sites'));
-      signals.push(sig('note','Employer and job site proximity not assessed'));
-      return {fit, signals};
+    digital_nomads: { label:'Digital Nomads / Remote Workers', eval(){
+      const signals=[];
+      if(walkHigh) signals.push(sig('pos','Walkable neighborhood — outdoor/lifestyle balance this segment values'));
+      signals.push(sig('note','Internet speed not assessed — gigabit fiber is this segment\'s top requirement'));
+      signals.push(sig('note','Dedicated workspace / wired ethernet not assessed'));
+      signals.push(sig('note','Commercial airport proximity not assessed — this segment travels frequently'));
+      return {fit:'marginal', signals};
     }},
     seniors: { label:'Seniors 55+', eval(){
       const signals=[]; let penalty=false, pos=0;
@@ -1904,7 +1903,7 @@ function computeTenantSuitability(inp, fd) {
       signals.push(sig('note','Seasonal vacancy risk — budget for summer months'));
       return {fit, signals};
     }},
-    workforce: { label:'General Workforce', eval(){
+    workforce: { label:'Workforce & Essential Workers', eval(){
       const signals=[]; let pos=0;
       if(parkingAvail){ signals.push(sig('pos','Parking available')); pos++; }
       if(transitAvail){ signals.push(sig('pos','Transit accessible')); pos++; }
@@ -2877,15 +2876,15 @@ function renderPagedReport(md, ai, rg){
       hook: `Private furnished room in a ${inp.beds}-bedroom home built for healthcare professionals. Quiet house, professional tenants, and flexible lease terms designed to match your contract.`,
       tags: '#TravelNurse #TravelNurseHousing #NurseLife #FurnishedRoom #CoLiving'
     },
-    tech:     {
-      headline: `💻 Co-Living for Remote Workers — ${city}`,
-      hook: `Private furnished room with a dedicated workspace in a ${inp.beds}-bedroom home. High-speed internet, quiet environment, and professional housemates — everything you need to work from home.`,
-      tags: '#RemoteWork #CoLiving #FurnishedRoom #WorkFromHome #DigitalNomad'
+    young_professionals: {
+      headline: `🏙️ Co-Living for Young Professionals — ${city}`,
+      hook: `Private furnished room in a design-forward ${inp.beds}-bedroom home, walkable to coffee, restaurants, and nightlife. Flexible lease, easy move-in, and housemates who match your lifestyle.`,
+      tags: '#CoLiving #FurnishedRoom #YoungProfessional #CityLiving #Roommates'
     },
-    trades:   {
-      headline: `🔧 Furnished Co-Living for Working Professionals — ${city}`,
-      hook: `Clean, furnished private room in a ${inp.beds}-bedroom home close to job sites and daily essentials. Flexible lease terms and an easy commute.`,
-      tags: '#WorkforceHousing #FurnishedRoom #CoLiving #AffordableHousing'
+    digital_nomads: {
+      headline: `💻 Co-Living for Remote Workers & Digital Nomads — ${city}`,
+      hook: `Private furnished room with a dedicated workspace in a ${inp.beds}-bedroom home. Gigabit internet, quiet environment, and professional housemates — everything you need to work from home.`,
+      tags: '#RemoteWork #CoLiving #FurnishedRoom #WorkFromHome #DigitalNomad'
     },
     students: {
       headline: `🎓 Student Co-Living — ${city}`,
