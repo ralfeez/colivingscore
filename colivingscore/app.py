@@ -662,7 +662,7 @@ SECTION_KEYS = [
 # Regulatory deep-dive is fetched separately (see /api/regulatory-check) so it can
 # run first, use live web search, and not compete with the other 12 sections for
 # token budget or risk blowing the Gunicorn worker timeout (see that route for why).
-REGULATORY_KEYS = ["verdict", "summary", "state_level", "county_level", "city_level", "verify"]
+REGULATORY_KEYS = ["state_level", "county_level", "city_level", "verify", "verdict", "summary"]
 
 
 def _parse_sections(text, keys, fallback_key=None):
@@ -846,13 +846,7 @@ def _build_regulatory_prompt(address, city, county, state, zip_code, tenant_labe
 3. City/municipal zoning and occupancy code — specifically: any limit on the number of unrelated persons who may occupy one dwelling unit, permit/license requirements for room rentals or boarding/group housing, and any known recent enforcement actions or policy changes affecting shared or co-living housing in this city.
 
 ## RESPONSE FORMAT
-Return your findings using EXACTLY these section headers in this order. If you cannot find a specific rule after searching, say so explicitly rather than guessing.
-
-## VERDICT
-[Exactly one word: CLEAR, CAUTION, or RED_FLAG. RED_FLAG = you found an explicit unrelated-occupant limit, a rental/boarding-house prohibition, or a licensing requirement co-living properties commonly run afoul of. CAUTION = rules exist but are ambiguous, rarely enforced, or manageable with a permit. CLEAR = no meaningful restriction found after a genuine search.]
-
-## SUMMARY
-[1-2 plain-English sentences: the bottom-line takeaway for this investor.]
+Return your findings using EXACTLY these section headers in this order. Research and write STATE_LEVEL, COUNTY_LEVEL, and CITY_LEVEL first — VERDICT and SUMMARY come last and must be a conclusion drawn from what you actually found in those three sections, not a snap judgment made in advance. If you cannot find a specific rule after searching, say so explicitly rather than guessing.
 
 ## STATE_LEVEL
 [State law findings, or "No state-level restriction found" if genuinely none.]
@@ -864,7 +858,13 @@ Return your findings using EXACTLY these section headers in this order. If you c
 [City/municipal findings — this is usually where occupancy limits live. Be as specific as possible: cite the code section if found.]
 
 ## VERIFY
-[2-4 bullet points: exactly what the investor should verify directly with the city/county before proceeding, and which office to contact (planning department, code enforcement, business licensing, etc.)]"""
+[2-4 bullet points: exactly what the investor should verify directly with the city/county before proceeding, and which office to contact (planning department, code enforcement, business licensing, etc.)]
+
+## VERDICT
+[Exactly one word: CLEAR, CAUTION, or RED_FLAG. RED_FLAG = the STATE_LEVEL, COUNTY_LEVEL, or CITY_LEVEL sections above describe an explicit unrelated-occupant limit, a rental/boarding-house prohibition, or a licensing requirement co-living properties commonly run afoul of. CAUTION = rules exist but are ambiguous, rarely enforced, or manageable with a permit — or no permit pathway for this exact use was found (an information gap is NOT the same as a clean bill of health). CLEAR = you genuinely found no meaningful restriction of any kind in any of the three sections above after a real search. This must match what you actually wrote above — do not output CLEAR if any section above describes a real restriction, licensing requirement, or occupancy cap, even a minor one.]
+
+## SUMMARY
+[1-2 plain-English sentences: the bottom-line takeaway for this investor, consistent with the VERDICT above.]"""
 
 
 @app.route("/api/regulatory-check", methods=["POST"])
@@ -928,10 +928,21 @@ def api_regulatory_check():
             # than silently claiming "clear".
             verdict = "caution"
 
+        summary = sections.get("summary", "")
+        if not used_web_search and verdict == "clear":
+            # A "clear" verdict is only trustworthy when it came from an
+            # actual live search. Without web search, "no restriction found"
+            # just means Claude's training data didn't have one — that's a
+            # gap, not a clean bill of health, so don't let it read as one.
+            verdict = "caution"
+            summary = ("Live web search was unavailable for this check, so this result is based on "
+                       "general knowledge only and could not confirm current local rules. "
+                       + summary).strip()
+
         return jsonify({
             "verdict":         verdict,
             "verdict_raw":     sections.get("verdict", ""),
-            "summary":         sections.get("summary", ""),
+            "summary":         summary,
             "state_level":     sections.get("state_level", ""),
             "county_level":    sections.get("county_level", ""),
             "city_level":      sections.get("city_level", ""),

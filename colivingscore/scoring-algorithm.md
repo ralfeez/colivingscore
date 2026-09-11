@@ -48,16 +48,32 @@ Notes:
 
 ## Factor Scoring Details
 
-### Bathroom Ratio (beds ÷ full baths only — half baths excluded)
+### Bathroom Ratio (shared beds ÷ shared full baths — half baths excluded)
 
-| Ratio     | Penalty % |
-|-----------|-----------|
-| ≤ 1.5     | 0%        |
-| ≤ 2.0     | 33%       |
-| ≤ 2.5     | 67%       |
-| > 2.5     | 100%      |
+A bedroom with its own private (en suite) bathroom doesn't draw on the
+bathrooms the rest of the household shares, so en suite bedrooms — and an
+equal number of full bathrooms — are removed from the ratio calculation
+before scoring:
+
+  shared_beds  = beds − ensuites
+  shared_baths = full_baths − ensuites
+
+| Shared ratio (shared_beds ÷ shared_baths) | Penalty % |
+|--------------------------------------------|-----------|
+| ≤ 1.5                                       | 0%        |
+| ≤ 2.0                                       | 33%       |
+| ≤ 2.5                                       | 67%       |
+| > 2.5                                       | 100%      |
 
 Deduction = max_penalty × penalty_pct
+
+Two edge cases:
+- **shared_beds ≤ 0** (every bedroom is en suite): 0% penalty — nobody needs
+  to share a bathroom at all.
+- **shared_beds > 0 but shared_baths ≤ 0** (en suites consumed every
+  bathroom, but shared bedrooms remain): 100% penalty, **plus** a dedicated,
+  always-shown red flag — "No shared bathroom available" — independent of
+  whether the deduction alone would rank in the top-3 flags shown to the user.
 
 **Improvement suggestion:** Adding a bedroom may seem like an easy path to more
 income, but tenants in co-living homes place high value on bathroom access. An
@@ -274,6 +290,18 @@ The free score uses a fixed 15% assumption.
 ---
 
 ## Changelog
+
+### 2026-09-10
+- **Changed:** Bathroom ratio factor now subtracts en suite bedrooms (and an
+  equal number of full bathrooms) from both counts before computing the
+  ratio, since a private en-suite bath isn't available to the rest of the
+  household. Same penalty tiers as before, applied to the reduced counts.
+  Added a new "En Suite Bedrooms" input (property-details step, capped at
+  min(beds, baths)) to capture this.
+- **Added:** Dedicated always-shown red flag ("No shared bathroom
+  available") for the edge case where en suites consume every bathroom but
+  shared bedrooms remain — distinct from, and in addition to, the ordinary
+  100%-penalty bathroom-ratio deduction.
 
 ### 2026-04-20
 - **Removed:** Bed count penalty factor (was max 8 pts). Replaced with an
