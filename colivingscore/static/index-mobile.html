@@ -231,6 +231,7 @@ select:focus,input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,
 .loading-logo{font-size:22px;font-weight:700;color:#fff;letter-spacing:-0.5px;margin-bottom:32px}
 .loading-logo span{color:var(--green)}
 .loading-stage{font-size:15px;font-weight:500;color:rgba(255,255,255,0.85);margin-bottom:20px;min-height:24px;transition:opacity 0.3s}
+.loading-elapsed{font-size:12px;color:rgba(255,255,255,0.5);margin-top:-12px;margin-bottom:16px}
 .loading-bar-wrap{width:100%;height:6px;background:rgba(255,255,255,0.12);border-radius:99px;overflow:hidden;margin-bottom:36px}
 .loading-bar{height:100%;background:var(--green);border-radius:99px;width:0%;transition:width 0.6s ease}
 .loading-quote-wrap{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:24px 28px;min-height:100px;display:flex;flex-direction:column;justify-content:center;transition:opacity 0.5s}
@@ -1093,6 +1094,7 @@ input, select, button { font-size: 16px !important; } /* prevent iOS zoom on foc
     <div class="loading-content">
       <div class="loading-logo">CoLiving<span>Score</span></div>
       <div class="loading-stage" id="loading-stage">Preparing your analysis...</div>
+      <div class="loading-elapsed" id="loading-elapsed"></div>
       <div class="loading-bar-wrap"><div class="loading-bar" id="loading-bar"></div></div>
       <div class="loading-quote-wrap">
         <div class="loading-quote" id="loading-quote"></div>
@@ -2493,16 +2495,32 @@ let _loadingTimers = [];
 
 function startLoadingScreen(){
   showScreen('s-loading');
-  const bar      = document.getElementById('loading-bar');
-  const stageEl  = document.getElementById('loading-stage');
-  const quoteEl  = document.getElementById('loading-quote');
-  const authorEl = document.getElementById('loading-author');
+  const bar       = document.getElementById('loading-bar');
+  const stageEl   = document.getElementById('loading-stage');
+  const quoteEl   = document.getElementById('loading-quote');
+  const authorEl  = document.getElementById('loading-author');
+  const elapsedEl = document.getElementById('loading-elapsed');
 
   // Reset bar instantly (no transition) so a previous 100% doesn't animate backwards
   bar.style.transition = 'none';
   bar.style.width = '0%';
   void bar.offsetWidth; // force reflow before restoring transition
   bar.style.transition = '';
+
+  // Elapsed-time counter — the live regulatory check and market analysis can
+  // each run over a minute, so a live timer reassures the user this is still
+  // working rather than frozen, especially past the point the fake progress
+  // stages below have all played out.
+  const startTime = Date.now();
+  function updateElapsed(){
+    const secs = Math.floor((Date.now() - startTime) / 1000);
+    const mmss = secs < 60 ? `${secs}s` : `${Math.floor(secs/60)}:${String(secs%60).padStart(2,'0')}`;
+    elapsedEl.textContent = secs < 45
+      ? `${mmss} elapsed`
+      : `${mmss} elapsed — live regulatory and market research can take several minutes`;
+  }
+  updateElapsed();
+  _loadingTimers.push(setInterval(updateElapsed, 1000));
 
   // Progress bar stages
   let si = 0;
@@ -2677,7 +2695,7 @@ async function runFullProAnalysis(overrideInputs){
   let fastData = {};
   try {
     const ctrl = new AbortController();
-    const t = setTimeout(()=>ctrl.abort(), 30000);
+    const t = setTimeout(()=>ctrl.abort(), 60000);
     const res = await fetch(_apiUrl('/api/pro-data-fast'), {
       method:'POST', headers:{'Content-Type':'application/json', 'X-API-Key': window._apiKey||''},
       signal: ctrl.signal,
