@@ -1608,7 +1608,13 @@ function escText(s){
   return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-function regBannerHTML(data, pending){
+// `context` controls phrasing since the same banner shows both before the
+// report exists (nothing to review yet, never a reason to stop and wait)
+// and inside the finished report (the findings are genuinely there to read):
+// 'pre' = financial-inputs/review screens, 'page1' = report overview,
+// 'page8' = the Zoning page where the full write-up actually appears.
+function regBannerHTML(data, pending, context){
+  context = context || 'pre';
   if(pending){
     return `<div class="banner" style="background:var(--gray-50);border:1px solid var(--gray-200);color:var(--gray-600)">
       <div class="banner-icon" style="background:var(--gray-400);color:var(--white)">🔍</div>
@@ -1616,18 +1622,26 @@ function regBannerHTML(data, pending){
     </div>`;
   }
   if(!data){
-    return `<div class="banner caution"><div class="banner-icon">!</div><div class="banner-text"><strong>Regulatory check unavailable.</strong> The live lookup didn't complete — verify local rules directly with the city or county before proceeding.</div></div>`;
+    const tail = context==='pre'
+      ? 'Once your report is generated, verify local rules directly with the city or county.'
+      : 'Verify local rules directly with the city or county before proceeding.';
+    return `<div class="banner caution"><div class="banner-icon">!</div><div class="banner-text"><strong>Regulatory check unavailable.</strong> ${tail}</div></div>`;
   }
+  const titles = {
+    pre:   {caution:'Caution flagged — full findings will appear in your report', red_flag:'Red Flag found — full findings will appear in your report'},
+    page1: {caution:'Caution — see the Zoning page for full findings',            red_flag:'Red Flag — see the Zoning page for full findings'},
+    page8: {caution:'Caution — review the findings below',                       red_flag:'Red Flag — review the findings below'},
+  };
   const cfg = {
     clear:    {type:'success',  icon:'✓', title:'No red flags found'},
-    caution:  {type:'caution',  icon:'!', title:'Caution — review before proceeding'},
-    red_flag: {type:'critical', icon:'✕', title:'Red Flag — potential regulatory barrier'},
+    caution:  {type:'caution',  icon:'!', title:titles[context].caution},
+    red_flag: {type:'critical', icon:'✕', title:titles[context].red_flag},
   }[data.verdict] || {type:'caution', icon:'!', title:'Review needed'};
   return `<div class="banner ${cfg.type}"><div class="banner-icon">${cfg.icon}</div><div class="banner-text"><strong>${cfg.title}.</strong> ${escText(data.summary)}</div></div>`;
 }
 
 function renderRegBanners(){
-  const html = window._regPending ? regBannerHTML(null, true) : regBannerHTML(window._regData, false);
+  const html = window._regPending ? regBannerHTML(null, true) : regBannerHTML(window._regData, false, 'pre');
   ['reg-check-proform','reg-check-review'].forEach(id=>{
     const el = document.getElementById(id);
     if(el) el.innerHTML = html;
@@ -2772,7 +2786,7 @@ function renderPagedReport(md, ai, rg){
       ? `${ensuites} en suite bedroom${ensuites===1?'':'s'} · ${sharedBaths} bathroom${sharedBaths===1?'':'s'} available to use`
       : `${ensuites} en suite bedroom${ensuites===1?'':'s'} — every bedroom has its own bathroom`;
   set('rpt-pg-1',`
-    ${regBannerHTML(rg, false)}
+    ${regBannerHTML(rg, false, 'page1')}
     <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--gray-100)">
       <div style="text-align:center;min-width:90px">
         <div style="font-size:60px;font-weight:800;color:${bColor};line-height:1">${score}</div>
@@ -2971,7 +2985,7 @@ function renderPagedReport(md, ai, rg){
     rg.city_level   ? `## City / Municipal\n${rg.city_level}` : '',
     rg.verify       ? `## What To Verify\n${rg.verify}`      : '',
   ].filter(Boolean).join('\n\n') : '';
-  set('rpt-pg-8', regBannerHTML(rg, false) + renderAIContent(regBody) + beAware);
+  set('rpt-pg-8', regBannerHTML(rg, false, 'page8') + renderAIContent(regBody) + beAware);
 
   // ── PAGE 9: P&L Waterfall + Occupancy Sensitivity ────────────────────
   {
