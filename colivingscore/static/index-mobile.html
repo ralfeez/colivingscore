@@ -2694,6 +2694,7 @@ async function runFullProAnalysis(overrideInputs){
         address:      window._address || '',
         city:         place.city  ||'', state:    place.state ||'', zip: place.zip||'',
         beds:         inp.beds    ||4,  baths:    inp.baths   ||2,  sqft: inp.sqft||0,
+        ensuites:     inp.ensuites||0,
         tenant_key:   inp.tenant  ||'workforce',
         rent_per_room: inp.rent   ||0,
         mortgage:     (overrideInputs&&overrideInputs.mortgage) ||

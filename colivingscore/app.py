@@ -709,6 +709,9 @@ def _build_market_analysis_prompt(data):
     beds       = data.get("beds", 4)
     baths      = data.get("baths", 2)
     sqft       = data.get("sqft", 0)
+    ensuites   = min(data.get("ensuites", 0) or 0, beds, baths)
+    shared_beds  = max(0, beds - ensuites)
+    shared_baths = max(0, baths - ensuites)
     tenant_key = data.get("tenant_key", "workforce")
     rent_per_room = data.get("rent_per_room", 0)
     mortgage   = data.get("mortgage", 0)
@@ -757,9 +760,11 @@ def _build_market_analysis_prompt(data):
 
 FINANCIAL GROUND RULE — READ FIRST: The investor's actual P&L is calculated separately from their exact inputs and presented in the report. Do NOT state, calculate, or estimate any specific dollar figures for revenue, expenses, NOI, cash flow, or DSCR in your analysis. If financial performance is relevant to a section, reference it qualitatively (e.g. "at the investor's target rent and occupancy assumption" or "per the financial model"). Inventing financial figures that conflict with the investor's actual inputs destroys the report's credibility.
 
+BATHROOM RATIO GROUND RULE — READ FIRST: This property has {ensuites} en suite bedroom(s) — bedrooms with their own private bathroom, not available to the rest of the household. The property's real bathroom-sharing constraint is {shared_beds} shared bedroom(s) to {shared_baths} shared bathroom(s), NOT the raw {beds}-bed/{baths}-bath count. Any time you reference the bathroom ratio, bathroom access, or bathroom-related risk anywhere in your analysis, you MUST use the {shared_beds}-to-{shared_baths} shared figure and state it that way (e.g. "{shared_beds} shared bedrooms to {shared_baths} shared bathrooms"). Do NOT compute, state, or imply a different ratio from the raw bed/bath count — the report's other pages already show the {shared_beds}:{shared_baths} figure, and a mismatched ratio elsewhere destroys the report's credibility exactly like an invented financial figure would.
+
 ## PROPERTY
 - Address: {address} ({city}, {state} {zip_code})
-- Configuration: {beds} bed / {baths} bath / {sqft or "unknown"} sq ft
+- Configuration: {beds} bed / {baths} bath / {sqft or "unknown"} sq ft ({ensuites} en suite, {shared_beds} shared bedroom(s) sharing {shared_baths} shared bathroom(s))
 - Target tenant type: {tenant_label}
 - Investor's target rent per room: {rent_room_str}/month
 - Monthly mortgage: {mortgage_str}
@@ -808,7 +813,7 @@ Threats:
 [2-3 specific risks: regulatory, competition, market ceiling]
 
 ## RISK_ANALYSIS
-[Top 3-4 risks specific to THIS deal. Each gets a short paragraph: what the risk is, how likely, and how to mitigate. Include bathroom ratio risk if applicable, market rent ceiling, tenant quality variability, management intensity.]
+[Top 3-4 risks specific to THIS deal. Each gets a short paragraph: what the risk is, how likely, and how to mitigate. If bathroom ratio is a risk, cite it as the {shared_beds}-shared-bedroom-to-{shared_baths}-shared-bathroom figure per the ground rule above — never the raw {beds}/{baths} count. Also cover market rent ceiling, tenant quality variability, management intensity.]
 
 ## EMPLOYER_MAPPING
 [Named major employers found within 5 miles: warehouses, hospitals, manufacturers, logistics hubs. Distance from property. Why job cluster proximity drives co-living demand here. Assessment of employer-to-affordable-housing supply ratio.]
